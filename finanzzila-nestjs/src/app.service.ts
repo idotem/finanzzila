@@ -2,57 +2,57 @@ import { Injectable } from '@nestjs/common';
 import ExpensesCategory from './expenses.category.enum';
 import IncomeCategory from './income.category.enum';
 import * as fs from 'fs';
+import ExpensesEntity from './expenses.entity';
+import IncomeEntity from './income.entity';
+import NotMappedExpensesAndIncomeEntity from './notmapped.expenses.entity';
 
 @Injectable()
 export class AppService {
-  expenses: Map<ExpensesCategory, number> = new Map<ExpensesCategory, number>();
-  income: Map<IncomeCategory, number> = new Map<IncomeCategory, number>();
-  notMapped: Map<string, number> = new Map<string, number>();
+  expenses: ExpensesEntity[] = [];
+  income: IncomeEntity[] = [];
+  notMapped: NotMappedExpensesAndIncomeEntity[] = [];
 
   getHello(): string {
     return 'Hello';
   }
 
   populateExpensesMap(): void {
-    this.expenses.set(ExpensesCategory.ALIEXPRESS, 0.0);
-    this.expenses.set(ExpensesCategory.ATM, 0.0);
-    this.expenses.set(ExpensesCategory.BOOKS, 0.0);
-    this.expenses.set(ExpensesCategory.CAFE_AND_BARS, 0.0);
-    this.expenses.set(ExpensesCategory.CLOTHES_AND_WEARABLES, 0.0);
-    this.expenses.set(ExpensesCategory.EDUCATION, 0.0);
-    this.expenses.set(ExpensesCategory.ENTERTAINMENT, 0.0);
-    this.expenses.set(ExpensesCategory.FOOD, 0.0);
-    this.expenses.set(ExpensesCategory.FUEL_AND_CAR, 0.0);
-    this.expenses.set(ExpensesCategory.GIFTS, 0.0);
-    this.expenses.set(ExpensesCategory.HYGIENE, 0.0);
-    this.expenses.set(ExpensesCategory.INVESTING_AND_FEES, 0.0);
-    this.expenses.set(ExpensesCategory.MARKETS, 0.0);
-    this.expenses.set(ExpensesCategory.MEDICAL, 0.0);
-    this.expenses.set(ExpensesCategory.RESTAURANTS, 0.0);
-    this.expenses.set(ExpensesCategory.SNACKS_AND_WATER, 0.0);
-    this.expenses.set(ExpensesCategory.SOFTWARE_AND_HARDWARE, 0.0);
-    this.expenses.set(ExpensesCategory.UTILITIES, 0.0);
+    this.expenses.push({ name: 'ALIEXPRESS', value: 0.0 });
+    this.expenses.push({ name: 'ATM', value: 0.0 });
+    this.expenses.push({ name: 'BOOKS', value: 0.0 });
+    this.expenses.push({ name: 'CAFE_AND_BARS', value: 0.0 });
+    this.expenses.push({ name: 'CLOTHES_AND_WEARABLES', value: 0.0 });
+    this.expenses.push({ name: 'EDUCATION', value: 0.0 });
+    this.expenses.push({ name: 'ENTERTAINMENT', value: 0.0 });
+    this.expenses.push({ name: 'FOOD', value: 0.0 });
+    this.expenses.push({ name: 'FUEL_AND_CAR', value: 0.0 });
+    this.expenses.push({ name: 'GIFTS', value: 0.0 });
+    this.expenses.push({ name: 'HYGIENE', value: 0.0 });
+    this.expenses.push({ name: 'INVESTING_AND_FEES', value: 0.0 });
+    this.expenses.push({ name: 'MARKETS', value: 0.0 });
+    this.expenses.push({ name: 'MEDICAL', value: 0.0 });
+    this.expenses.push({ name: 'RESTAURANTS', value: 0.0 });
+    this.expenses.push({ name: 'SNACKS_AND_WATER', value: 0.0 });
+    this.expenses.push({ name: 'SOFTWARE_AND_HARDWARE', value: 0.0 });
+    this.expenses.push({ name: 'UTILITIES', value: 0.0 });
   }
 
-  updateAmountForCategoryInExpenses(
-    category: ExpensesCategory,
-    amount: number,
-  ): void {
-    // console.log('category: ' + category);
-    // console.log('amount: ' + amount);
-    // console.log('alreadySavedAmount: ' + this.expenses.get(category));
-    const addedAmount = this.expenses.get(category) + amount;
-    // console.log('addedAmount: ' + addedAmount);
-    this.expenses.set(category, addedAmount);
-    // console.log('addedAmountAfterSet: ' + this.expenses.get(category));
+  updateAmountForCategoryInExpenses(category: string, amount: number): void {
+    const expense = this.expenses.find((e) => e.name === category);
+    expense.value = expense.value + amount;
   }
 
   addNotMappedToOrdinaryMap(name: string, amount: number): void {
-    this.notMapped.set(name, this.notMapped.get(name) + amount);
+    let expense = this.expenses.find((e) => e.name === name);
+    if (expense === undefined || expense === null) {
+      expense = { name: name, value: amount };
+    }
+    expense.value = expense.value + amount;
   }
 
-  updateAmountForCategoryInIncome(category: IncomeCategory, amount: number) {
-    this.income.set(category, this.income.get(category) + amount);
+  updateAmountForCategoryInIncome(category: string, amount: number) {
+    const expense = this.expenses.find((e) => e.name === category);
+    expense.value = expense.value + amount;
   }
 
   mapAndFillExpenses(
@@ -67,16 +67,16 @@ export class AppService {
       case 'BEN. STANICA OKTA SKOPJE': {
         if (Math.abs(amountOfTransaction) >= 1000) {
           this.updateAmountForCategoryInExpenses(
-            ExpensesCategory.FUEL_AND_CAR,
+            'FUEL_AND_CAR',
             amountOfTransaction - (amountOfTransaction % 1000),
           );
           this.updateAmountForCategoryInExpenses(
-            ExpensesCategory.SNACKS_AND_WATER,
+            'SNACKS_AND_WATER',
             amountOfTransaction % 1000,
           );
         } else {
           this.updateAmountForCategoryInExpenses(
-            ExpensesCategory.SNACKS_AND_WATER,
+            'SNACKS_AND_WATER',
             amountOfTransaction,
           );
         }
@@ -91,10 +91,7 @@ export class AppService {
       case 'VRSHNIK 7 SKOPJE':
       case 'MESARNICA ANDREJA SKOPJE':
       case 'GIRO VELADA SKOPJE': {
-        this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.FOOD,
-          amountOfTransaction,
-        );
+        this.updateAmountForCategoryInExpenses('FOOD', amountOfTransaction);
         break;
       }
       case 'TINEKS MT DOOEL SKOPJE':
@@ -109,24 +106,18 @@ export class AppService {
       case 'MARKET NIKOLOVI IM SVETI NIKOLE':
       case 'SUPER TINEKS 13 SKOPJE':
       case 'STOKOMAK MLECEN BR.8 SKOPJE': {
-        this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.MARKETS,
-          amountOfTransaction,
-        );
+        this.updateAmountForCategoryInExpenses('MARKETS', amountOfTransaction);
         break;
       }
       case '0230706724686': {
         this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.INVESTING_AND_FEES,
+          'INVESTING_AND_FEES',
           amountOfTransaction,
         );
         break;
       }
       case 'LITERATURA SITI MOL SKOPJE': {
-        this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.BOOKS,
-          amountOfTransaction,
-        );
+        this.updateAmountForCategoryInExpenses('BOOKS', amountOfTransaction);
         break;
       }
       case 'CENTRAL PERK KOFI DO SKOPJE':
@@ -137,27 +128,24 @@ export class AppService {
       case 'MADAL BAL KAFE DZOJ KA SKOPJE': {
         if (amountOfTransaction <= 300) {
           this.updateAmountForCategoryInExpenses(
-            ExpensesCategory.CAFE_AND_BARS,
+            'CAFE_AND_BARS',
             amountOfTransaction,
           );
         } else {
           this.updateAmountForCategoryInExpenses(
-            ExpensesCategory.RESTAURANTS,
+            'RESTAURANTS',
             amountOfTransaction,
           );
         }
         break;
       }
       case 'DM DROGERIE MARKT 8 SKOPJE': {
-        this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.HYGIENE,
-          amountOfTransaction,
-        );
+        this.updateAmountForCategoryInExpenses('HYGIENE', amountOfTransaction);
         break;
       }
       case 'CINEPLEXX-CITY MALL SKOPJE': {
         this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.ENTERTAINMENT,
+          'ENTERTAINMENT',
           amountOfTransaction,
         );
         break;
@@ -165,7 +153,7 @@ export class AppService {
       case 'VAIKIKI RETAIL MK DO SKOPJE':
       case 'ZARA EAST GATE SKOPJE': {
         this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.CLOTHES_AND_WEARABLES,
+          'CLOTHES_AND_WEARABLES',
           amountOfTransaction,
         );
         break;
@@ -175,7 +163,7 @@ export class AppService {
       case 'SETEK KRIVA PALANKA KRIVA PALANKA':
       case 'SETEK SITI MOL SKOPJE': {
         this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.SOFTWARE_AND_HARDWARE,
+          'SOFTWARE_AND_HARDWARE',
           amountOfTransaction,
         );
         break;
@@ -184,36 +172,27 @@ export class AppService {
       case 'WWW.ALIEXPRESS.COM LONDON':
       case 'aliexpress Luxembourg': {
         this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.ALIEXPRESS,
+          'ALIEXPRESS',
           amountOfTransaction,
         );
         break;
       }
       case 'VIOLA NASTEL SKOPJE': {
-        this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.MEDICAL,
-          amountOfTransaction,
-        );
+        this.updateAmountForCategoryInExpenses('MEDICAL', amountOfTransaction);
         break;
       }
       case 'KBSATM KRIVA PALANKA SKOPJE':
       case 'KBSATM CITY MALL SK SKOPJE': {
-        this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.ATM,
-          amountOfTransaction,
-        );
+        this.updateAmountForCategoryInExpenses('ATM', amountOfTransaction);
         break;
       }
       case 'PANDORA SKOPJE': {
-        this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.GIFTS,
-          amountOfTransaction,
-        );
+        this.updateAmountForCategoryInExpenses('GIFTS', amountOfTransaction);
         break;
       }
       case 'IKNOW.UKIM.MK SKOPJE': {
         this.updateAmountForCategoryInExpenses(
-          ExpensesCategory.EDUCATION,
+          'EDUCATION',
           amountOfTransaction,
         );
         break;
@@ -234,19 +213,13 @@ export class AppService {
   ) {
     switch (nameOfTransactionPlace) {
       case 'ЕУРО-ЛЕВЕЛ ДОО Скопје':
-        this.updateAmountForCategoryInIncome(
-          IncomeCategory.WAGE,
-          amountOfTransaction,
-        );
+        this.updateAmountForCategoryInIncome('WAGE', amountOfTransaction);
       default:
-        this.updateAmountForCategoryInIncome(
-          IncomeCategory.OTHER,
-          amountOfTransaction,
-        );
+        this.updateAmountForCategoryInIncome('OTHER', amountOfTransaction);
     }
   }
 
-  fillExpensesThenReturn(): Map<ExpensesCategory, number> {
+  fillExpensesThenReturn(): ExpensesEntity[] {
     const transactionAmountIndex = 3;
     const transactionNameIndex = 1;
     const expensesFile = fs.readFileSync(
@@ -269,6 +242,9 @@ export class AppService {
   }
 
   getExpenses() {
+    this.expenses = [];
+    this.income = [];
+    this.notMapped = [];
     this.populateExpensesMap();
     const newMap = this.fillExpensesThenReturn();
     return newMap;

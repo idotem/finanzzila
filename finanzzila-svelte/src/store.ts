@@ -15,9 +15,9 @@ export type ExpensesEntity = {
 For our use case, we only care about the drink names, not the other information.
 Here, we'll create a derived store to hold the drink names.
 **/
-export const drinkNames = derived(apiData, ($apiData: any) => {
+export const expenses = derived(apiData, ($apiData: any) => {
 	if ($apiData) {
-		return $apiData.map((expense: ExpensesEntity) => expense.name + " = " + expense.value);
+		return $apiData.map((expense: ExpensesEntity) => expense);
 	}
 	return [];
 });

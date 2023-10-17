@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from "svelte";
-	import { apiData, drinkNames } from "../store.ts";
+	import { apiData, expenses } from "../store";
 
 	onMount(async () => {
 		fetch("http://localhost:3000/expenses")
@@ -19,9 +19,14 @@
 <main>
 	<h1>Expenses</h1>
 	<ul>
-		{#each $drinkNames as drinkName}
-			<li>{drinkName}</li>
-		{/each}
+		<table>
+			{#each $expenses as expense}
+				<tr>
+					<td>{expense.name}</td>
+					<td>{expense.value}</td>
+				</tr>
+			{/each}
+		</table>
 	</ul>
 </main>
 

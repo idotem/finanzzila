@@ -6,21 +6,11 @@
 <div class="text-column">
 	<h1>About this app</h1>
 
-	<p>
-		This is a <a href="https://kit.svelte.dev">SvelteKit</a> app. You can make your own by typing the
-		following into your command line and following the prompts:
-	</p>
-
-	<pre>npm create svelte@latest</pre>
+	<p>This is a personal finance application for managing your finances and tracking expenses.</p>
 
 	<p>
-		The page you're looking at is purely static HTML, with no client-side interactivity needed.
-		Because of that, we don't need to load any JavaScript. Try viewing the page's source, or opening
-		the devtools network panel and reloading.
-	</p>
-
-	<p>
-		The <a href="/sverdle">Sverdle</a> page illustrates SvelteKit's data loading and form handling. Try
-		using it with JavaScript disabled!
+		I Metodi Mladneovski am the sole creator of this project. I am doing this in order to learn
+		NestJS and Svelte, however I have decided to build this application because I really need it
+		to automate my finance and tracking of expenses.
 	</p>
 </div>

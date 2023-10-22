@@ -2,31 +2,18 @@
 	import { onMount } from "svelte";
 	import { apiData, expenses } from "../store";
 	import AddMonth from "./AddMonth.svelte";
-	import { fly } from "svelte/transition";
 
-	import { bind } from "./Modal.svelte";
+	import { writable } from "svelte/store";
+	import Modal, { bind } from "svelte-simple-modal";
+	const modal = writable(null);
+	// @ts-ignore
+	const showModal = () =>
+		// @ts-ignore
+		modal.set(bind(AddMonth, { message: "Add month", onCancel: () => cancelAddMonth() }));
 
-	import Popup from "./Popup.svelte";
-
-	import { modal } from "./stores.js";
-
-	let opening = false;
-	let opened = false;
-	let closing = false;
-	let closed = false;
-
-	const showPopup = () => {
-		modal.set(Popup);
-	};
-
-	const showPopupWithProps = () => {
-		modal.set(bind(Popup, { message: "It's a customized popup!" }));
-	};
-
-	/**
-	 * @type {boolean}
-	 */
-	let addMonthShowPopup = false;
+	function cancelAddMonth() {
+		modal.set(null);
+	}
 
 	onMount(async () => {
 		fetch("http://localhost:3000/expenses")
@@ -41,28 +28,15 @@
 			});
 	});
 	const month = "January";
-
-	function addMonth() {
-		addMonthShowPopup = true;
-	}
-
-	/**
-	 * @type {FileList}
-	 */
-	let files;
-
-	$: if (files) {
-	}
 </script>
 
 <main>
-	{#if addMonthShowPopup}
-		<AddMonth />
-	{/if}
 	<h1>Expenses</h1>
 	<div class="expenses-buttons">
 		<div>
-			<button class="add-month" type="submit" on:click={() => addMonth()}>Add Month</button>
+			<Modal show={$modal}>
+				<button on:click={showModal}>Add month</button>
+			</Modal>
 			<button class="add-expense" type="submit">Add Expense</button>
 		</div>
 	</div>

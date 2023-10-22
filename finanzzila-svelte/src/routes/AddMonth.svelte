@@ -2,7 +2,7 @@
 	/**
 	 * @type {any}
 	 */
-	export let message = "Add month";
+	export let message;
 	export let onCancel = () => {};
 	export let onOkay = () => {};
 
@@ -14,20 +14,26 @@
 
 	function _onCancel() {
 		onCancel();
-		close();
 	}
 
 	function _onOkay() {
 		onOkay(value);
-		close();
 	}
 
 	$: onChange(value);
+
+	/**
+	 * @type {FileList}
+	 */
+	let files;
+
+	$: if (files) {
+	}
 </script>
 
 <h2>{message}</h2>
 <div>
-	<label for="expnesesFile">Upload a .csv expenses file:</label>
+	<label for="expensesFile">Upload a .csv expenses file:</label>
 	<input accept="application/csv" id="expensesFile" name="expensesFile" type="file" />
 </div>
 
@@ -48,6 +54,14 @@
 
 	.buttons {
 		display: flex;
-		justify-content: space-between;
+		justify-content: end;
+	}
+	.buttons button:nth-child(1) {
+		background-color: red;
+	}
+	.buttons button:nth-child(2) {
+		background-color: green;
+		color: white;
+		margin-left: 20px;
 	}
 </style>

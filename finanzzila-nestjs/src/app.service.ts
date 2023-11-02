@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import ExpensesCategory from './expenses.category.enum';
-import IncomeCategory from './income.category.enum';
 import * as fs from 'fs';
 import ExpensesEntity from './expenses.entity';
 import IncomeEntity from './income.entity';
@@ -46,8 +44,10 @@ export class AppService {
     let expense = this.expenses.find((e) => e.name === name);
     if (expense === undefined || expense === null) {
       expense = { name: name, value: amount };
+    } else {
+      expense.value = expense.value + amount;
     }
-    expense.value = expense.value + amount;
+    this.notMapped.push(expense);
   }
 
   updateAmountForCategoryInIncome(category: string, amount: number) {
@@ -223,7 +223,7 @@ export class AppService {
     const transactionAmountIndex = 3;
     const transactionNameIndex = 1;
     const expensesFile = fs.readFileSync(
-      '/home/meto/Documents/financial-documents/Izvestaj_za_Promet.csv',
+      '/home/meto/Documents/financial-documents/September_2023.csv',
       'utf-8',
     );
     const expenseRows: string[] = expensesFile.split('\n');
@@ -247,6 +247,7 @@ export class AppService {
     this.notMapped = [];
     this.populateExpensesMap();
     const newMap = this.fillExpensesThenReturn();
+    console.log(this.notMapped);
     return newMap;
   }
 }

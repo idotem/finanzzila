@@ -16,7 +16,8 @@ export class AppController {
 
   @Get()
   getExpenses(): ExpensesEntity[] {
-    return this.appService.getExpenses();
+    const expenses: ExpensesEntity[] = this.appService.getExpenses();
+    return expenses;
   }
 
   @Post('/upload')

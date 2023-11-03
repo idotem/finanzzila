@@ -37,16 +37,18 @@ export class AppService {
 
   updateAmountForCategoryInExpenses(category: string, amount: number): void {
     const expense = this.expenses.find((e) => e.name === category);
-    expense.value = expense.value + amount;
+    expense.value += amount;
   }
 
   addNotMappedToOrdinaryMap(name: string, amount: number): void {
     let expense = this.expenses.find((e) => e.name === name);
-    if (expense === undefined || expense === null) {
-      expense = { name: name, value: amount };
+    console.log(amount);
+    if (expense !== undefined) {
+      expense.value += amount;
     } else {
-      expense.value = expense.value + amount;
+      expense = { name: name, value: amount };
     }
+    console.log(expense)
     this.notMapped.push(expense);
   }
 
@@ -219,21 +221,43 @@ export class AppService {
     }
   }
 
+  replaceCommasBetweenDoubleQuoutesWithDots(row: string): string {
+    const regex = /"([^"]*)"/g;  
+    const result = row.replace(regex, (match, group) => {
+      return `"${group.replace(/,/g, '.')}"`;
+    });
+    return result;
+  }
+
+  removeDoubleQuoutesFromRows(row : string) : string {
+    const withoutQuotes = row.replace(/"/g, '');
+    const regex = /"([^"]*)"/g;
+    const result = withoutQuotes.replace(regex, (match, group) => {
+      return `"${group.replace(/,/g, '.')}"`;
+    });
+    return result;
+  }
+
   fillExpensesThenReturn(): ExpensesEntity[] {
     const transactionAmountIndex = 3;
     const transactionNameIndex = 1;
     const expensesFile = fs.readFileSync(
-      '/home/meto/Documents/financial-documents/September_2023.csv',
+      // '/home/meto/Documents/financial-documents/September_2023.csv',
+      'c:\\Users\\inteligenta\\Downloads\\September_2023.csv',
       'utf-8',
     );
     const expenseRows: string[] = expensesFile.split('\n');
     for (let i = 1; i < expenseRows.length - 1; i++) {
+      expenseRows[i] = this.replaceCommasBetweenDoubleQuoutesWithDots(expenseRows[i]);
+      expenseRows[i] = this.removeDoubleQuoutesFromRows(expenseRows[i]);
+      console.log(expenseRows[i]);
       const expenseColumns: string[] = expenseRows[i].split(',');
       const nameOfTransactionPlace: string =
         expenseColumns[transactionNameIndex];
       const amountOfTransaction: number = parseFloat(
-        expenseColumns[transactionAmountIndex],
+        expenseColumns[transactionAmountIndex].replace(".", "")
       );
+      console.log(nameOfTransactionPlace + " : " + amountOfTransaction)
       if (nameOfTransactionPlace && amountOfTransaction) {
         this.mapAndFillExpenses(nameOfTransactionPlace, amountOfTransaction);
       }

@@ -1,18 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
-import ExpensesEntity from './expenses.entity';
-import IncomeEntity from './income.entity';
-import NotMappedExpensesAndIncomeEntity from './notmapped.expenses.entity';
+import TransactionEntity from './transaction.entity';
+import { MonthData } from './month-data.entity';
 
 @Injectable()
 export class AppService {
-  expenses: ExpensesEntity[] = [];
-  income: IncomeEntity[] = [];
-  notMapped: NotMappedExpensesAndIncomeEntity[] = [];
-
-  getHello(): string {
-    return 'Hello';
-  }
+  filePathHome = '/home/meto/Documents/financial-documents/September_2023.csv';
+  filePathWork = 'c:\\Users\\inteligenta\\Downloads\\September_2023.csv';
+  expenses: TransactionEntity[] = [];
+  income: TransactionEntity[] = [];
+  notMapped: TransactionEntity[] = [];
 
   populateExpensesMap(): void {
     this.expenses.push({ name: 'ALIEXPRESS', value: 0.0 });
@@ -42,14 +39,17 @@ export class AppService {
 
   addNotMappedToOrdinaryMap(name: string, amount: number): void {
     let expense = this.expenses.find((e) => e.name === name);
-    console.log(amount);
     if (expense !== undefined) {
       expense.value += amount;
     } else {
       expense = { name: name, value: amount };
     }
-    console.log(expense)
     this.notMapped.push(expense);
+  }
+
+  addIncomeTransaticionToIncomeMap(name: string, amount: number) {
+    console.log(name + ' ' + amount);
+    this.income.push({ name: name, value: amount });
   }
 
   updateAmountForCategoryInIncome(category: string, amount: number) {
@@ -61,6 +61,13 @@ export class AppService {
     nameOfTransactionPlace: string,
     amountOfTransaction: number,
   ): void {
+    if (amountOfTransaction > 0) {
+      this.addIncomeTransaticionToIncomeMap(
+        nameOfTransactionPlace,
+        amountOfTransaction,
+      );
+      return;
+    }
     switch (nameOfTransactionPlace) {
       case 'B.S. 142 KR.PALANKA2 KR.PALANKA':
       case 'MAKPETROL AD SKOPJE':
@@ -222,14 +229,14 @@ export class AppService {
   }
 
   replaceCommasBetweenDoubleQuoutesWithDots(row: string): string {
-    const regex = /"([^"]*)"/g;  
+    const regex = /"([^"]*)"/g;
     const result = row.replace(regex, (match, group) => {
       return `"${group.replace(/,/g, '.')}"`;
     });
     return result;
   }
 
-  removeDoubleQuoutesFromRows(row : string) : string {
+  removeDoubleQuoutesFromRows(row: string): string {
     const withoutQuotes = row.replace(/"/g, '');
     const regex = /"([^"]*)"/g;
     const result = withoutQuotes.replace(regex, (match, group) => {
@@ -238,31 +245,26 @@ export class AppService {
     return result;
   }
 
-  fillExpensesThenReturn(): ExpensesEntity[] {
+  fillTransactions(): void {
     const transactionAmountIndex = 3;
     const transactionNameIndex = 1;
-    const expensesFile = fs.readFileSync(
-      // '/home/meto/Documents/financial-documents/September_2023.csv',
-      'c:\\Users\\inteligenta\\Downloads\\September_2023.csv',
-      'utf-8',
-    );
+    const expensesFile = fs.readFileSync(this.filePathHome, 'utf-8');
     const expenseRows: string[] = expensesFile.split('\n');
     for (let i = 1; i < expenseRows.length - 1; i++) {
-      expenseRows[i] = this.replaceCommasBetweenDoubleQuoutesWithDots(expenseRows[i]);
+      expenseRows[i] = this.replaceCommasBetweenDoubleQuoutesWithDots(
+        expenseRows[i],
+      );
       expenseRows[i] = this.removeDoubleQuoutesFromRows(expenseRows[i]);
-      console.log(expenseRows[i]);
       const expenseColumns: string[] = expenseRows[i].split(',');
       const nameOfTransactionPlace: string =
         expenseColumns[transactionNameIndex];
       const amountOfTransaction: number = parseFloat(
-        expenseColumns[transactionAmountIndex].replace(".", "")
+        expenseColumns[transactionAmountIndex],
       );
-      console.log(nameOfTransactionPlace + " : " + amountOfTransaction)
       if (nameOfTransactionPlace && amountOfTransaction) {
         this.mapAndFillExpenses(nameOfTransactionPlace, amountOfTransaction);
       }
     }
-    return this.expenses;
   }
 
   getExpenses() {
@@ -270,8 +272,12 @@ export class AppService {
     this.income = [];
     this.notMapped = [];
     this.populateExpensesMap();
-    const newMap = this.fillExpensesThenReturn();
-    console.log(this.notMapped);
-    return newMap;
+    this.fillTransactions();
+    const data: MonthData = {
+      expenses: this.expenses,
+      income: this.income,
+      notMapped: this.notMapped,
+    };
+    return data;
   }
 }

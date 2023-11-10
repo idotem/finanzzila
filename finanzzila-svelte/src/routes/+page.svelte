@@ -1,29 +1,27 @@
 <script>
-	import { onMount } from "svelte";
-	import { apiData, expenses } from "../store";
-	import AddMonth from "./AddMonth.svelte";
+	// @ts-nocheck
 
+	import { onMount } from "svelte";
+	import AddMonth from "./AddMonth.svelte";
 	import { writable } from "svelte/store";
 	import Modal, { bind } from "svelte-simple-modal";
 	const modal = writable(null);
-	// @ts-ignore
 	const showModal = () =>
-		// @ts-ignore
 		modal.set(bind(AddMonth, { message: "Add month", onCancel: () => cancelAddMonth() }));
 
 	function cancelAddMonth() {
 		modal.set(null);
 	}
 
+	let monthData = { expenses: [], income: [], notMapped: [] };
+
 	onMount(async () => {
 		fetch("http://localhost:3000/expenses")
 			.then((response) => response.json())
 			.then((data) => {
-				console.log(data);
-				apiData.set(data);
+				monthData = data;
 			})
 			.catch((error) => {
-				console.log(error);
 				return [];
 			});
 	});
@@ -44,74 +42,27 @@
 		<div class="innerExpenses">
 			<div class="monthCard">
 				<h4>Month: {month}</h4>
+				<h5>Income</h5>
 				<table>
-					{#each $expenses as expense}
+					{#each monthData.income as income}
+						<tr>
+							<td>{income.name}</td>
+							<td>{income.value} MKD</td>
+						</tr>
+					{/each}
+				</table>
+				<h5>Expenses</h5>
+				<table>
+					{#each monthData.expenses as expense}
 						<tr>
 							<td>{expense.name}</td>
 							<td>{expense.value} MKD</td>
 						</tr>
 					{/each}
 				</table>
-			</div>
-			<div class="monthCard">
-				<h4>Month: {month}</h4>
+				<h6>Not Mapped</h6>
 				<table>
-					{#each $expenses as expense}
-						<tr>
-							<td>{expense.name}</td>
-							<td>{expense.value} MKD</td>
-						</tr>
-					{/each}
-				</table>
-			</div>
-			<div class="monthCard">
-				<h4>Month: {month}</h4>
-				<table>
-					{#each $expenses as expense}
-						<tr>
-							<td>{expense.name}</td>
-							<td>{expense.value} MKD</td>
-						</tr>
-					{/each}
-				</table>
-			</div>
-			<div class="monthCard">
-				<h4>Month: {month}</h4>
-				<table>
-					{#each $expenses as expense}
-						<tr>
-							<td>{expense.name}</td>
-							<td>{expense.value} MKD</td>
-						</tr>
-					{/each}
-				</table>
-			</div>
-			<div class="monthCard">
-				<h4>Month:</h4>
-				<table>
-					{#each $expenses as expense}
-						<tr>
-							<td>{expense.name}</td>
-							<td>{expense.value} MKD</td>
-						</tr>
-					{/each}
-				</table>
-			</div>
-			<div class="monthCard">
-				<h4>Month: {month}</h4>
-				<table>
-					{#each $expenses as expense}
-						<tr>
-							<td>{expense.name}</td>
-							<td>{expense.value} MKD</td>
-						</tr>
-					{/each}
-				</table>
-			</div>
-			<div class="monthCard">
-				<h4>Month: {month}</h4>
-				<table>
-					{#each $expenses as expense}
+					{#each monthData.notMapped as expense}
 						<tr>
 							<td>{expense.name}</td>
 							<td>{expense.value} MKD</td>

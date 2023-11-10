@@ -6,18 +6,17 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AppService } from './app.service';
-import ExpensesEntity from './expenses.entity';
 import { Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { MonthData } from './month-data.entity';
 
 @Controller('/expenses')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getExpenses(): ExpensesEntity[] {
-    const expenses: ExpensesEntity[] = this.appService.getExpenses();
-    return expenses;
+  getExpenses(): MonthData {
+    return this.appService.getExpenses();
   }
 
   @Post('/upload')

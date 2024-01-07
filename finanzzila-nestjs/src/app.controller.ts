@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Param,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -8,15 +9,16 @@ import {
 import { AppService } from './app.service';
 import { Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { MonthData } from './month-data.entity';
+// import { MonthData } from './month-data.entity';
+import YearData from './year-data.entity';
 
 @Controller('/expenses')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
-  getExpenses(): MonthData {
-    return this.appService.getExpenses();
+  @Get(':year')
+  getExpenses(@Param('year') year: string): YearData {
+    return this.appService.getExpenses(year);
   }
 
   @Post('/upload')

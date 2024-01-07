@@ -15,8 +15,8 @@ type TransactionEntity = {
 
 export const monthData = derived(apiData, ($apiData: any) => {
 	console.log($apiData);
-	if ($apiData.expenses) {
-		return { expenses /*  */: null, income: null, notMapped: null };
+	if ($apiData) {
+		return $apiData;
 	}
 	return { expenses /*  */: null, income: null, notMapped: null };
 });

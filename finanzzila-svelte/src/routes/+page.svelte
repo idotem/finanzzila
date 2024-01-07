@@ -13,23 +13,23 @@
 		modal.set(null);
 	}
 
-	let monthData = { expenses: [], income: [], notMapped: [] };
+	let yearData = { months: [] };
 
 	onMount(async () => {
-		fetch("http://localhost:3000/expenses")
+		fetch("http://localhost:3000/expenses/2023")
 			.then((response) => response.json())
 			.then((data) => {
-				monthData = data;
+				yearData = data;
 			})
 			.catch((error) => {
+				console.log(error);
 				return [];
 			});
 	});
-	const month = "January";
 </script>
 
 <main>
-	<h1>Expenses</h1>
+	<h1>Transactions for 2023</h1>
 	<div class="expenses-buttons">
 		<div>
 			<Modal show={$modal}>
@@ -38,45 +38,53 @@
 			<button class="add-expense" type="submit">Add Expense</button>
 		</div>
 	</div>
-	<div class="mainExpenses">
-		<div class="innerExpenses">
-			<div class="monthCard">
-				<h4>Month: {month}</h4>
-				<h5>Income</h5>
-				<table>
-					{#each monthData.income as income}
-						<tr>
-							<td>{income.name}</td>
-							<td>{income.value} MKD</td>
-						</tr>
-					{/each}
-				</table>
-				<h5>Expenses</h5>
-				<table>
-					{#each monthData.expenses as expense}
-						<tr>
-							<td>{expense.name}</td>
-							<td>{expense.value} MKD</td>
-						</tr>
-					{/each}
-				</table>
-				<h6>Not Mapped</h6>
-				<table>
-					{#each monthData.notMapped as expense}
-						<tr>
-							<td>{expense.name}</td>
-							<td>{expense.value} MKD</td>
-						</tr>
-					{/each}
-				</table>
+	<div class="year">
+		{#each yearData.months as monthData}
+			<div class="mainExpenses">
+				<div class="innerExpenses">
+					<div class="monthCard">
+						<h4>Month: {monthData.name}</h4>
+						<h5>Income</h5>
+						<table>
+							{#each monthData.income as income}
+								<tr>
+									<td>{income.name}</td>
+									<td>{income.value} MKD</td>
+								</tr>
+							{/each}
+						</table>
+						<h5>Expenses</h5>
+						<table>
+							{#each monthData.expenses as expense}
+								<tr>
+									<td>{expense.name}</td>
+									<td>{expense.value} MKD</td>
+								</tr>
+							{/each}
+						</table>
+						<h6>Not Mapped</h6>
+						<table>
+							{#each monthData.notMapped as expense}
+								<tr>
+									<td>{expense.name}</td>
+									<td>{expense.value} MKD</td>
+								</tr>
+							{/each}
+						</table>
+					</div>
+				</div>
 			</div>
-		</div>
+		{/each}
 	</div>
 </main>
 
 <style>
-	.mainExpenses {
-		margin: auto;
+	.year {
+		/* text-align: center; */
+		display: table;
+	}
+	.year > * {
+		display: table-cell;
 	}
 	.innerExpenses {
 		text-align: center;

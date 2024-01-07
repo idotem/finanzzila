@@ -1,7 +1,10 @@
 import TransactionEntity from './transaction.entity';
 
-export type MonthData = {
+type MonthData = {
+  name: string;
   expenses: TransactionEntity[];
   income: TransactionEntity[];
   notMapped: TransactionEntity[];
 };
+
+export default MonthData;

@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import TransactionEntity from './transaction.entity';
-import { MonthData } from './month-data.entity';
+import MonthData from './month-data.entity';
+import YearData from './year-data.entity';
 
 @Injectable()
 export class AppService {
-  filePathHome = '/home/meto/Documents/financial-documents/September_2023.csv';
-  filePathWork = 'c:\\Users\\inteligenta\\Downloads\\September_2023.csv';
+  filePathHome =
+    '/home/meto/personal-projects/learning-nest/finanzzila/finanzzila-nestjs/monthly-reports/';
   expenses: TransactionEntity[] = [];
   income: TransactionEntity[] = [];
   notMapped: TransactionEntity[] = [];
@@ -29,7 +30,7 @@ export class AppService {
     this.expenses.push({ name: 'RESTAURANTS', value: 0.0 });
     this.expenses.push({ name: 'SNACKS_AND_WATER', value: 0.0 });
     this.expenses.push({ name: 'SOFTWARE_AND_HARDWARE', value: 0.0 });
-    this.expenses.push({ name: 'UTILITIES', value: 0.0 });
+    this.expenses.push({ name: 'EVERYTHING_STORE', value: 0.0 });
   }
 
   updateAmountForCategoryInExpenses(category: string, amount: number): void {
@@ -43,21 +44,27 @@ export class AppService {
       expense.value += amount;
     } else {
       expense = { name: name, value: amount };
+      this.notMapped.push(expense);
     }
-    this.notMapped.push(expense);
   }
 
   addIncomeTransaticionToIncomeMap(name: string, amount: number) {
-    console.log(name + ' ' + amount);
     this.income.push({ name: name, value: amount });
   }
 
   updateAmountForCategoryInIncome(category: string, amount: number) {
     const expense = this.expenses.find((e) => e.name === category);
-    expense.value = expense.value + amount;
+    expense.value += amount;
   }
 
-  mapAndFillExpenses(
+  checkIfNameOfTransactionContainsGivenWord(
+    nameOfTransactionPlace: string,
+    wordThatsContained: string,
+  ): boolean {
+    return nameOfTransactionPlace.includes(wordThatsContained);
+  }
+
+  mapAndFillMaps(
     nameOfTransactionPlace: string,
     amountOfTransaction: number,
   ): void {
@@ -68,12 +75,23 @@ export class AppService {
       );
       return;
     }
-    switch (nameOfTransactionPlace) {
-      case 'B.S. 142 KR.PALANKA2 KR.PALANKA':
-      case 'MAKPETROL AD SKOPJE':
-      case 'BP KRIVA PALANKA 2 142 KRIVA PALANKA':
-      case 'BP PARTIZANSKA 002 SKOPJE':
-      case 'BEN. STANICA OKTA SKOPJE': {
+    switch (true) {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'BP ',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'B.S. ',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'MAKPETROL',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'OKTA',
+      ): {
         if (Math.abs(amountOfTransaction) >= 1000) {
           this.updateAmountForCategoryInExpenses(
             'FUEL_AND_CAR',
@@ -91,50 +109,137 @@ export class AppService {
         }
         break;
       }
-      case 'BON APETIT SKOPJE':
-      case 'FURNA SILBO-CENTAR SKOPJE':
-      case 'RESTORAN MIDA SKOPJE':
-      case 'ROJAL BURGER D.MALO SKOPJE':
-      case 'M S BEJKERI CENTAR SKOPJE':
-      case 'BIFE 1 SKOPJE':
-      case 'VRSHNIK 7 SKOPJE':
-      case 'MESARNICA ANDREJA SKOPJE':
-      case 'GIRO VELADA SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'BON APETIT',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'SILBO-CENTAR',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'RESTORAN MIDA SKOPJE',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'ROJAL BURGER',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'M S BEJKERI',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'BIFE',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'GURMAN',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'VRSHNIK',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'MESARNICA',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'GIRO',
+      ): {
         this.updateAmountForCategoryInExpenses('FOOD', amountOfTransaction);
         break;
       }
-      case 'TINEKS MT DOOEL SKOPJE':
-      case 'CENA TREJD 2014 SKOPJE':
-      case 'KAM 76-MLECHEN SKOPJE':
-      case 'PAMA MARKETI SKOPJE':
-      case 'Ramstor Makedonija SKOPJE':
-      case 'VERO 2 TAFTALIDZE K7 SKOPJE':
-      case 'VERO 9 K.8 SKOPJE':
-      case 'STEP MARKETI 2 SKOPJE':
-      case 'GRANDPROM ZUR DOO SKOPJE':
-      case 'MARKET NIKOLOVI IM SVETI NIKOLE':
-      case 'SUPER TINEKS 13 SKOPJE':
-      case 'STOKOMAK MLECEN BR.8 SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'TINEKS',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'LA NOI',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'CENA TREJD',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'KAM',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'MARKETI',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'Ramstor',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'RAMSTOR',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'VERO',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'ZUR',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'MARKET',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'STOKOMAK',
+      ): {
         this.updateAmountForCategoryInExpenses('MARKETS', amountOfTransaction);
         break;
       }
-      case '0230706724686': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        '230706724686',
+      ): {
         this.updateAmountForCategoryInExpenses(
           'INVESTING_AND_FEES',
           amountOfTransaction,
         );
         break;
       }
-      case 'LITERATURA SITI MOL SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'LITERATURA',
+      ): {
         this.updateAmountForCategoryInExpenses('BOOKS', amountOfTransaction);
         break;
       }
-      case 'CENTRAL PERK KOFI DO SKOPJE':
-      case 'MINT-KICEN BAR DOOEL KRIVA PALANKA':
-      case 'KRIGLA BAR KRIVA PALANKA':
-      case 'KANJON MATKA HOTEL SKOPJE':
-      case 'REVIJA BAR FOOD SKOPJE':
-      case 'MADAL BAL KAFE DZOJ KA SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'KOFI',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'BAR',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'HOTEL',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'KAFE',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'LITERATURA',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'LITERATURA',
+      ): {
         if (amountOfTransaction <= 300) {
           this.updateAmountForCategoryInExpenses(
             'CAFE_AND_BARS',
@@ -148,58 +253,136 @@ export class AppService {
         }
         break;
       }
-      case 'DM DROGERIE MARKT 8 SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'DM DROGERIE',
+      ): {
         this.updateAmountForCategoryInExpenses('HYGIENE', amountOfTransaction);
         break;
       }
-      case 'CINEPLEXX-CITY MALL SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'CINEPLEXX',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'KUPIKARTA',
+      ): {
         this.updateAmountForCategoryInExpenses(
           'ENTERTAINMENT',
           amountOfTransaction,
         );
         break;
       }
-      case 'VAIKIKI RETAIL MK DO SKOPJE':
-      case 'ZARA EAST GATE SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'VAIKIKI',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'ZARA',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'NJU JORKER',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'KOTON',
+      ): {
         this.updateAmountForCategoryInExpenses(
           'CLOTHES_AND_WEARABLES',
           amountOfTransaction,
         );
         break;
       }
-      case 'ANHOC DOOEL SKOPJE':
-      case 'NEPTUN-CITY MALL SKOPJE':
-      case 'SETEK KRIVA PALANKA KRIVA PALANKA':
-      case 'SETEK SITI MOL SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'ANHOC',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'NEPTUN',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'SETEK',
+      ): {
         this.updateAmountForCategoryInExpenses(
           'SOFTWARE_AND_HARDWARE',
           amountOfTransaction,
         );
         break;
       }
-      case 'WWW.ALIEXPRESS.COM LUXEMBOURG':
-      case 'WWW.ALIEXPRESS.COM LONDON':
-      case 'aliexpress Luxembourg': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'ALIEXPRESS',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'aliexpress',
+      ): {
         this.updateAmountForCategoryInExpenses(
           'ALIEXPRESS',
           amountOfTransaction,
         );
         break;
       }
-      case 'VIOLA NASTEL SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'APTEKA',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'VIOLA',
+      ): {
         this.updateAmountForCategoryInExpenses('MEDICAL', amountOfTransaction);
         break;
       }
-      case 'KBSATM KRIVA PALANKA SKOPJE':
-      case 'KBSATM CITY MALL SK SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'KBSATM',
+      ): {
         this.updateAmountForCategoryInExpenses('ATM', amountOfTransaction);
         break;
       }
-      case 'PANDORA SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'CVEKARNICA',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'PANDORA',
+      ): {
         this.updateAmountForCategoryInExpenses('GIFTS', amountOfTransaction);
         break;
       }
-      case 'IKNOW.UKIM.MK SKOPJE': {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'JUSK',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'JUMBO',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'BAZARO',
+      ): {
+        this.updateAmountForCategoryInExpenses(
+          'EVERYTHING_STORE',
+          amountOfTransaction,
+        );
+        break;
+      }
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'IKNOW.UKIM.MK',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'EKVUS',
+      ): {
         this.updateAmountForCategoryInExpenses(
           'EDUCATION',
           amountOfTransaction,
@@ -220,18 +403,25 @@ export class AppService {
     nameOfTransactionPlace: string,
     amountOfTransaction: number,
   ) {
-    switch (nameOfTransactionPlace) {
-      case 'ЕУРО-ЛЕВЕЛ ДОО Скопје':
+    switch (true) {
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'ЕУРО-ЛЕВЕЛ',
+      ):
+      case this.checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace,
+        'ИНТЕЛИГЕНТА',
+      ):
         this.updateAmountForCategoryInIncome('WAGE', amountOfTransaction);
       default:
         this.updateAmountForCategoryInIncome('OTHER', amountOfTransaction);
     }
   }
 
-  replaceCommasBetweenDoubleQuoutesWithDots(row: string): string {
+  replaceCommasBetweenDoubleQuoutesWithEmptyString(row: string): string {
     const regex = /"([^"]*)"/g;
-    const result = row.replace(regex, (match, group) => {
-      return `"${group.replace(/,/g, '.')}"`;
+    const result = row.replace(regex, (group) => {
+      return `"${group.replace(/,/g, '')}"`;
     });
     return result;
   }
@@ -239,45 +429,85 @@ export class AppService {
   removeDoubleQuoutesFromRows(row: string): string {
     const withoutQuotes = row.replace(/"/g, '');
     const regex = /"([^"]*)"/g;
-    const result = withoutQuotes.replace(regex, (match, group) => {
+    const result = withoutQuotes.replace(regex, (group) => {
       return `"${group.replace(/,/g, '.')}"`;
     });
     return result;
   }
 
-  fillTransactions(): void {
+  fillTransactions(transactionFile: string): void {
     const transactionAmountIndex = 3;
     const transactionNameIndex = 1;
-    const expensesFile = fs.readFileSync(this.filePathHome, 'utf-8');
-    const expenseRows: string[] = expensesFile.split('\n');
-    for (let i = 1; i < expenseRows.length - 1; i++) {
-      expenseRows[i] = this.replaceCommasBetweenDoubleQuoutesWithDots(
-        expenseRows[i],
-      );
-      expenseRows[i] = this.removeDoubleQuoutesFromRows(expenseRows[i]);
-      const expenseColumns: string[] = expenseRows[i].split(',');
-      const nameOfTransactionPlace: string =
-        expenseColumns[transactionNameIndex];
-      const amountOfTransaction: number = parseFloat(
-        expenseColumns[transactionAmountIndex],
+    // const transactionFile = fs.readFileSync(this.filePathHome, 'utf-8');
+    const rows: string[] = transactionFile.split('\n');
+    for (let i = 1; i < rows.length - 1; i++) {
+      rows[i] = this.replaceCommasBetweenDoubleQuoutesWithEmptyString(rows[i]);
+      rows[i] = this.removeDoubleQuoutesFromRows(rows[i]);
+      const columns: string[] = rows[i].split(',');
+      const nameOfTransactionPlace: string = columns[transactionNameIndex];
+      const amountOfTransaction: number = parseInt(
+        columns[transactionAmountIndex],
       );
       if (nameOfTransactionPlace && amountOfTransaction) {
-        this.mapAndFillExpenses(nameOfTransactionPlace, amountOfTransaction);
+        this.mapAndFillMaps(nameOfTransactionPlace, amountOfTransaction);
       }
     }
   }
 
-  getExpenses() {
-    this.expenses = [];
-    this.income = [];
-    this.notMapped = [];
-    this.populateExpensesMap();
-    this.fillTransactions();
-    const data: MonthData = {
-      expenses: this.expenses,
-      income: this.income,
-      notMapped: this.notMapped,
-    };
-    return data;
+  getMonthName(monthNumber: number): string {
+    switch (monthNumber) {
+      case 1:
+        return 'January';
+      case 2:
+        return 'February';
+      case 3:
+        return 'March';
+      case 4:
+        return 'April';
+      case 5:
+        return 'May';
+      case 6:
+        return 'June';
+      case 7:
+        return 'July';
+      case 8:
+        return 'August';
+      case 9:
+        return 'September';
+      case 10:
+        return 'October';
+      case 11:
+        return 'November';
+      case 12:
+        return 'December';
+    }
+  }
+
+  getExpenses(year: string): YearData {
+    let file: string;
+    const allData: YearData = { months: [] };
+    for (let i = 1; i <= 12; i++) {
+      try {
+        file = fs.readFileSync(
+          this.filePathHome + year + '/' + i + '.csv',
+          'utf-8',
+        );
+      } catch (e) {
+        continue;
+      }
+      this.expenses = [];
+      this.income = [];
+      this.notMapped = [];
+      this.populateExpensesMap();
+      this.fillTransactions(file);
+      const data: MonthData = {
+        name: this.getMonthName(i),
+        expenses: this.expenses,
+        income: this.income,
+        notMapped: this.notMapped,
+      };
+      allData.months.push(data);
+    }
+    return allData;
   }
 }

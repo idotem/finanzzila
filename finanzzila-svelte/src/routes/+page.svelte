@@ -20,12 +20,14 @@
 			.then((response) => response.json())
 			.then((data) => {
 				yearData = data;
+                console.log(data)
 			})
 			.catch((error) => {
 				console.log(error);
 				return [];
 			});
 	});
+    
 </script>
 
 <main>
@@ -52,6 +54,10 @@
 									<td>{income.value} MKD</td>
 								</tr>
 							{/each}
+                            <tr>
+                                <td class="total">TOTAL EXPENSES:</td>
+                                <td class="total">{monthData.incomeSum} MKD</td>
+                            </tr>
 						</table>
 						<h5>Expenses</h5>
 						<table>
@@ -61,6 +67,10 @@
 									<td>{expense.value} MKD</td>
 								</tr>
 							{/each}
+                            <tr>
+                                <td class="total">TOTAL EXPENSES:</td>
+                                <td class="total">{monthData.expensesSum} MKD</td>
+                            </tr>
 						</table>
 						<h6>Not Mapped</h6>
 						<table>
@@ -70,6 +80,10 @@
 									<td>{expense.value} MKD</td>
 								</tr>
 							{/each}
+                            <tr>
+                                <td class="total">TOTAL NOT MAPPED:</td>
+                                <td class="total">{monthData.notMappedSum} MKD</td>
+                            </tr>
 						</table>
 					</div>
 				</div>
@@ -114,4 +128,7 @@
 		padding-right: 20px;
 		text-align: left;
 	}
+    .total {
+        font-weight: 700;
+    }
 </style>

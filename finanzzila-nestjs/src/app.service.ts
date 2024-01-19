@@ -505,6 +505,16 @@ export class AppService {
         expenses: this.expenses,
         income: this.income,
         notMapped: this.notMapped,
+        expensesSum: this.expenses.reduce((prev, expense) => { 
+            return {name: expense.name, value: (prev.value + expense.value) }}).value,
+        
+        incomeSum: this.income.reduce((prev, expense) => { 
+            return {name: expense.name, value: (prev.value + expense.value) }}).value,
+        
+        notMappedSum: this.notMapped.reduce((prev, expense) => { 
+            return {name: expense.name, value: (prev.value + expense.value) }}).value,
+        
+                                          
       };
       allData.months.push(data);
     }

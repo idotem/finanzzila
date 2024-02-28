@@ -10,7 +10,7 @@ import { AppService } from './app.service';
 import { Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 // import { MonthData } from './month-data.entity';
-import YearData from './year-data.entity';
+import YearData from './old-transaction/year-data.entity';
 
 @Controller('/expenses')
 export class AppController {

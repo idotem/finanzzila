@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
-import TransactionEntity from './transaction.entity';
-import MonthData from './month-data.entity';
-import YearData from './year-data.entity';
+import TransactionEntity from './old-transaction/transaction.entity.js';
+import MonthData from './old-transaction/month-data.entity.js';
+import YearData from './old-transaction/year-data.entity.js';
 
 @Injectable()
 export class AppService {

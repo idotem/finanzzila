@@ -1,4 +1,4 @@
-import TransactionEntity from './transaction.entity';
+import TransactionEntity from './old-trans.type';
 
 type MonthData = {
   name: string;

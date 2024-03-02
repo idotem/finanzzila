@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
-import TransactionEntity from './old-transaction/transaction.entity.js';
+import TransactionEntity from './old-transaction/old-trans.type.js';
 import MonthData from './old-transaction/month-data.entity.js';
 import YearData from './old-transaction/year-data.entity.js';
 
@@ -513,8 +513,6 @@ export class AppService {
         
         notMappedSum: this.notMapped.reduce((prev, expense) => { 
             return {name: expense.name, value: (prev.value + expense.value) }}).value,
-        
-                                          
       };
       allData.months.push(data);
     }

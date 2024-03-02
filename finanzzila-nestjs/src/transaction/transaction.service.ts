@@ -1,28 +1,56 @@
 import { Injectable } from '@nestjs/common';
 import { Workbook } from 'exceljs';
-import TransactionEntity from './entities/transaction.entity'
-import { TransactionCategory } from './entities/category.entity';
+import Transaction from './entities/transaction.entity'
+import { TransactionCategory } from '../transaction-category/entity/transaction-category.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { TransactionCategoryService } from 'src/transaction-category/transaction-category.service';
+import { TransactionFilterDto } from './dto/filter-transaction.dto';
+import * as fs from 'fs';
 
 @Injectable()
 export class TransactionService {
+    constructor(
+        @InjectRepository(Transaction)
+        private readonly transactionRepository: Repository<Transaction>,
+        private readonly transactionCategoryService: TransactionCategoryService,
+    ){}
 
-    populateTransactions(file: Express.Multer.File) {
+    async checkIfFileAlreadyUploaded(fileName: string) : Promise<boolean> {
+        const uploadedFiles = await this.findAllUploadedReports(); 
+        if(uploadedFiles.find((f) => f === fileName)){
+            console.log('File already uploaded and transactions entered: ',
+                       fileName); 
+            return true;
+        }
+        return false;
+    }
+
+    async populateTransactions(file: Express.Multer.File) : Promise<any>{
+        if(await this.checkIfFileAlreadyUploaded(file.originalname)){
+            return;
+        };
+        const categories = await this.transactionCategoryService.findAll();
+        var transactions : Transaction[] = []
         const workbook = new Workbook();
-        workbook.xlsx.load(file.buffer)
+        await workbook.xlsx.load(file.buffer)
         .then(function() {
             var worksheet = workbook.getWorksheet('Sheet1');
             worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
-                const category : TransactionCategory = getCategory(
-                    row.values[2].toString(), row.values[4]);
+                if(rowNumber === 1){
+                    return;
+                }
+                const transDate : Date = row.values[1];
+                const transName : string = row.values[2].toString();
+                const transAmount : number = row.values[4];
+                let category : TransactionCategory = getCategory(transName, transAmount);
+                const transaction = new Transaction(transDate, transName,
+                                                    transAmount, category) 
                 if(category){
-                    const transaction: TransactionEntity = 
-                        new TransactionEntity(row.values[1],
-                                              row.values[2].toString(),
-                                              row.values[4],
-                                              category) 
-                    console.log(transaction);
+                    transactions.push(transaction);
                 }
             });
+
             function checkIfNameOfTransactionContainsGivenWord(
                 nameOfTransactionPlace: string,
                 wordThatsContained: string,
@@ -35,11 +63,14 @@ export class TransactionService {
                 amountOfTransaction: number,
             ): TransactionCategory { 
                 if(!nameOfTransactionPlace || !amountOfTransaction){
-                    console.log("Name or amount are undefined");
-                    return undefined;
+                    console.log("Ignored or invalid transaction with name: ", 
+                                nameOfTransactionPlace, 
+                                "and amount: ",
+                                amountOfTransaction);
+                                return undefined;
                 }
                 if (amountOfTransaction > 0) {
-                    return TransactionCategory.INCOME;
+                    return categories.find((c) => c.name === 'INCOME');
                 }
                 switch (true) {
                     case checkIfNameOfTransactionContainsGivenWord(
@@ -58,7 +89,7 @@ export class TransactionService {
                             nameOfTransactionPlace,
                             'OKTA',
                     ): {
-                        return TransactionCategory.FUEL_AND_CAR;
+                        return categories.find((c) => c.name === 'FUEL_AND_CAR');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -99,8 +130,12 @@ export class TransactionService {
                         case checkIfNameOfTransactionContainsGivenWord(
                             nameOfTransactionPlace,
                             'GIRO',
+                    ):
+                        case checkIfNameOfTransactionContainsGivenWord(
+                            nameOfTransactionPlace,
+                            'POPOVSKI',
                     ): {
-                        return TransactionCategory.FOOD;
+                        return categories.find((c) => c.name === 'FOOD');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -146,19 +181,25 @@ export class TransactionService {
                             nameOfTransactionPlace,
                             'STOKOMAK',
                     ): {
-                        return TransactionCategory.FOOD;
+                        return categories.find((c) => c.name === 'MARKET');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
                         '230706724686',
                     ): {
-                        return TransactionCategory.INVESTING_AND_FEES;
+                        return categories.find((c) => c.name === 'INVESTING_AND_FEES');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
                         'LITERATURA',
                     ): {
-                        return TransactionCategory.BOOKS;
+                        return categories.find((c) => c.name === 'BOOKS');
+                    }
+                    case checkIfNameOfTransactionContainsGivenWord(
+                        nameOfTransactionPlace,
+                        'КОМЕРЦИЈАЛНА',
+                    ): {
+                        return categories.find((c) => c.name === 'COMMERCIAL_BANK');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -173,15 +214,15 @@ export class TransactionService {
                             'KAFE',
                     ):
                         if (amountOfTransaction <= 300) {
-                        return TransactionCategory.CAFE_AND_BARS;
+                        return categories.find((c) => c.name === 'CAFE_AND_BARS');
                     } else {
-                        return TransactionCategory.RESTAURANTS;
+                        return categories.find((c) => c.name === 'RESTAURANTS');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
                         'DM DROGERIE',
                     ): {
-                        return TransactionCategory.HYGIENE;
+                        return categories.find((c) => c.name === 'HYGIENE');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -191,7 +232,7 @@ export class TransactionService {
                             nameOfTransactionPlace,
                             'KUPIKARTA',
                     ): {
-                        return TransactionCategory.ENTERTAINMENT;
+                        return categories.find((c) => c.name === 'ENTERTAINMENT');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -209,7 +250,8 @@ export class TransactionService {
                             nameOfTransactionPlace,
                             'KOTON',
                     ): {
-                        return TransactionCategory.CLOTHES_AND_WEARABLES;
+                        return categories
+                        .find((c) => c.name === 'CLOTHES_AND_WEARBLES');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -223,7 +265,8 @@ export class TransactionService {
                             nameOfTransactionPlace,
                             'SETEK',
                     ): {
-                        return TransactionCategory.SOFTWARE_AND_HARDWARE;
+                        return categories
+                        .find((c) => c.name === 'SOFTWARE_AND_HARDWARE');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -233,7 +276,7 @@ export class TransactionService {
                             nameOfTransactionPlace,
                             'aliexpress',
                     ): {
-                        TransactionCategory.ALIEXPRESS;
+                        return categories.find((c) => c.name === 'ALIEXPRESS');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -243,13 +286,13 @@ export class TransactionService {
                             nameOfTransactionPlace,
                             'VIOLA',
                     ): {
-                        return TransactionCategory.MEDICAL;
+                        return categories.find((c) => c.name === 'MEDICAL');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
                         'KBSATM',
                     ): {
-                        return TransactionCategory.ATM;
+                        return categories.find((c) => c.name === 'ATM');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -259,7 +302,7 @@ export class TransactionService {
                             nameOfTransactionPlace,
                             'PANDORA',
                     ): {
-                        return TransactionCategory.GIFTS;
+                        return categories.find((c) => c.name === 'GIFTS');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -273,7 +316,7 @@ export class TransactionService {
                             nameOfTransactionPlace,
                             'BAZARO',
                     ): {
-                        return TransactionCategory.EVERYTHING_STORE;
+                        return categories.find((c) => c.name === 'EVERYTHING_STORE');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -283,18 +326,55 @@ export class TransactionService {
                             nameOfTransactionPlace,
                             'EKVUS',
                     ): {
-                        return TransactionCategory.EDUCATION;
+                        return categories.find((c) => c.name === 'EDUCATION');
                     }
                     default: {
-                        return TransactionCategory.NOT_MAPPED;
+                        return categories.find((c) => c.name === 'NOT_MAPPED');
                     }
                 }
             }
         });
+        this.transactionRepository.save(transactions);
 
+        fs.writeFileSync(`./uploaded-reports/${file.originalname}`, file.buffer);
     }
 
+    findAllFiltered(transactionFilter: TransactionFilterDto) :Promise<Transaction[]>{
+        const queryBuilder = this.transactionRepository.
+            createQueryBuilder('transaction').
+            leftJoinAndSelect('transaction.category', 'category');
+        if (transactionFilter.categoryId) {
+            queryBuilder.andWhere('transaction.category.id = :categoryId', 
+                                  { categoryId: transactionFilter.categoryId});
+        }
+        if (transactionFilter.dateFrom && transactionFilter.dateTo) {
+            queryBuilder.andWhere('transaction.date BETWEEN :dateFrom AND :dateTo', {
+                dateFrom: transactionFilter.dateFrom,
+                dateTo: transactionFilter.dateTo,
+            });
+        } else if(transactionFilter.dateFrom) {
+            queryBuilder.andWhere('transaction.date >= :dateFrom', {
+                dateFrom: transactionFilter.dateFrom,
+            });
+        } else if(transactionFilter.dateTo) {
+            queryBuilder.andWhere('transaction.date <= :dateTo', {
+                dateTo: transactionFilter.dateTo,
+            });
+        }
+        return queryBuilder.getMany();
+    }
 
-
-
+    async findAllUploadedReports(): Promise<string[]> {
+        const folderPath = './uploaded-reports/'
+        return new Promise<string[]>((resolve, reject) => {
+            fs.readdir(folderPath, (err, files) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(files);
+                }
+            });
+        });
+    }
+        
 }

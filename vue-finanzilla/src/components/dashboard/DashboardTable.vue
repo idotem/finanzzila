@@ -27,38 +27,12 @@ console.log(transactions);
 </script>
 
 <template>
-  <main>
+  <main class="bg-green-950 text-white">
 
     <h1>{{ titleParent }}</h1>
     <hr>
     <h2>Transactions</h2>
-    <!-- <v-table v-if="transactions.length !== 0">
-      <thead>
-        <tr>
-          <th class="text-left">
-            Name
-          </th>
-          <th class="text-left">
-            Name
-          </th>
-          <th class="text-left">
-            Amount
-          </th>
-          <th class="text-left">
-            Category
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in transactions" :key="item.name">
-          <td>{{ item.date }}</td>
-          <td>{{ item.nameOfPlace }}</td>
-          <td>{{ item.amount }}</td>
-          <td>{{ item.category.name }}</td>
-        </tr>
-      </tbody>
-    </v-table> -->
-    <v-data-table v-if="transactions" :items="transactions"></v-data-table>
+    <v-data-table class="bg-green-950 text-white" v-if="transactions" :items="transactions"></v-data-table>
     <p v-else-if="errorMessage">{{ errorMessage }}</p>
     <p v-else>Loading..</p>
   </main>

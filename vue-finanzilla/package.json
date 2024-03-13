@@ -34,6 +34,7 @@
     "eslint": "^8.49.0",
     "eslint-plugin-vue": "^9.17.0",
     "jsdom": "^24.0.0",
+    "material-design-icons-iconfont": "^6.7.0",
     "npm-run-all2": "^6.1.1",
     "postcss": "^8.4.35",
     "prettier": "^3.0.3",

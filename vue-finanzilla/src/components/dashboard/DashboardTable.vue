@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { onMounted, ref } from 'vue';
-import { VDataTable } from 'vuetify/components';
+import { VDataTable, VCard } from 'vuetify/components';
 const props = defineProps<{
   title: string
 }>()
@@ -27,14 +27,18 @@ console.log(transactions);
 </script>
 
 <template>
-  <main class="bg-green-950 text-white">
+  <main>
 
-    <h1>{{ titleParent }}</h1>
-    <hr>
-    <h2>Transactions</h2>
-    <v-data-table class="bg-green-950 text-white" v-if="transactions" :items="transactions"></v-data-table>
-    <p v-else-if="errorMessage">{{ errorMessage }}</p>
-    <p v-else>Loading..</p>
+    <v-card>
+      <h1 class="text-3xl">{{ titleParent }}</h1>
+      <div class="w-2/4 h-96 bg-black mt-10 mb-10"></div>
+
+      <h1>Transactions</h1>
+      <v-data-table color="black" class="border-2 border-black" v-if="transactions"
+        :items="transactions"></v-data-table>
+      <p v-else-if="errorMessage">{{ errorMessage }}</p>
+      <p v-else>Loading..</p>
+    </v-card>
   </main>
 </template>
 

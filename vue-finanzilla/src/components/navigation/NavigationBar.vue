@@ -1,19 +1,18 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
-import { VNavigationDrawer, VList, VListItem } from 'vuetify/components';
+import { VNavigationDrawer, VList, VListItem, VListItemTitle, VListItemMedia } from 'vuetify/components';
 </script>
 
 <template>
-    <v-navigation-drawer floating permanent class="bg-green-950 text-white">
-        <v-list density="compact" nav>
-            <v-list-item prepend-icon="mdi-view-dashboard" title="Home" value="home">
-                <RouterLink to="/"></RouterLink>
+    <v-navigation-drawer app rail expand-on-hover color='#009688'>
+        <v-list density="comfortable" nav class="bg-teal-600">
+            <v-list-item prepend-icon="dashboard" to="/">
+                Dashboard
             </v-list-item>
-            <v-list-item prepend-icon="mdi-forum" title="About" value="about">
-                <RouterLink to="/about"></RouterLink>
+            <v-list-item prepend-icon=" information" to="/about">
+                About
             </v-list-item>
         </v-list>
     </v-navigation-drawer>
 </template>
 
-<style></style>
+<style scoped></style>

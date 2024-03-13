@@ -14,14 +14,14 @@ export class TransactionService {
         @InjectRepository(Transaction)
         private readonly transactionRepository: Repository<Transaction>,
         private readonly transactionCategoryService: TransactionCategoryService,
-    ){}
+    ) {}
 
-    async checkIfFileAlreadyUploaded(fileName: string) : Promise<boolean> {
-        const uploadedFiles = await this.findAllUploadedReports(); 
+    async checkIfFileAlreadyUploaded(fileName: string): Promise<boolean> {
+        const uploadedFiles = await this.findAllUploadedReports();
         if(uploadedFiles.find((f) => f === fileName)){
             console.log('File already uploaded and transactions entered: ',
-                       fileName); 
-            return true;
+                        fileName); 
+                        return true;
         }
         return false;
     }
@@ -376,5 +376,5 @@ export class TransactionService {
             });
         });
     }
-        
+
 }

@@ -4,18 +4,18 @@ import { Entity, Column, OneToMany, PrimaryGeneratedColumn, JoinColumn } from 't
 @Entity()
 export class TransactionCategory {
 
-  @PrimaryGeneratedColumn()
-  id: number;
+    @PrimaryGeneratedColumn()
+    id: number;
 
-  @Column({name: 'name', unique: true})
-  name: string;
+    @Column({name: 'name', unique: true})
+    name: string;
 
-  @OneToMany(() => Transaction, transaction => transaction.category)
-  @JoinColumn({name: 'transaction_id'})
-  transactions: Transaction[];
+    @OneToMany(() => Transaction, transaction => transaction.category)
+    @JoinColumn({name: 'transaction_id'})
+    transactions: Transaction[];
 
-  constructor(name: string) {
-      this.name = name;
-  }
+    constructor(name: string) {
+        this.name = name;
+    }
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { VNavigationDrawer, VList, VListItem, VListItemTitle, VListItemMedia } from 'vuetify/components';
+import { VNavigationDrawer, VList, VListItem } from 'vuetify/components';
 </script>
 
 <template>

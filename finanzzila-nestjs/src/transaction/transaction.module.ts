@@ -12,4 +12,4 @@ import { TransactionCategory } from 'src/transaction-category/entity/transaction
     controllers: [TransactionController],
     providers: [TransactionService, TransactionCategoryService],
 })
-export class TransactionModule {}
+export class TransactionModule { }

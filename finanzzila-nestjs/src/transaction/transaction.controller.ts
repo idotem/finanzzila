@@ -11,7 +11,7 @@ export class TransactionController {
 
     @Post('upload')
     @UseInterceptors(FileInterceptor('file'))
-    uploadFile(@UploadedFile() file: Express.Multer.File) : void {
+    uploadFile(@UploadedFile() file: Express.Multer.File): void {
         this.transactionService.populateTransactions(file);
     }
 
@@ -19,9 +19,10 @@ export class TransactionController {
     async findAllFiltered(@Query() filterTransaction: TransactionFilterDto) : Promise<Transaction[]> {
         const t = await this.transactionService.findAllFiltered(filterTransaction);
         return t;
-    } 
+    }
+
     @Get('uploaded-reports')
     async findAllUploadedReports() {
         return await this.transactionService.findAllUploadedReports();
-    } 
+    }
 }

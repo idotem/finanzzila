@@ -19,9 +19,8 @@ export class TransactionService {
     async checkIfFileAlreadyUploaded(fileName: string): Promise<boolean> {
         const uploadedFiles = await this.findAllUploadedReports();
         if(uploadedFiles.find((f) => f === fileName)){
-            console.log('File already uploaded and transactions entered: ',
-                        fileName); 
-                        return true;
+            console.log('File already uploaded and transactions entered: ', fileName); 
+            return true;
         }
         return false;
     }
@@ -31,11 +30,11 @@ export class TransactionService {
             return;
         };
         const categories = await this.transactionCategoryService.findAll();
-        var transactions : Transaction[] = []
+        const transactions : Transaction[] = []
         const workbook = new Workbook();
         await workbook.xlsx.load(file.buffer)
         .then(function() {
-            var worksheet = workbook.getWorksheet('Sheet1');
+            const worksheet = workbook.getWorksheet('Sheet1');
             worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
                 if(rowNumber === 1){
                     return;
@@ -43,7 +42,7 @@ export class TransactionService {
                 const transDate : Date = row.values[1];
                 const transName : string = row.values[2].toString();
                 const transAmount : number = row.values[4];
-                let category : TransactionCategory = getCategory(transName, transAmount);
+                const category : TransactionCategory = getCategory(transName, transAmount);
                 const transaction = new Transaction(transDate, transName,
                                                     transAmount, category) 
                 if(category){

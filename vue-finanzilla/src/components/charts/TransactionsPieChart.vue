@@ -1,18 +1,23 @@
 <script setup lang="ts">
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale } from 'chart.js'
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { Pie } from 'vue-chartjs'
-import type Transaction from '../model/Transaction';
+import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
-import { computed, onMounted, ref } from 'vue';
-import CategoryService from '../service/CategoryService';
-import TransactionService from '../service/TransactionService';
+import { ref, watch } from 'vue';
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
+const props = defineProps({
+    transactionsProp: {
+        type: Array as () => Transaction[],
+        required: true
+    },
+    title: {
+        type: String,
+        required: false,
+    }
 
-const props = defineProps<{
-    title: string,
-}>()
+});
 
 const categories = ref<TransactionCategory[]>([]);
 const transactions = ref<Transaction[]>([]);
@@ -20,22 +25,12 @@ const errorMessage = ref<string>('');
 const groupedTransactions = ref<GroupedTransactions | undefined>(undefined)
 const data = ref();
 
-onMounted(async () => {
-    try {
-        await fetchCategoriesAndTransactions();
-    } catch (error) {
-        errorMessage.value = 'Error fetching data';
-        console.error('Error fetching data:', error);
-    }
-});
 
-const fetchCategoriesAndTransactions = async () => {
-    TransactionService.getAllFiltered().then((tr: Transaction[]) => {
-        transactions.value = tr;
-        categories.value = tr.map((t) => t.category);
-        groupTransactions(tr);
-    })
-}
+watch(() => props.transactionsProp, (newValue: Transaction[], oldValue) => {
+    transactions.value = newValue;
+    categories.value = newValue.map((t) => t.category);
+    groupTransactions(newValue);
+}, { immediate: true });
 
 interface GroupedTransactions {
     [category: string]: { totalAmount: number, transactions: Transaction[] };
@@ -62,8 +57,6 @@ function groupTransactions(tr: Transaction[]) {
         datasets: [
             {
                 backgroundColor: [
-                    "#85C1E9",
-                    "#F1948A",
                     "#6C3483",
                     "#82E0AA",
                     "#E74C3C",

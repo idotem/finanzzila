@@ -25,7 +25,7 @@ export class TransactionService {
         return false;
     }
 
-    async populateTransactions(file: Express.Multer.File) : Promise<any>{
+    async populateTransactions(file: Express.Multer.File) : Promise<Transaction[]>{
         if(await this.checkIfFileAlreadyUploaded(file.originalname)){
             return;
         };
@@ -333,9 +333,11 @@ export class TransactionService {
                 }
             }
         });
-        this.transactionRepository.save(transactions);
+        await this.transactionRepository.save(transactions);
 
         fs.writeFileSync(`./uploaded-reports/${file.originalname}`, file.buffer);
+        const tr = await this.findAllFiltered(new TransactionFilterDto(undefined, undefined, undefined));
+        return tr;
     }
 
     findAllFiltered(transactionFilter: TransactionFilterDto) :Promise<Transaction[]>{

@@ -1,7 +1,7 @@
 export class TransactionFilterDto{
-    dateFrom: Date;
-    dateTo: Date;
-    categoryId: number;
+    dateFrom: Date | undefined;
+    dateTo: Date | undefined;
+    categoryId: number | undefined;
 
     constructor(dateFrom: Date, dateTo: Date, categoryId: number){
         this.dateFrom = dateFrom;

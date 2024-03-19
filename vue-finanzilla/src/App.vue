@@ -5,7 +5,7 @@ import NavigationBar from './components/navigation/NavigationBar.vue';
 
 <template>
   <v-layout class="bg-slate-400">
-    <v-app-bar color='#009688' title=" Finanzzila"><v-icon icon="list"></v-icon></v-app-bar>
+    <v-app-bar color='#009688' title=" Finanzzila"></v-app-bar>
 
     <NavigationBar></NavigationBar>
 

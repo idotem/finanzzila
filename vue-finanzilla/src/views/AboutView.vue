@@ -1,7 +1,16 @@
+<script setup>
+import AboutPage from '@/components/about/AboutPage.vue';
+</script>
+
 <template>
-  <div class="about">
-    <h1>This is an about page</h1>
-  </div>
+  <main>
+
+    <div class="about">
+      <h1>This is an about page</h1>
+      <AboutPage></AboutPage>
+    </div>
+
+  </main>
 </template>
 
 <style></style>

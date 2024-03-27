@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
-import { Pie } from 'vue-chartjs'
+import { Doughnut } from 'vue-chartjs'
 import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import { ref, watch } from 'vue';
+import '../charts/Charts.css'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -33,10 +34,19 @@ watch(() => props.transactionsProp, (newValue: Transaction[], oldValue) => {
 }, { immediate: true });
 
 interface GroupedTransactions {
-    [category: string]: { totalAmount: number, transactions: Transaction[] };
+    [category: string]: {
+        categoryName: string,
+        totalAmount: number,
+        transactions: Transaction[],
+        percentFromTotal: string
+    };
 }
 
 function groupTransactions(tr: Transaction[]) {
+    const totalAmount = tr.reduce((acc, curr) =>
+        curr.category.name !== 'INCOME' ?
+            acc + Math.abs(curr.amount) : acc, 0);
+
     groupedTransactions.value = tr.reduce((acc: GroupedTransactions, transaction) => {
         const { amount } = transaction;
         const categoryName = transaction.category.name;
@@ -44,14 +54,22 @@ function groupTransactions(tr: Transaction[]) {
             return acc;
         }
         if (!acc[categoryName]) {
-            acc[categoryName] = { totalAmount: 0, transactions: [] };
+            acc[categoryName] = {
+                categoryName: categoryName,
+                totalAmount: 0,
+                transactions: [],
+                percentFromTotal: ''
+            };
         }
         acc[categoryName].totalAmount += amount;
+        acc[categoryName].percentFromTotal = (Math.abs((acc[categoryName].totalAmount / totalAmount) * 100)).toFixed(2);
         acc[categoryName].transactions.push(transaction);
         return acc;
     }, {});
-    const categoriesForPie = Object.keys(groupedTransactions.value);
-    const totalAmountsByCategory = Object.values(groupedTransactions.value).map((tr) => tr.totalAmount);
+    const categoriesForPie = Object.values(groupedTransactions.value)
+        .map((tr) => tr.percentFromTotal + '% ' + tr.categoryName)
+    const totalAmountsByCategory = Object.values(groupedTransactions.value)
+        .map((tr) => tr.totalAmount);
     data.value = {
         labels: categoriesForPie,
         datasets: [
@@ -81,22 +99,35 @@ function groupTransactions(tr: Transaction[]) {
                 ],
                 data: totalAmountsByCategory,
             }
-        ]
+        ],
     }
 
 }
 
 
-const options = {
+const options: any = {
     responsive: true,
     maintainAspectRatio: false,
     color: 'rgb(203 213 225)',
     borderColor: 'black',
-
+    cutout: '40%',
+    plugins: {
+        legend: {
+            align: 'start',
+            color: 'white',
+            position: 'right',
+            labels: {
+                color: 'white',
+                font: {
+                    size: 16,
+                },
+            }
+        }
+    },
 }
 
 </script>
 <template>
     <h2 class="text-center text-slate-200">{{ title }}</h2>
-    <Pie v-if="data" :data="data" :options="options" class="text-slate-200" />
+    <Doughnut v-if="data" :data="data" :options="options" class="text-slate-200" />
 </template>

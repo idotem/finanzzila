@@ -25,7 +25,6 @@ export default class TransactionService {
                 'Content-Type': 'multipart/form-data'
             }
         });
-        console.log(res);
         const transactions: Transaction[] = res.data.map(
             (t: any) =>
                 new Transaction(

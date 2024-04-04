@@ -4,7 +4,6 @@ import { Doughnut } from 'vue-chartjs'
 import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import { ref, watch } from 'vue';
-import '../charts/Charts.css'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 

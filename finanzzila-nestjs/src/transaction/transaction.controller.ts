@@ -16,8 +16,8 @@ export class TransactionController {
     }   
 
     @Get()
-    async findAllFiltered(@Query() filterTransaction: TransactionFilterDto) : Promise<Transaction[]> {
-        const t = await this.transactionService.findAllFiltered(filterTransaction);
+    async findAllFiltered(@Query() filter: TransactionFilterDto) : Promise<Transaction[]> {
+        const t = await this.transactionService.findAllFiltered(filter);
         return t;
     }
 

@@ -8,7 +8,7 @@ import { VNavigationDrawer, VList, VListItem } from 'vuetify/components';
             <v-list-item prepend-icon="dashboard" to="/">
                 Dashboard
             </v-list-item>
-            <v-list-item prepend-icon=" information" to="/about">
+            <v-list-item prepend-icon="information" to="/about">
                 About
             </v-list-item>
         </v-list>

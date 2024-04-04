@@ -1,9 +1,19 @@
 import axiosInstance from '@/config/axios/axios';
 import Transaction from '../model/Transaction';
+import type TransactionFilterDto from '../model/TransactionFilterDto';
 
 export default class TransactionService {
-    static async getAllFiltered(): Promise<Transaction[]> {
-        const res = await axiosInstance.get('/transactions');
+    static async getAllFiltered(
+        filter: TransactionFilterDto
+    ): Promise<Transaction[]> {
+        console.log(filter);
+        const res = await axiosInstance.get('/transactions', {
+            params: {
+                dateFrom: filter.dateFrom,
+                dateTo: filter.dateTo,
+                categoryId: filter.categoryId
+            }
+        });
         const transactions: Transaction[] = res.data.map(
             (t: any) =>
                 new Transaction(

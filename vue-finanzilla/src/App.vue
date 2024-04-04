@@ -9,7 +9,7 @@ import NavigationBar from './components/navigation/NavigationBar.vue';
 
     <NavigationBar></NavigationBar>
 
-    <v-main class="d-flex align-center justify-center h-100 pl-40 pr-40 pt-20">
+    <v-main class="d-flex align-center justify-center h-100 pl-10 pt-20">
       <RouterView></RouterView>
     </v-main>
 

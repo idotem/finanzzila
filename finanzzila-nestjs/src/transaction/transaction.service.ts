@@ -10,6 +10,7 @@ import * as fs from 'fs';
 
 @Injectable()
 export class TransactionService {
+    uploadedReportsFolderPath = './uploaded-reports-dev';
     constructor(
         @InjectRepository(Transaction)
         private readonly transactionRepository: Repository<Transaction>,
@@ -335,7 +336,7 @@ export class TransactionService {
         });
         await this.transactionRepository.save(transactions);
 
-        fs.writeFileSync(`./uploaded-reports/${file.originalname}`, file.buffer);
+        fs.writeFileSync(`${this.uploadedReportsFolderPath}/${file.originalname}`, file.buffer);
         const tr = await this.findAllFiltered(new TransactionFilterDto(undefined, undefined, undefined));
         return tr;
     }
@@ -366,7 +367,7 @@ export class TransactionService {
     }
 
     async findAllUploadedReports(): Promise<string[]> {
-        const folderPath = './uploaded-reports/'
+        const folderPath = `${this.uploadedReportsFolderPath}/`
         return new Promise<string[]>((resolve, reject) => {
             fs.readdir(folderPath, (err, files) => {
                 if (err) {

@@ -10,7 +10,7 @@ import * as fs from 'fs';
 
 @Injectable()
 export class TransactionService {
-    uploadedReportsFolderPath = './uploaded-reports-main';
+    uploadedReportsFolderPath = './uploaded-reports-dev';
     constructor(
         @InjectRepository(Transaction)
         private readonly transactionRepository: Repository<Transaction>,

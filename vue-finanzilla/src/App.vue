@@ -4,8 +4,8 @@ import NavigationBar from './components/navigation/NavigationBar.vue';
 </script>
 
 <template>
-  <v-layout class="bg-slate-400">
-    <v-app-bar color='#009688' title=" Finanzzila"></v-app-bar>
+  <v-layout class="bg-teal-500">
+    <v-app-bar color='rgb(59 7 100)' title="Finanzzila"></v-app-bar>
 
     <NavigationBar></NavigationBar>
 
@@ -13,8 +13,8 @@ import NavigationBar from './components/navigation/NavigationBar.vue';
       <RouterView></RouterView>
     </v-main>
 
-    <v-footer name="footer" app class="justify-center" color="#009688">
-      Finanzzila
+    <v-footer name="footer" app class="justify-center" color="rgb(59 7 100)">
+      <p class="text-slate-300">Finanzzila</p>
     </v-footer>
   </v-layout>
 

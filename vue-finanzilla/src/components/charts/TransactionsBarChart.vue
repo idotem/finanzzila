@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
-import { Doughnut } from 'vue-chartjs'
+import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import { ref, watch } from 'vue';
+import { Bar } from 'vue-chartjs'
 
-ChartJS.register(ArcElement, Tooltip, Legend)
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
 const props = defineProps({
     transactionsProp: {
@@ -16,7 +16,6 @@ const props = defineProps({
 
 const categories = ref<TransactionCategory[]>([]);
 const transactions = ref<Transaction[]>([]);
-const errorMessage = ref<string>('');
 const groupedTransactions = ref<GroupedTransactions | undefined>(undefined)
 const data = ref();
 
@@ -60,14 +59,17 @@ function groupTransactions(tr: Transaction[]) {
         acc[categoryName].transactions.push(transaction);
         return acc;
     }, {});
-    const categoriesForPie = Object.values(groupedTransactions.value)
-        .map((tr) => tr.percentFromTotal + '% ' + tr.categoryName)
+    const categoriesForBar = Object.values(groupedTransactions.value)
+        .map((tr) => tr.categoryName)
     const totalAmountsByCategory = Object.values(groupedTransactions.value)
-        .map((tr) => tr.totalAmount);
+        .map((tr) => Math.abs(tr.totalAmount));
+    console.log(categoriesForBar)
     data.value = {
-        labels: categoriesForPie,
+        labels: categoriesForBar,
         datasets: [
             {
+                label: 'Expenses',
+                fill: false,
                 backgroundColor: [
                     "rgba(108, 52, 131, 0.5)", // #6C3483
                     "rgba(130, 224, 170, 0.5)", // #82E0AA
@@ -116,34 +118,53 @@ function groupTransactions(tr: Transaction[]) {
                 data: totalAmountsByCategory,
             }
         ],
+
     }
 
 }
 
-
 const options: any = {
+    // indexAxis: 'y',
+    barThickness: 'flex',
+    scales: {
+        y: {
+            beginAtZero: true,
+            ticks: {
+                color: 'white'
+            },
+            grid: {
+                color: 'black'
+            }
+        },
+        x: {
+            ticks: {
+                color: 'white',
+            },
+            grid: {
+                color: 'black'
+            }
+        },
+    },
     responsive: true,
-    maintainAspectRatio: false,
-    color: 'rgb(203 213 225)',
-    borderColor: 'black',
-    cutout: '40%',
+    maintainAspectRation: false,
     plugins: {
         legend: {
-            align: 'start',
-            color: 'white',
-            position: 'right',
+            align: 'center',
+            color: '',
+            position: 'top',
             labels: {
                 color: 'white',
                 font: {
                     size: 16,
                 },
             }
-        }
+        },
     },
 }
 
+
 </script>
 <template>
-    <h2 class="text-center text-xl text-slate-200">Pie - Expenses</h2>
-    <Doughnut v-if="data" :data="data" :options="options" class="text-slate-200" />
+    <h2 class="text-center text-xl text-slate-200">Bar</h2>
+    <Bar minWidth="100px" v-if="data" :data="data" :options="options" class="text-slate-200" />
 </template>

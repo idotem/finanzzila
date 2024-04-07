@@ -12,6 +12,7 @@ export class TransactionController {
     @Post('upload')
     @UseInterceptors(FileInterceptor('file'))
     uploadFile(@UploadedFile() file: Express.Multer.File): Promise<Transaction[]> {
+        console.log(file);
         return this.transactionService.populateTransactions(file);
     }   
 

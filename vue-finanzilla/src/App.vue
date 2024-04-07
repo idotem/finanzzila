@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { VAppBar, VFooter, VLayout, VMain } from 'vuetify/components';
-import NavigationBar from './components/navigation/NavigationBar.vue';
+import NavigationBar from './navigation/NavigationBar.vue';
 </script>
 
 <template>
-  <v-layout class="bg-teal-500">
-    <v-app-bar color='rgb(59 7 100)' title="Finanzzila"></v-app-bar>
+  <v-layout class="bg-teal-500 ">
+    <v-app-bar theme="white" color='rgb(59 7 100)' title="Finanzzila"></v-app-bar>
 
     <NavigationBar></NavigationBar>
 

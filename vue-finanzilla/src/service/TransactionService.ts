@@ -1,6 +1,6 @@
 import axiosInstance from '@/config/axios/axios';
-import Transaction from '../model/Transaction';
-import type TransactionFilterDto from '../model/TransactionFilterDto';
+import Transaction from '../components/model/Transaction';
+import type TransactionFilterDto from '../components/model/TransactionFilterDto';
 
 export default class TransactionService {
     static async getAllFiltered(

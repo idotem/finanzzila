@@ -1,5 +1,5 @@
 import axiosInstance from '@/config/axios/axios';
-import { TransactionCategory } from '../model/TransactionCategory';
+import { TransactionCategory } from '../components/model/TransactionCategory';
 
 export default class CategoryService {
     static async getAllCategories(): Promise<TransactionCategory[]> {

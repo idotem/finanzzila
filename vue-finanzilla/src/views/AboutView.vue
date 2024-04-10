@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import AboutPage from '@/components/about/AboutPage.vue';
 </script>
 

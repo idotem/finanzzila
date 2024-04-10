@@ -117,18 +117,24 @@ async function uploadFile() {
         </v-col>
       </v-row>
       <v-row align="start" class="mb-2 mt-0">
-        <v-col cols="12" md="12" xl="6" :key="1" style="height: 34rem">
-          <v-sheet class="p-4 shadow-black shadow-lg pb-10 bg-cyan-950 rounded-xl" style="height: 32rem">
-            <TransactionsPieChart v-if="transactions && transactions.length !== 0" :transactionsProp="transactions">
-            </TransactionsPieChart>
+        <v-col cols="12" md="12" xl="6" :key="1" style="height: 36rem;">
+          <v-sheet class="p-4 shadow-black shadow-lg bg-cyan-950 rounded-xl"
+            style="height: 34rem; overflow-x: scroll; overflow-y: hidden;">
+            <div style="height: 31rem; min-width: 40rem;" v-if="transactions && transactions.length !== 0">
+              <TransactionsPieChart :transactionsProp="transactions">
+              </TransactionsPieChart>
+            </div>
             <h2 v-else-if="errorMessage">{{ errorMessage }}</h2>
             <h1 v-else>No transactions, no pie</h1>
           </v-sheet>
         </v-col>
-        <v-col cols="12" md="12" xl="6" key="2" style="height: 34rem">
-          <v-sheet class="p-4 shadow-black shadow-lg pb-10 bg-cyan-950 rounded-xl items-center" style="height: 32rem">
-            <TransactionsBarChart v-if="transactions && transactions.length !== 0" :transactionsProp="transactions">
-            </TransactionsBarChart>
+        <v-col cols="12" md="12" xl="6" key="2" style="height: 36rem;">
+          <v-sheet class="p-4 shadow-black shadow-lg pb-10 bg-cyan-950 rounded-xl items-center"
+            style="height: 34rem; overflow-x: scroll; overflow-y: hidden">
+            <div style="height: 31rem; min-width: 40rem;" v-if="transactions && transactions.length !== 0">
+              <TransactionsBarChart :transactionsProp="transactions">
+              </TransactionsBarChart>
+            </div>
             <h2 v-else-if="errorMessage">{{ errorMessage }}</h2>
             <h1 v-else>No transactions, no pie</h1>
           </v-sheet>

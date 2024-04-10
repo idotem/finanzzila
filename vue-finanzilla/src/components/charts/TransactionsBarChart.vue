@@ -5,9 +5,9 @@ import type { TransactionCategory } from '../model/TransactionCategory';
 import { ref, watch } from 'vue';
 import { Bar } from 'vue-chartjs'
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { useRouter } from 'vue-router';
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ChartDataLabels)
-
 
 const props = defineProps({
     transactionsProp: {
@@ -18,8 +18,11 @@ const props = defineProps({
 
 const categories = ref<TransactionCategory[]>([]);
 const transactions = ref<Transaction[]>([]);
+const categoriesForBar = ref<any[]>([]);
 const groupedTransactions = ref<GroupedTransactions | undefined>(undefined)
 const data = ref();
+
+const router = useRouter()
 
 
 watch(() => props.transactionsProp, (newValue: Transaction[], oldValue) => {
@@ -30,6 +33,7 @@ watch(() => props.transactionsProp, (newValue: Transaction[], oldValue) => {
 
 interface GroupedTransactions {
     [category: string]: {
+        categoryId: number,
         categoryName: string,
         totalAmount: number,
         transactions: Transaction[],
@@ -45,11 +49,13 @@ function groupTransactions(tr: Transaction[]) {
     groupedTransactions.value = tr.reduce((acc: GroupedTransactions, transaction) => {
         const { amount } = transaction;
         const categoryName = transaction.category.name;
+        const categoryId = transaction.category.id;
         if (categoryName == 'INCOME') {
             return acc;
         }
         if (!acc[categoryName]) {
             acc[categoryName] = {
+                categoryId: categoryId,
                 categoryName: categoryName,
                 totalAmount: 0,
                 transactions: [],
@@ -61,12 +67,13 @@ function groupTransactions(tr: Transaction[]) {
         acc[categoryName].transactions.push(transaction);
         return acc;
     }, {});
-    const categoriesForBar = Object.values(groupedTransactions.value)
-        .map((tr) => tr.categoryName)
+    categoriesForBar.value = Object.values(groupedTransactions.value);
+    const categoriesForBarReduced = Object.values(groupedTransactions.value)
+        .map((tr) => tr.percentFromTotal + '% ' + tr.categoryName)
     const totalAmountsByCategory = Object.values(groupedTransactions.value)
         .map((tr) => Math.abs(tr.totalAmount));
     data.value = {
-        labels: categoriesForBar,
+        labels: categoriesForBarReduced,
         datasets: [
             {
                 label: 'Expenses',
@@ -119,14 +126,13 @@ function groupTransactions(tr: Transaction[]) {
                 data: totalAmountsByCategory,
             }
         ],
-
     }
 
     return
 }
 
 const options: any = {
-    // indexAxis: 'y'~/p/lea/finanzzila/vue-finanzilla dev !5 ❯ npm uninstall chartjs-plugin-datalabels --save
+    // indexAxis: 'y'
     barThickness: 'flex',
     scales: {
         y: {
@@ -148,7 +154,7 @@ const options: any = {
         },
     },
     responsive: true,
-    maintainAspectRation: false,
+    maintainAspectRatio: false,
     plugins: {
         legend: {
             align: 'center',
@@ -181,30 +187,13 @@ const options: any = {
         }
     },
     onClick: function (event: any, elements: any) {
-
-        const canvas = document.getElementsByTagName('canvas');
-        console.log(canvas)
-        let barChart: any;
-        if (canvas) {
-            barChart = ChartJS.getChart(canvas)
-        } else {
-            barChart = null;
-        }
-        console.log(barChart)
-        if (!barChart) {
-            console.error('Could not find bar chart');
+        const firstPoint = (elements[0])
+        if (!firstPoint) {
+            console.log("Not clicked on any category.")
             return;
-        } else {
-            const points = barChart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
-            console.log('points', points)
-
-            if (points?.length) {
-                const firstPoint = points[0];
-                const label = barChart.data.labels[firstPoint.index];
-                const value = barChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
-                console.log(label, value)
-            }
         }
+        const categoryId = categoriesForBar.value[firstPoint.index].categoryId;
+        router.push({ name: 'Transactions', params: { categoryId: categoryId } })
     }
 
 }
@@ -213,5 +202,5 @@ const options: any = {
 </script>
 <template>
     <h2 class="text-center text-xl text-slate-200">Bar</h2>
-    <Bar id='barChart' minWidth="100px" v-if="data" :data="data" :options="options" class="text-slate-200" />
+    <Bar id='barChart' v-if="data" :data="data" :options="options" class="text-slate-200" />
 </template>

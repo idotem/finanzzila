@@ -7,8 +7,6 @@ const route = useRoute()
 const categoryId = ref<string | undefined>(typeof route.params.categoryId === "string"
     ? route.params.categoryId
     : route.params.categoryId.at(0));
-
-console.log(categoryId.value)
 </script>
 
 <template>

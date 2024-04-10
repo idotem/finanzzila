@@ -8,23 +8,17 @@ import type Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import TransactionFilterDto from '../model/TransactionFilterDto';
 
-const props = defineProps({
-    categoryId: {
-        type: Number,
-        required: false
-    },
-});
+type TransactionTableProps = {
+    categoryId?: number | undefined,
+}
+
+const props = defineProps<TransactionTableProps>();
 
 const transactions = ref<Transaction[]>([])
 const categories = ref<TransactionCategory[]>([])
 const errorMessage = ref('');
 const rangeDateFilter = ref<Date[]>([]);
-const filterCategoryId = ref<number | undefined>(undefined);
-
-watch(() => props.categoryId, () => {
-    console.log(props.categoryId)
-    filterCategoryId.value = props.categoryId;
-})
+const filterCategoryId = ref<number | undefined>(props.categoryId);
 
 onMounted(async () => {
     try {
@@ -37,9 +31,8 @@ onMounted(async () => {
 });
 
 const fetchTransactions = async () => {
-    const filter: TransactionFilterDto = rangeDateFilter.value !== null
-        ? new TransactionFilterDto(rangeDateFilter.value[0], rangeDateFilter.value[1], filterCategoryId.value)
-        : new TransactionFilterDto(undefined, undefined, undefined);
+    const filter: TransactionFilterDto = new TransactionFilterDto(rangeDateFilter.value[0],
+        rangeDateFilter.value[1], filterCategoryId.value);
     TransactionService.getAllFiltered(filter).then((tr: Transaction[]) => {
         transactions.value = tr;
     })

@@ -10,6 +10,7 @@ import TransactionFilterDto from '../model/TransactionFilterDto';
 import TransactionService from '../../service/TransactionService';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import CategoryService from '../../service/CategoryService';
+import { convertNumberToCurrency } from '../../utils/CurrencyConverter'
 
 const transactions = ref<Transaction[]>([])
 const categories = ref<TransactionCategory[]>([])
@@ -17,9 +18,10 @@ const errorMessage = ref('');
 const files = ref<File[] | undefined>();
 const rangeDateFilter = ref<Date[]>([]);
 const filterCategoryId = ref<number | undefined>(undefined);
-const totalExpenses = ref<number | undefined>(undefined);
-const totalIncome = ref<number | undefined>(undefined);
-const differenceExpensesIncome = ref<number | undefined>(undefined);
+const totalExpenses = ref<number>();
+const totalIncome = ref<number>();
+const differenceExpensesIncome = ref<number>();
+const currentCurrency = ref<string>('MKD');
 
 
 onMounted(async () => {
@@ -67,6 +69,7 @@ async function uploadFile() {
       await TransactionService.uploadFileTransactions(files.value[0])
         .then((tr: Transaction[]) => {
           transactions.value = tr;
+          calculateStats(tr);
           files.value = undefined;
         })
     } catch (error) {
@@ -75,6 +78,7 @@ async function uploadFile() {
     }
   }
 };
+
 
 </script>
 
@@ -135,14 +139,26 @@ async function uploadFile() {
           <h1 class="text-center text-xl">General statistics</h1>
         </v-col>
         <v-col class="text-lg">
+          <select class="w-1/5 h-9 rounded-sm bg-[#212121] text-slate-300 p-2" name="changeCurrency"
+            v-model="currentCurrency">
+            <option value="MKD">MKD</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
           <p>
-            Total amount spend: {{ totalExpenses }} MKD
+            Total amount earned: {{ convertNumberToCurrency(totalIncome, currentCurrency) }}
           </p>
           <p>
-            Total amount earned: {{ totalIncome }} MKD
+            Total amount spend: {{ convertNumberToCurrency(totalExpenses, currentCurrency) }}
           </p>
           <p>
-            Difference: {{ differenceExpensesIncome }} MKD
+            Difference: {{ convertNumberToCurrency(differenceExpensesIncome, currentCurrency) }}
+          </p>
+          <p>
+            First transaction date: {{ transactions.at(transactions.length - 1)?.date }}
+          </p>
+          <p>
+            Last transaction date: {{ transactions.at(0)?.date }}
           </p>
         </v-col>
       </v-row>

@@ -4,8 +4,10 @@ import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import { ref, watch } from 'vue';
 import { Bar } from 'vue-chartjs'
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ChartDataLabels)
+
 
 const props = defineProps({
     transactionsProp: {
@@ -63,7 +65,6 @@ function groupTransactions(tr: Transaction[]) {
         .map((tr) => tr.categoryName)
     const totalAmountsByCategory = Object.values(groupedTransactions.value)
         .map((tr) => Math.abs(tr.totalAmount));
-    console.log(categoriesForBar)
     data.value = {
         labels: categoriesForBar,
         datasets: [
@@ -121,10 +122,11 @@ function groupTransactions(tr: Transaction[]) {
 
     }
 
+    return
 }
 
 const options: any = {
-    // indexAxis: 'y',
+    // indexAxis: 'y'~/p/lea/finanzzila/vue-finanzilla dev !5 ❯ npm uninstall chartjs-plugin-datalabels --save
     barThickness: 'flex',
     scales: {
         y: {
@@ -150,7 +152,6 @@ const options: any = {
     plugins: {
         legend: {
             align: 'center',
-            color: '',
             position: 'top',
             labels: {
                 color: 'white',
@@ -159,12 +160,58 @@ const options: any = {
                 },
             }
         },
+        datalabels: {
+            anchor: 'end',
+            align: 'end',
+            color: 'white',
+            offset: 6,
+            display: 'auto',
+            font: {
+                weight: 'bold'
+            },
+            backgroundColor: function (context: any) {
+                return context.dataset.backgroundColor;
+            },
+            borderColor: function (context: any) {
+                return context.dataset.borderColor;
+            },
+            borderRadius: 2,
+            borderWidth: 1,
+            padding: 2
+        }
     },
+    onClick: function (event: any, elements: any) {
+
+        const canvas = document.getElementsByTagName('canvas');
+        console.log(canvas)
+        let barChart: any;
+        if (canvas) {
+            barChart = ChartJS.getChart(canvas)
+        } else {
+            barChart = null;
+        }
+        console.log(barChart)
+        if (!barChart) {
+            console.error('Could not find bar chart');
+            return;
+        } else {
+            const points = barChart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
+            console.log('points', points)
+
+            if (points?.length) {
+                const firstPoint = points[0];
+                const label = barChart.data.labels[firstPoint.index];
+                const value = barChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
+                console.log(label, value)
+            }
+        }
+    }
+
 }
 
 
 </script>
 <template>
     <h2 class="text-center text-xl text-slate-200">Bar</h2>
-    <Bar minWidth="100px" v-if="data" :data="data" :options="options" class="text-slate-200" />
+    <Bar id='barChart' minWidth="100px" v-if="data" :data="data" :options="options" class="text-slate-200" />
 </template>

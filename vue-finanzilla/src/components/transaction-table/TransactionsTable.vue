@@ -8,12 +8,23 @@ import type Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import TransactionFilterDto from '../model/TransactionFilterDto';
 
+const props = defineProps({
+    categoryId: {
+        type: Number,
+        required: false
+    },
+});
 
 const transactions = ref<Transaction[]>([])
 const categories = ref<TransactionCategory[]>([])
 const errorMessage = ref('');
 const rangeDateFilter = ref<Date[]>([]);
 const filterCategoryId = ref<number | undefined>(undefined);
+
+watch(() => props.categoryId, () => {
+    console.log(props.categoryId)
+    filterCategoryId.value = props.categoryId;
+})
 
 onMounted(async () => {
     try {
@@ -51,7 +62,7 @@ const fetchCategories = async () => {
 
 <template>
     <main>
-        <h1 class="text-3xl text-black">Transactions</h1>
+        <h1 class="text-3xl text-black mb-4">Transactions</h1>
         <v-container>
             <v-row class="bg-cyan-950 text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg mb-1">
                 <v-col cols="12" sm="12" md="6">
@@ -75,9 +86,7 @@ const fetchCategories = async () => {
                     </v-sheet>
                 </v-col>
                 <v-col cols="12">
-                    <h1>Transactions</h1>
-                    <VDataTable hover color="black" class="bg-cyan-950 border-2 border-black text-slate-200 text-xl"
-                        v-if="transactions"
+                    <VDataTable hover color="black" class="bg-cyan-950 text-slate-200 text-xl" v-if="transactions"
                         :items="transactions.map((tr) => { return { ...tr, category: tr.category.name } })">
                     </VDataTable>
                     <p v-else-if="errorMessage">{{ errorMessage }}</p>

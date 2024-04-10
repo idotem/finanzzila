@@ -138,6 +138,14 @@ const options: any = {
                     size: 16,
                 },
             }
+        },
+        datalabels: {
+            anchor: 'center',
+            color: 'white',
+            display: false,
+            font: {
+                weight: 'bold'
+            }
         }
     },
 }

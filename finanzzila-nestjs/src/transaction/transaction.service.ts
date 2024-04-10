@@ -46,6 +46,7 @@ export class TransactionService {
                 const category : TransactionCategory = getCategory(transName, transAmount);
                 const transaction = new Transaction(transDate, transName,
                                                     transAmount, category) 
+                console.log(rowNumber, " ", category, transDate, transName, transAmount, transaction)
                 if(category){
                     transactions.push(transaction);
                 }
@@ -62,7 +63,7 @@ export class TransactionService {
                 nameOfTransactionPlace: string,
                 amountOfTransaction: number,
             ): TransactionCategory { 
-                if(!nameOfTransactionPlace || !amountOfTransaction){
+                if(amountOfTransaction === undefined && amountOfTransaction === null){
                     console.log("Ignored or invalid transaction with name: ", 
                                 nameOfTransactionPlace, 
                                 "and amount: ",
@@ -251,7 +252,7 @@ export class TransactionService {
                             'KOTON',
                     ): {
                         return categories
-                        .find((c) => c.name === 'CLOTHES_AND_WEARBLES');
+                        .find((c) => c.name === 'CLOTHES_AND_WEARABLES');
                     }
                     case checkIfNameOfTransactionContainsGivenWord(
                         nameOfTransactionPlace,
@@ -363,6 +364,7 @@ export class TransactionService {
                 dateTo: transactionFilter.dateTo,
             });
         }
+        queryBuilder.orderBy('transaction.date', "DESC");
         return queryBuilder.getMany();
     }
 

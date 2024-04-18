@@ -13,6 +13,10 @@ const props = defineProps({
         type: Array as () => Transaction[],
         required: true
     },
+    dateFilter: {
+        type: Array as () => string[],
+        required: false,
+    }
 });
 
 const categories = ref<TransactionCategory[]>([]);
@@ -160,7 +164,7 @@ const options: any = {
             return;
         }
         const categoryId = categoriesForPie.value[firstPoint.index].categoryId;
-        router.push({ name: 'Transactions', params: { categoryId: categoryId } })
+        router.push({ name: 'Transactions', query: { categoryId: categoryId, dateFilter: props.dateFilter } })
     }
 }
 

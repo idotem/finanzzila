@@ -10,7 +10,7 @@ const router = createRouter({
             component: DashboardView
         },
         {
-            path: '/transactions/:categoryId?',
+            path: '/transactions',
             name: 'Transactions',
             component: () => import('../views/TransactionsView.vue')
         },

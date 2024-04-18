@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { TransactionCategoryModule } from './transaction-category/transaction-category.module';
 import { TransactionCategory } from './transaction-category/entity/transaction-category.entity';
+import { KeywordModule } from './keyword/keyword.module';
 import Transaction from './transaction/entities/transaction.entity';
 
 @Module({
@@ -24,6 +25,7 @@ import Transaction from './transaction/entities/transaction.entity';
     UserModule,
     TransactionModule,
     TransactionCategoryModule,
+    KeywordModule,
   ],
   controllers: [AppController],
   providers: [AppService],

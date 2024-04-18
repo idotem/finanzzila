@@ -5,12 +5,16 @@ import { TransactionCategory } from './entity/transaction-category.entity';
 
 @Injectable()
 export class TransactionCategoryService {
-  constructor(
-    @InjectRepository(TransactionCategory)
-    private readonly transactionCategoryRepository: Repository<TransactionCategory>,
-  ) {}
+    constructor(
+        @InjectRepository(TransactionCategory)
+        private readonly transactionCategoryRepository: Repository<TransactionCategory>,
+    ) { }
 
-  findAll(): Promise<TransactionCategory[]> {
-    return this.transactionCategoryRepository.find();
-  }
+    findAll(): Promise<TransactionCategory[]> {
+        return this.transactionCategoryRepository.find();
+    }
+    findById(id: number): Promise<TransactionCategory> {
+        const options: any = { id: id };
+        return this.transactionCategoryRepository.findOne(options);
+    }
 }

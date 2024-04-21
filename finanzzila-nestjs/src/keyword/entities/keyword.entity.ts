@@ -1,12 +1,13 @@
 import { TransactionCategory } from "src/transaction-category/entity/transaction-category.entity";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Keyword {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: 'number' })
+    @ManyToOne(() => TransactionCategory, category => category.transactions)
+    @JoinColumn({name: 'category_id'})
     category: TransactionCategory;
 
     @Column({ type: 'varchar', length: 200 })

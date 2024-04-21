@@ -8,6 +8,7 @@ import { TransactionCategoryModule } from './transaction-category/transaction-ca
 import { TransactionCategory } from './transaction-category/entity/transaction-category.entity';
 import { KeywordModule } from './keyword/keyword.module';
 import Transaction from './transaction/entities/transaction.entity';
+import { Keyword } from './keyword/entities/keyword.entity';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import Transaction from './transaction/entities/transaction.entity';
       port: 5432,
       password: 'mete5',
       username: 'postgres',
-      entities: [TransactionCategory, Transaction],
+      entities: [TransactionCategory, Transaction, Keyword],
       database: 'finazzila',
       synchronize: true,
       logging: true,

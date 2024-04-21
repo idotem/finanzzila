@@ -5,10 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import Transaction from './entities/transaction.entity'
 import { TransactionCategoryService } from 'src/transaction-category/transaction-category.service';
 import { TransactionCategory } from 'src/transaction-category/entity/transaction-category.entity';
+import { Keyword } from 'src/keyword/entities/keyword.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Transaction]),
-    TypeOrmModule.forFeature([TransactionCategory])],
+    imports: [TypeOrmModule.forFeature([Transaction, TransactionCategory, Keyword])],
     controllers: [TransactionController],
     providers: [TransactionService, TransactionCategoryService],
 })

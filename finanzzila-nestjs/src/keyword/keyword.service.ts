@@ -1,20 +1,19 @@
-import { Injectable } from '@nestjs/common';
 import { CreateKeywordDto } from './dto/create-keyword.dto';
 import { UpdateKeywordDto } from './dto/update-keyword.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TransactionCategoryService } from 'src/transaction-category/transaction-category.service';
 import { Keyword } from './entities/keyword.entity';
 import { TransactionCategory } from 'src/transaction-category/entity/transaction-category.entity';
+import { TransactionCategoryService } from 'src/transaction-category/transaction-category.service';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class KeywordService {
     constructor(
         @InjectRepository(Keyword)
         private readonly keywordRepository: Repository<Keyword>,
-        private readonly categoryService: TransactionCategoryService
+        private readonly categoryService: TransactionCategoryService 
     ) { }
-
 
     async create(createKeywordDto: CreateKeywordDto) {
         const category: TransactionCategory = await this.categoryService.findById(createKeywordDto.categoryId);
@@ -23,11 +22,22 @@ export class KeywordService {
     }
 
     findAll() {
-        return `This action returns all keyword`;
+        return this.keywordRepository.find();
+    }
+
+    findAllByCategoryId(catId: number) {
+        const queryBuilder = this.keywordRepository
+            .createQueryBuilder('keyword')
+            .leftJoinAndSelect('transaction.category', 'category');
+        queryBuilder.andWhere('keyword.category.id = :catId', { catId: catId});
+        return queryBuilder.getMany();
+
     }
 
     findOne(id: number) {
-        return `This action returns a #${id} keyword`;
+        const queryBuilder = this.keywordRepository.createQueryBuilder('keyword');
+        queryBuilder.andWhere('keyword.id = :id', { id: id });
+        return queryBuilder.getOne();
     }
 
     update(id: number, updateKeywordDto: UpdateKeywordDto) {

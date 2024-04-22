@@ -12,7 +12,7 @@ export class KeywordService {
     constructor(
         @InjectRepository(Keyword)
         private readonly keywordRepository: Repository<Keyword>,
-        private readonly categoryService: TransactionCategoryService 
+        private readonly categoryService: TransactionCategoryService
     ) { }
 
     async create(createKeywordDto: CreateKeywordDto) {
@@ -29,22 +29,33 @@ export class KeywordService {
         const queryBuilder = this.keywordRepository
             .createQueryBuilder('keyword')
             .leftJoinAndSelect('transaction.category', 'category');
-        queryBuilder.andWhere('keyword.category.id = :catId', { catId: catId});
+        queryBuilder.andWhere('keyword.category.id = :catId', { catId: catId });
         return queryBuilder.getMany();
 
     }
 
-    findOne(id: number) {
+    findOne(id: number): Promise<Keyword> {
         const queryBuilder = this.keywordRepository.createQueryBuilder('keyword');
         queryBuilder.andWhere('keyword.id = :id', { id: id });
         return queryBuilder.getOne();
     }
 
-    update(id: number, updateKeywordDto: UpdateKeywordDto) {
-        return `This action updates a #${id} keyword #${updateKeywordDto}`;
+    async update(id: number, updateKeywordDto: UpdateKeywordDto) {
+        const keyword: Keyword = await this.findOne(id);
+        const category: TransactionCategory =
+            await this.categoryService.findById(updateKeywordDto.categoryId);
+        if (keyword) {
+            keyword.value = updateKeywordDto.value;
+            if (category) {
+                keyword.category = category;
+            }
+        } else {
+            console.log("Keyword was not found, id:", id);
+        }
     }
 
     remove(id: number) {
-        return `This action removes a #${id} keyword`;
+        const options: any = { id: id };
+        return this.keywordRepository.remove(options);
     }
 }

@@ -21,11 +21,6 @@ export class TransactionCategoryService {
         return this.transactionCategoryRepository.find();
     }
 
-    findById(id: number): Promise<TransactionCategory> {
-        const options: any = { id: id };
-        return this.transactionCategoryRepository.findOne(options);
-    }
-
     async create(createTransactionCategoryDto: CreateTransactionCategoryDto): Promise<TransactionCategory> {
         const category: TransactionCategory = new TransactionCategory(
             createTransactionCategoryDto.name);
@@ -42,12 +37,24 @@ export class TransactionCategoryService {
         })
     }
 
-    update(id: number, updateTransactionCategoryDto: UpdateTransactionCategoryDto) {
-        return `This action updates a #${id} keyword #${updateTransactionCategoryDto}`;
+    async update(id: number, updateTransactionCategoryDto: UpdateTransactionCategoryDto) {
+        const category : TransactionCategory = await this.findById(id);
+        if(category) {
+            category.name = updateTransactionCategoryDto.name;
+            return this.transactionCategoryRepository.save(category);
+        } else {
+            console.log("Category not found");
+        }
+    }
+
+    findById(id: number): Promise<TransactionCategory> {
+        const options: any = { id: id };
+        return this.transactionCategoryRepository.findOne(options);
     }
 
     remove(id: number) {
-        return `This action removes a #${id} keyword`;
+        const options: any = { id: id };
+        return this.transactionCategoryRepository.remove(options);
     }
 }
 

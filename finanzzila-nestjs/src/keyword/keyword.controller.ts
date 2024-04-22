@@ -17,18 +17,23 @@ export class KeywordController {
     return this.keywordService.findAll();
   }
 
+  @Get('category/:id')
+  findAllByCategory(@Param(':id') id: number) {
+    return this.keywordService.findAllByCategoryId(+id);
+  }
+
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: number) {
     return this.keywordService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateKeywordDto: UpdateKeywordDto) {
+  update(@Param('id') id: number, @Body() updateKeywordDto: UpdateKeywordDto) {
     return this.keywordService.update(+id, updateKeywordDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     return this.keywordService.remove(+id);
   }
 }

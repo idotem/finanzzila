@@ -30,7 +30,7 @@ export class TransactionCategoryController {
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.transactionCategoryService.remove(+id);
+    remove(@Param('id') id: string): void {
+        this.transactionCategoryService.remove(+id);
     }
 }

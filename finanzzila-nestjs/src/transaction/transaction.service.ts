@@ -52,8 +52,9 @@ export class TransactionService {
         return this.transactionRepository.save(transaction);
     }
 
-    remove(id: number) {
-        return this.transactionRepository.delete(id);
+    remove(id: number): void {
+        const options: any = { id: id };
+        this.transactionRepository.delete(options);
     }
 
     async checkIfFileAlreadyUploaded(fileName: string): Promise<boolean> {

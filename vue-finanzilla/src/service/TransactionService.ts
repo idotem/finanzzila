@@ -1,6 +1,7 @@
 import axiosInstance from '@/config/axios/axios';
 import Transaction from '../components/model/Transaction';
 import type TransactionFilterDto from '../components/model/TransactionFilterDto';
+import type { AxiosResponse } from 'axios';
 
 export default class TransactionService {
     static async getAllFiltered(
@@ -46,5 +47,9 @@ export default class TransactionService {
                 )
         );
         return transactions;
+    }
+
+    static async delete(id: number): Promise<AxiosResponse> {
+        return await axiosInstance.delete(`transactions/${id}`);
     }
 }

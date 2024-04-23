@@ -3,37 +3,37 @@ import { KeywordService } from './keyword.service';
 import { CreateKeywordDto } from './dto/create-keyword.dto';
 import { UpdateKeywordDto } from './dto/update-keyword.dto';
 
-@Controller('keyword')
+@Controller('keywords')
 export class KeywordController {
-  constructor(private readonly keywordService: KeywordService) {}
+    constructor(private readonly keywordService: KeywordService) { }
 
-  @Post()
-  create(@Body() createKeywordDto: CreateKeywordDto) {
-    return this.keywordService.create(createKeywordDto);
-  }
+    @Post()
+    create(@Body() createKeywordDto: CreateKeywordDto) {
+        return this.keywordService.create(createKeywordDto);
+    }
 
-  @Get()
-  findAll() {
-    return this.keywordService.findAll();
-  }
+    @Get()
+    findAll() {
+        return this.keywordService.findAll();
+    }
 
-  @Get('category/:id')
-  findAllByCategory(@Param(':id') id: number) {
-    return this.keywordService.findAllByCategoryId(+id);
-  }
+    @Get('categories/:id')
+    findAllByCategory(@Param(':id') id: number) {
+        return this.keywordService.findAllByCategoryId(+id);
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: number) {
-    return this.keywordService.findOne(+id);
-  }
+    @Get(':id')
+    findOne(@Param('id') id: number) {
+        return this.keywordService.findOne(+id);
+    }
 
-  @Patch(':id')
-  update(@Param('id') id: number, @Body() updateKeywordDto: UpdateKeywordDto) {
-    return this.keywordService.update(+id, updateKeywordDto);
-  }
+    @Patch(':id')
+    update(@Param('id') id: number, @Body() updateKeywordDto: UpdateKeywordDto) {
+        return this.keywordService.update(+id, updateKeywordDto);
+    }
 
-  @Delete(':id')
-  remove(@Param('id') id: number) {
-    return this.keywordService.remove(+id);
-  }
+    @Delete(':id')
+    remove(@Param('id') id: number): void {
+        this.keywordService.remove(+id);
+    }
 }

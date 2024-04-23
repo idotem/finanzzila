@@ -54,8 +54,8 @@ export class KeywordService {
         }
     }
 
-    remove(id: number) {
+    remove(id: number): void {
         const options: any = { id: id };
-        return this.keywordRepository.remove(options);
+        this.keywordRepository.delete(options);
     }
 }

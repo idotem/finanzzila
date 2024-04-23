@@ -52,9 +52,9 @@ export class TransactionCategoryService {
         return this.transactionCategoryRepository.findOne(options);
     }
 
-    remove(id: number) {
+    remove(id: number) : void {
         const options: any = { id: id };
-        return this.transactionCategoryRepository.remove(options);
+        this.transactionCategoryRepository.delete(options);
     }
 }
 

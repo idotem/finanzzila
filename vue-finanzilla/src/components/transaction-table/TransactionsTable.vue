@@ -8,12 +8,17 @@ import type Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import TransactionFilterDto from '../model/TransactionFilterDto';
 
+type TransactionTableProps = {
+    categoryId?: number | undefined,
+}
+
+const props = defineProps<TransactionTableProps>();
 
 const transactions = ref<Transaction[]>([])
 const categories = ref<TransactionCategory[]>([])
 const errorMessage = ref('');
 const rangeDateFilter = ref<Date[]>([]);
-const filterCategoryId = ref<number | undefined>(undefined);
+const filterCategoryId = ref<number | undefined>(props.categoryId);
 
 onMounted(async () => {
     try {
@@ -26,9 +31,8 @@ onMounted(async () => {
 });
 
 const fetchTransactions = async () => {
-    const filter: TransactionFilterDto = rangeDateFilter.value !== null
-        ? new TransactionFilterDto(rangeDateFilter.value[0], rangeDateFilter.value[1], filterCategoryId.value)
-        : new TransactionFilterDto(undefined, undefined, undefined);
+    const filter: TransactionFilterDto = new TransactionFilterDto(rangeDateFilter.value[0],
+        rangeDateFilter.value[1], filterCategoryId.value);
     TransactionService.getAllFiltered(filter).then((tr: Transaction[]) => {
         transactions.value = tr;
     })
@@ -51,7 +55,7 @@ const fetchCategories = async () => {
 
 <template>
     <main>
-        <h1 class="text-3xl text-black">Transactions</h1>
+        <h1 class="text-3xl text-black mb-4">Transactions</h1>
         <v-container>
             <v-row class="bg-cyan-950 text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg mb-1">
                 <v-col cols="12" sm="12" md="6">
@@ -75,9 +79,7 @@ const fetchCategories = async () => {
                     </v-sheet>
                 </v-col>
                 <v-col cols="12">
-                    <h1>Transactions</h1>
-                    <VDataTable hover color="black" class="bg-cyan-950 border-2 border-black text-slate-200 text-xl"
-                        v-if="transactions"
+                    <VDataTable hover color="black" class="bg-cyan-950 text-slate-200 text-xl" v-if="transactions"
                         :items="transactions.map((tr) => { return { ...tr, category: tr.category.name } })">
                     </VDataTable>
                     <p v-else-if="errorMessage">{{ errorMessage }}</p>

@@ -4,6 +4,7 @@ import { Doughnut } from 'vue-chartjs'
 import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import { ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -12,14 +13,18 @@ const props = defineProps({
         type: Array as () => Transaction[],
         required: true
     },
+    dateFilter: {
+        type: Array as () => string[],
+        required: false,
+    }
 });
 
 const categories = ref<TransactionCategory[]>([]);
+const categoriesForPie = ref<any[]>([]);
 const transactions = ref<Transaction[]>([]);
-const errorMessage = ref<string>('');
 const groupedTransactions = ref<GroupedTransactions | undefined>(undefined)
 const data = ref();
-
+const router = useRouter()
 
 watch(() => props.transactionsProp, (newValue: Transaction[], oldValue) => {
     transactions.value = newValue;
@@ -29,6 +34,7 @@ watch(() => props.transactionsProp, (newValue: Transaction[], oldValue) => {
 
 interface GroupedTransactions {
     [category: string]: {
+        categoryId: number,
         categoryName: string,
         totalAmount: number,
         transactions: Transaction[],
@@ -44,11 +50,13 @@ function groupTransactions(tr: Transaction[]) {
     groupedTransactions.value = tr.reduce((acc: GroupedTransactions, transaction) => {
         const { amount } = transaction;
         const categoryName = transaction.category.name;
+        const categoryId = transaction.category.id;
         if (categoryName == 'INCOME') {
             return acc;
         }
         if (!acc[categoryName]) {
             acc[categoryName] = {
+                categoryId: categoryId,
                 categoryName: categoryName,
                 totalAmount: 0,
                 transactions: [],
@@ -60,12 +68,13 @@ function groupTransactions(tr: Transaction[]) {
         acc[categoryName].transactions.push(transaction);
         return acc;
     }, {});
-    const categoriesForPie = Object.values(groupedTransactions.value)
+    categoriesForPie.value = Object.values(groupedTransactions.value);
+    const categoriesForPieReduced = Object.values(groupedTransactions.value)
         .map((tr) => tr.percentFromTotal + '% ' + tr.categoryName)
     const totalAmountsByCategory = Object.values(groupedTransactions.value)
         .map((tr) => tr.totalAmount);
     data.value = {
-        labels: categoriesForPie,
+        labels: categoriesForPieReduced,
         datasets: [
             {
                 backgroundColor: [
@@ -138,8 +147,25 @@ const options: any = {
                     size: 16,
                 },
             }
+        },
+        datalabels: {
+            anchor: 'center',
+            color: 'white',
+            display: false,
+            font: {
+                weight: 'bold'
+            }
         }
     },
+    onClick: function (event: any, elements: any) {
+        const firstPoint = (elements[0])
+        if (!firstPoint) {
+            console.log("Not clicked on any category.")
+            return;
+        }
+        const categoryId = categoriesForPie.value[firstPoint.index].categoryId;
+        router.push({ name: 'Transactions', query: { categoryId: categoryId, dateFilter: props.dateFilter } })
+    }
 }
 
 </script>

@@ -10,6 +10,7 @@ import TransactionFilterDto from '../model/TransactionFilterDto';
 import TransactionService from '../../service/TransactionService';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import CategoryService from '../../service/CategoryService';
+import { convertNumberToCurrency } from '../../utils/CurrencyConverter'
 
 const transactions = ref<Transaction[]>([])
 const categories = ref<TransactionCategory[]>([])
@@ -17,9 +18,10 @@ const errorMessage = ref('');
 const files = ref<File[] | undefined>();
 const rangeDateFilter = ref<Date[]>([]);
 const filterCategoryId = ref<number | undefined>(undefined);
-const totalExpenses = ref<number | undefined>(undefined);
-const totalIncome = ref<number | undefined>(undefined);
-const differenceExpensesIncome = ref<number | undefined>(undefined);
+const totalExpenses = ref<number>();
+const totalIncome = ref<number>();
+const differenceExpensesIncome = ref<number>();
+const currentCurrency = ref<string>('MKD');
 
 
 onMounted(async () => {
@@ -67,6 +69,7 @@ async function uploadFile() {
       await TransactionService.uploadFileTransactions(files.value[0])
         .then((tr: Transaction[]) => {
           transactions.value = tr;
+          calculateStats(tr);
           files.value = undefined;
         })
     } catch (error) {
@@ -75,6 +78,7 @@ async function uploadFile() {
     }
   }
 };
+
 
 </script>
 
@@ -113,18 +117,24 @@ async function uploadFile() {
         </v-col>
       </v-row>
       <v-row align="start" class="mb-2 mt-0">
-        <v-col cols="12" md="12" xl="6" :key="1" style="height: 34rem">
-          <v-sheet class="p-4 shadow-black shadow-lg pb-10 bg-cyan-950 rounded-xl" style="height: 32rem">
-            <TransactionsPieChart v-if="transactions && transactions.length !== 0" :transactionsProp="transactions">
-            </TransactionsPieChart>
+        <v-col cols="12" md="12" xl="6" :key="1" style="height: 36rem;">
+          <v-sheet class="p-4 shadow-black shadow-lg bg-cyan-950 rounded-xl"
+            style="height: 34rem; overflow-x: scroll; overflow-y: hidden;">
+            <div style="height: 31rem; min-width: 40rem;" v-if="transactions && transactions.length !== 0">
+              <TransactionsPieChart :transactionsProp="transactions">
+              </TransactionsPieChart>
+            </div>
             <h2 v-else-if="errorMessage">{{ errorMessage }}</h2>
             <h1 v-else>No transactions, no pie</h1>
           </v-sheet>
         </v-col>
-        <v-col cols="12" md="12" xl="6" key="2" style="height: 34rem">
-          <v-sheet class="p-4 shadow-black shadow-lg pb-10 bg-cyan-950 rounded-xl items-center" style="height: 32rem">
-            <TransactionsBarChart v-if="transactions && transactions.length !== 0" :transactionsProp="transactions">
-            </TransactionsBarChart>
+        <v-col cols="12" md="12" xl="6" key="2" style="height: 36rem;">
+          <v-sheet class="p-4 shadow-black shadow-lg pb-10 bg-cyan-950 rounded-xl items-center"
+            style="height: 34rem; overflow-x: scroll; overflow-y: hidden">
+            <div style="height: 31rem; min-width: 40rem;" v-if="transactions && transactions.length !== 0">
+              <TransactionsBarChart :transactionsProp="transactions">
+              </TransactionsBarChart>
+            </div>
             <h2 v-else-if="errorMessage">{{ errorMessage }}</h2>
             <h1 v-else>No transactions, no pie</h1>
           </v-sheet>
@@ -135,14 +145,26 @@ async function uploadFile() {
           <h1 class="text-center text-xl">General statistics</h1>
         </v-col>
         <v-col class="text-lg">
+          <select class="w-1/5 h-9 rounded-sm bg-[#212121] text-slate-300 p-2" name="changeCurrency"
+            v-model="currentCurrency">
+            <option value="MKD">MKD</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
           <p>
-            Total amount spend: {{ totalExpenses }} MKD
+            Total amount earned: {{ convertNumberToCurrency(totalIncome, currentCurrency) }}
           </p>
           <p>
-            Total amount earned: {{ totalIncome }} MKD
+            Total amount spend: {{ convertNumberToCurrency(totalExpenses, currentCurrency) }}
           </p>
           <p>
-            Difference: {{ differenceExpensesIncome }} MKD
+            Difference: {{ convertNumberToCurrency(differenceExpensesIncome, currentCurrency) }}
+          </p>
+          <p>
+            First transaction date: {{ transactions.at(transactions.length - 1)?.date }}
+          </p>
+          <p>
+            Last transaction date: {{ transactions.at(0)?.date }}
           </p>
         </v-col>
       </v-row>

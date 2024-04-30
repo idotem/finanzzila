@@ -11,7 +11,7 @@ import { ref, onMounted, watch } from 'vue';
 import type Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import TransactionFilterDto from '../model/TransactionFilterDto';
-import axiosInstance from '@/config/axios/axios';
+import type TransactionDto from '../model/TransactionDto';
 
 type TransactionTableProps = {
     categoryId?: number | undefined,
@@ -34,7 +34,7 @@ const transactionsHeaders = [
     { title: 'Date', key: 'date' },
     { title: 'Company name', key: 'nameOfPlace' },
     { title: 'Amount (MKD)', key: 'amount' },
-    { title: 'Category', key: 'category' },
+    { title: 'Category', key: 'category.name' },
     { title: 'Actions', key: 'actions', sortable: false },
 ];
 
@@ -70,15 +70,12 @@ const fetchCategories = async () => {
     })
 }
 function editItem(item: any) {
-    // editedIndex = desserts.indexOf(item)
-    // editedItem = Object.assign({}, item)
+    editingItem.value = {...item, category: item.category.id};
     dialog.value = true
 }
 
 function deleteItem(item: any) {
     deletingItem.value = item;
-    // editedIndex = desserts.indexOf(item)
-    // editedItem = Object.assign({}, item)
     dialogDelete.value = true
 }
 
@@ -91,28 +88,42 @@ function deleteItemConfirm() {
             alert(`Unsuccesfull: ${err}`)
         })
 
-    // desserts.splice(this.editedIndex, 1)
     closeDelete()
 }
 
 function close() {
     dialog.value = false
-    // this.$nextTick(() => {
-    //     this.editedItem = Object.assign({}, this.defaultItem)
-    //     this.editedIndex = -1
-    // })
+    editingItem.value = Object.assign({}, {})
 }
 
 function closeDelete() {
-    dialogDelete.value = false
-    // this.$nextTick(() => {
-    //     this.editedItem = Object.assign({}, this.defaultItem)
-    //     this.editedIndex = -1
-    // })
+    dialogDelete.value = false;
+    deletingItem.value = Object.assign({}, {});
 }
 
 function save() {
-    close()
+    const itemToSave : TransactionDto = editingItem.value;
+    if(!itemToSave.nameOfPlace || !itemToSave.category || !itemToSave.amount || !itemToSave.date){
+        console.error("All fields for transaction are required.", itemToSave)
+        return;
+    }
+    if(editingItem.value.id !== undefined){
+        TransactionService.update(editingItem.value.id, itemToSave).then((res) => {
+            console.info("Successfully updated transaction ", res);
+            fetchTransactions();
+            close();
+        }).catch((err) => {
+            console.error("Unsccessfully updated transaction ", err);
+        })
+    } else {
+        TransactionService.add(itemToSave).then((res) => {
+            console.info("Successfully added transaction ", res);
+            fetchTransactions();
+            close();
+        }).catch((err) => {
+            console.error("Unsccessfully updated transaction ", err);
+        })
+    }
 }
 
 </script>
@@ -142,48 +153,34 @@ function save() {
                         </select>
                     </v-sheet>
                 </v-col>
+                <v-col cols="12" sm="12" md="3" class="justify-bottom">
+                    <v-btn prepend-icon="add" color="rgb(59 7 100)" dark @click="dialog = true" >
+                        <span class="text-white">Add New Transaction</span> 
+                    </v-btn>
+                </v-col>
                 <v-col cols="12">
                     <VDataTable hover color="black" class="bg-cyan-950 text-slate-200 text-xl" v-if="transactions"
-                        :headers="transactionsHeaders" :items="transactions.map((tr) => {
-                            return {
-                                ...tr, category:
-                                    tr.category.name
-                            }
-                        })">
+                        :headers="transactionsHeaders" :items="transactions">
                         <template v-slot:top>
-                            <v-toolbar flat>
-                                <v-toolbar-title>Transactions</v-toolbar-title>
-                                <v-divider class="mx-4" inset vertical></v-divider>
-                                <v-spacer></v-spacer>
-                                <v-dialog v-model="dialog" max-width="500px">
-                                    <template v-slot:activator="{ props }">
-                                        <v-btn class="mb-2" color="primary" dark v-bind="props">
-                                            New Item
-                                        </v-btn>
-                                    </template>
+                                <v-dialog v-model="dialog" max-width="600px">
                                     <v-card>
                                         <v-card-title>
-                                            <span class="text-h5">Add/Edit</span>
+                                            <span v-if="editingItem.date === undefined" class="text-h5">Add</span>
+                                            <span v-else class="text-h5">Edit</span>
                                         </v-card-title>
-
                                         <v-card-text>
                                             <v-container>
                                                 <v-row>
-                                                    <v-col cols="12" md="4" sm="6">
-                                                        <v-text-field v-model="editingItem.date"
-                                                            label="Date"></v-text-field>
+                                                    <v-col cols="12" sm="12" align-self="center">
+                                                        <label>Date</label>
+                                                        <VueDatePicker v-model="editingItem.date" label="Date"
+                                                            auto-apply dark :enable-time-picker="false" required>
+                                                        </VueDatePicker>
                                                     </v-col>
-                                                    <v-col cols="12" md="4" sm="6">
-                                                        <v-text-field v-model="editingItem.nameOfPlace"
-                                                            label="Company name"></v-text-field>
-                                                    </v-col>
-                                                    <v-col cols="12" md="4" sm="6">
-                                                        <v-text-field v-model="editingItem.amount"
-                                                            label="Amount (MKD)"></v-text-field>
-                                                    </v-col>
-                                                    <v-col cols="12" md="4" sm="6">
+                                                    <v-col cols="12" sm="12">
+                                                        <label>Category</label>
                                                         <select
-                                                            class="w-full h-9 rounded-sm bg-[#212121] text-slate-300"
+                                                            class="w-full h-9 p-2 rounded-sm bg-[#212121] text-slate-300"
                                                             name="filterCategory" v-model="editingItem.category">
                                                             <option :value="undefined">Clear Choice</option>
                                                             <option v-for="category in categories" :value="category.id"
@@ -191,6 +188,14 @@ function save() {
                                                                 {{ category.name }}
                                                             </option>
                                                         </select>
+                                                    </v-col>
+                                                    <v-col cols="12" sm="12">
+                                                        <v-text-field v-model="editingItem.nameOfPlace"
+                                                            label="Company name"></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12" sm="12">
+                                                        <v-text-field v-model="editingItem.amount"
+                                                            label="Amount (MKD)"></v-text-field>
                                                     </v-col>
                                                 </v-row>
                                             </v-container>
@@ -221,7 +226,6 @@ function save() {
                                         </v-card-actions>
                                     </v-card>
                                 </v-dialog>
-                            </v-toolbar>
                         </template>
                         <template v-slot:[`item.actions`]="{ item }">
                             <v-icon class="me-2" size="small" @click="editItem(item)">

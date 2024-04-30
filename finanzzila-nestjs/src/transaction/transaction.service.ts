@@ -31,14 +31,13 @@ export class TransactionService {
     }
 
     async findOne(id: number): Promise<Transaction> {
-        const options: any = { id: id };
-        return await this.transactionRepository.findOne(options);
+        return await this.transactionRepository.findOne({where: {id}});
     }
 
     async update(id: number, updateTransactionDto: UpdateTransactionDto) {
         const category: TransactionCategory = await this.transactionCategoryService
             .findById(updateTransactionDto.category);
-        const transaction = await this.findOne(id);
+        const transaction: Transaction = await this.findOne(id);
         if (!category) {
             console.log("Transaction category can not be empty on transacation update (Not Found)");
         }

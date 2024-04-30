@@ -48,8 +48,7 @@ export class TransactionCategoryService {
     }
 
     findById(id: number): Promise<TransactionCategory> {
-        const options: any = { id: id };
-        return this.transactionCategoryRepository.findOne(options);
+        return this.transactionCategoryRepository.findOne({where: {id}});
     }
 
     remove(id: number) : void {

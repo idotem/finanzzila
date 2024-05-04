@@ -2,16 +2,13 @@
 import CategoryService from '@/service/CategoryService';
 import TransactionService from '@/service/TransactionService';
 import {
-    VDataTable, VContainer, VRow, VSheet, VCol, VIcon, VDialog,
+    VExpansionPanel, VExpansionPanels, VFadeTransition, VExpansionPanelTitle,  VExpansionPanelText,
+    VContainer, VRow, VCol, VIcon, VDialog,
     VSpacer, VTextField, VBtn,
     VCard, VCardTitle, VCardText, VCardActions
 } from 'vuetify/components';
-import VueDatePicker from '@vuepic/vue-datepicker'
-import { ref, onMounted, watch } from 'vue';
-import type Transaction from '../model/Transaction';
-import type { TransactionCategory } from '../model/TransactionCategory';
-import TransactionFilterDto from '../model/TransactionFilterDto';
-import type TransactionDto from '../model/TransactionDto';
+import { ref, onMounted } from 'vue';
+import type { Category } from '../model/Category';
 
 type TransactionTableProps = {
     categoryId?: number | undefined,
@@ -19,28 +16,22 @@ type TransactionTableProps = {
 
 const props = defineProps<TransactionTableProps>();
 
-const transactions = ref<Transaction[]>([])
 const errorMessage = ref('');
-const rangeDateFilter = ref<Date[]>([]);
-const filterCategoryId = ref<number | undefined>(props.categoryId);
-const categories = ref<TransactionCategory[]>([])
+const categories = ref<Category[]>([])
 const dialog = ref<boolean>(false);
 const dialogDelete = ref<boolean>(false);
 const editingItem = ref<any>({})
 const deletingItem = ref<any>({});
 
 
-const transactionsHeaders = [
-    { title: 'Date', key: 'date' },
-    { title: 'Company name', key: 'nameOfPlace' },
-    { title: 'Amount (MKD)', key: 'amount' },
-    { title: 'Category', key: 'category.name' },
+const categoriesHeaders = [
+    { title: 'Name', key: 'name' },
+    { title: 'Keywords', key: 'keywords' },
     { title: 'Actions', key: 'actions', sortable: false },
 ];
 
 onMounted(async () => {
     try {
-        await fetchTransactions();
         await fetchCategories();
     } catch (error) {
         errorMessage.value = 'Error fetching data';
@@ -48,27 +39,12 @@ onMounted(async () => {
     }
 });
 
-const fetchTransactions = async () => {
-    const filter: TransactionFilterDto = new TransactionFilterDto(rangeDateFilter.value[0],
-        rangeDateFilter.value[1], filterCategoryId.value);
-    TransactionService.getAllFiltered(filter).then((tr: Transaction[]) => {
-        transactions.value = tr;
-    })
-}
-
-watch(rangeDateFilter, () => {
-    fetchTransactions();
-});
-
-watch(filterCategoryId, () => {
-    fetchTransactions();
-});
-
 const fetchCategories = async () => {
-    CategoryService.getAllTransactionCategories().then((trC: TransactionCategory[]) => {
+    CategoryService.getAllCategories().then((trC: Category[]) => {
         categories.value = trC;
     })
 }
+
 function editItem(item: any) {
     editingItem.value = {...item, category: item.category.id};
     dialog.value = true
@@ -82,7 +58,7 @@ function deleteItem(item: any) {
 function deleteItemConfirm() {
     TransactionService.delete(deletingItem.value.id)
         .then(() => {
-            fetchTransactions()
+            fetchCategories();
         })
         .catch((err) => {
             alert(`Unsuccesfull: ${err}`)
@@ -102,7 +78,7 @@ function closeDelete() {
 }
 
 function save() {
-    const itemToSave : TransactionDto = editingItem.value;
+    const itemToSave = editingItem.value;
     if(!itemToSave.nameOfPlace || !itemToSave.category || !itemToSave.amount || !itemToSave.date){
         console.error("All fields for transaction are required.", itemToSave)
         return;
@@ -110,7 +86,7 @@ function save() {
     if(editingItem.value.id !== undefined){
         TransactionService.update(editingItem.value.id, itemToSave).then((res) => {
             console.info("Successfully updated transaction ", res);
-            fetchTransactions();
+            fetchCategories();
             close();
         }).catch((err) => {
             console.error("Unsccessfully updated transaction ", err);
@@ -118,7 +94,7 @@ function save() {
     } else {
         TransactionService.add(itemToSave).then((res) => {
             console.info("Successfully added transaction ", res);
-            fetchTransactions();
+            fetchCategories();
             close();
         }).catch((err) => {
             console.error("Unsccessfully updated transaction ", err);
@@ -130,37 +106,68 @@ function save() {
 
 <template>
     <main>
-        <h1 class="text-3xl text-black mb-4">Transactions</h1>
+        <h1 class="text-3xl text-black mb-4">Configuration</h1>
         <v-container>
+          <v-row>
+            <v-col cols="6">
+              <v-btn prepend-icon="add" color="rgb(59 7 100)" dark @click="dialog = true" >
+                <span class="text-white">Add New Category</span> 
+              </v-btn>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col md="6" sm="12">
+              <v-expansion-panels>
+                <v-expansion-panel v-for="category in categories" :key="category.id">
+                  <v-expansion-panel-title>
+                    <template v-slot:default="{ expanded }">
+                      <v-row no-gutters>
+                        <v-col class="d-flex justify-start" cols="4">
+                          {{ category.name }}
+                        </v-col>
+                        <v-col v-if="expanded" class=""></v-col>
+                      </v-row>
+                    </template>
+                  </v-expansion-panel-title>
+                  <v-expansion-panel-text>
+                    <v-row>
+                      <v-col md="6" sm="12">
+                        <v-btn>Add Keyword</v-btn>
+                      </v-col>
+                      <v-col md="6" sm="12" align="end">
+                        <v-icon class="me-2" size="small" @click="editItem(category)">
+                          edit
+                        </v-icon>
+                        <v-icon size="small" @click="deleteItem(category)">
+                          delete
+                        </v-icon>
+                      </v-col>
+                    </v-row>
+                    <v-row>
+                      <v-col>
+                      <span v-for="keyword in category.keywords" :key="keyword">{{ keyword }}</span> 
+                      </v-col>
+                    </v-row>
+                  </v-expansion-panel-text>
+                </v-expansion-panel>
+              </v-expansion-panels>
+            </v-col>
+            <v-col md="6" sm="12">
+            </v-col>
+          </v-row>
+        </v-container>
+
+
+        <!-- <v-container>
             <v-row class="bg-cyan-950 text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg mb-1">
-                <v-col cols="12" sm="12" md="6">
-                    <v-sheet class="bg-cyan-950 text-slate-200">
-                        <label for="filterDateFrom">Pick a date range:</label>
-                        <VueDatePicker auto-apply dark v-model="rangeDateFilter" :enable-time-picker="false"
-                            :range="{ partialRange: false }">
-                        </VueDatePicker>
-                    </v-sheet>
-                </v-col>
-                <v-col cols="12" sm="12" md="3">
-                    <v-sheet class="bg-cyan-950 text-slate-200">
-                        <label class="w-full" for="filterCategory">Category:</label>
-                        <select class="w-full h-9 rounded-sm bg-[#212121] text-slate-300" name="filterCategory"
-                            v-model="filterCategoryId">
-                            <option :value="undefined">Clear Category Filter</option>
-                            <option v-for="category in categories" :value="category.id" v-bind:key="category.id">
-                                {{ category.name }}
-                            </option>
-                        </select>
-                    </v-sheet>
-                </v-col>
                 <v-col cols="12" sm="12" md="3" class="justify-bottom">
                     <v-btn prepend-icon="add" color="rgb(59 7 100)" dark @click="dialog = true" >
-                        <span class="text-white">Add New Transaction</span> 
+                        <span class="text-white">Add New Category</span> 
                     </v-btn>
                 </v-col>
                 <v-col cols="12">
-                    <VDataTable hover color="black" class="bg-cyan-950 text-slate-200 text-xl" v-if="transactions"
-                        :headers="transactionsHeaders" :items="transactions">
+                    <VDataTable hover color="black" class="bg-cyan-950 text-slate-200 text-xl" v-if="categories"
+                        :headers="categoriesHeaders" :items="categories">
                         <template v-slot:top>
                                 <v-dialog v-model="dialog" max-width="600px">
                                     <v-card>
@@ -240,7 +247,7 @@ function save() {
                     <p v-else>Loading..</p>
                 </v-col>
             </v-row>
-        </v-container>
+        </v-container> -->
     </main>
 </template>
 

@@ -51,7 +51,7 @@ watch(filterCategoryId, () => {
 });
 
 const fetchCategories = async () => {
-  CategoryService.getAllCategories().then((trC: TransactionCategory[]) => {
+  CategoryService.getAllTransactionCategories().then((trC: TransactionCategory[]) => {
     categories.value = trC;
   })
 }

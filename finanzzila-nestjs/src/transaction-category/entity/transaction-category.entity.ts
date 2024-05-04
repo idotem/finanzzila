@@ -19,7 +19,6 @@ export class TransactionCategory {
     @JoinColumn({name: 'keyword_id'})
     keywords: Keyword[];
 
-
     constructor(name: string) {
         this.name = name;
     }

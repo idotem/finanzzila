@@ -10,25 +10,13 @@ import {
 import { ref, onMounted } from 'vue';
 import type { Category } from '../model/Category';
 
-type TransactionTableProps = {
-    categoryId?: number | undefined,
-}
-
-const props = defineProps<TransactionTableProps>();
-
 const errorMessage = ref('');
 const categories = ref<Category[]>([])
 const dialog = ref<boolean>(false);
 const dialogDelete = ref<boolean>(false);
 const editingItem = ref<any>({})
+const addingKeyword = ref<string>('')
 const deletingItem = ref<any>({});
-
-
-const categoriesHeaders = [
-    { title: 'Name', key: 'name' },
-    { title: 'Keywords', key: 'keywords' },
-    { title: 'Actions', key: 'actions', sortable: false },
-];
 
 onMounted(async () => {
     try {
@@ -42,6 +30,7 @@ onMounted(async () => {
 const fetchCategories = async () => {
     CategoryService.getAllCategories().then((trC: Category[]) => {
         categories.value = trC;
+        console.log(categories)
     })
 }
 
@@ -53,6 +42,9 @@ function editItem(item: any) {
 function deleteItem(item: any) {
     deletingItem.value = item;
     dialogDelete.value = true
+}
+
+function deleteKeyword(keyword: any) {
 }
 
 function deleteItemConfirm() {
@@ -75,6 +67,16 @@ function close() {
 function closeDelete() {
     dialogDelete.value = false;
     deletingItem.value = Object.assign({}, {});
+}
+
+function addKeywordForCategory (category: Category){
+    CategoryService.addKeywordForCategory(category.id, addingKeyword.value)
+        .then(() => {
+            fetchCategories();
+        })
+        .catch((err) => {
+            console.log('Adding keyword for category ', category.name, ' failed with err: ', err);
+        });
 }
 
 function save() {
@@ -110,43 +112,55 @@ function save() {
         <v-container>
           <v-row>
             <v-col cols="6">
-              <v-btn prepend-icon="add" color="rgb(59 7 100)" dark @click="dialog = true" >
-                <span class="text-white">Add New Category</span> 
-              </v-btn>
+                <h1 class="text-black">Categories and keywords</h1>
+                <v-btn prepend-icon="add" color="rgb(59 7 100)" dark @click="dialog = true" >
+                    <span class="text-white">Add New Category</span> 
+                </v-btn>
             </v-col>
           </v-row>
           <v-row>
             <v-col md="6" sm="12">
-              <v-expansion-panels>
-                <v-expansion-panel v-for="category in categories" :key="category.id">
+              <v-expansion-panels multiple>
+                <v-expansion-panel bg-color="#083344" v-for="category in categories" :key="category.id">
                   <v-expansion-panel-title>
                     <template v-slot:default="{ expanded }">
                       <v-row no-gutters>
-                        <v-col class="d-flex justify-start" cols="4">
+                        <v-col class="justify-start" cols="6">
                           {{ category.name }}
                         </v-col>
-                        <v-col v-if="expanded" class=""></v-col>
+                        <v-col v-if="expanded" class="float-right" cols="6">
+                            
+                        </v-col>
                       </v-row>
                     </template>
                   </v-expansion-panel-title>
                   <v-expansion-panel-text>
+                    <v-row no-gutters>
+                        <v-col sm="12" md="4" align-self="center">
+                            <v-text-field placeholder="Keyword" v-model="addingKeyword"></v-text-field>
+                        </v-col>
+                        <v-col sm="12" md="8" align-self="center">
+                            <v-btn class="ml-5" @click="addKeywordForCategory(category)">Add Keyword</v-btn>
+                        </v-col>
+                    </v-row>
                     <v-row>
-                      <v-col md="6" sm="12">
-                        <v-btn>Add Keyword</v-btn>
-                      </v-col>
-                      <v-col md="6" sm="12" align="end">
-                        <v-icon class="me-2" size="small" @click="editItem(category)">
-                          edit
-                        </v-icon>
-                        <v-icon size="small" @click="deleteItem(category)">
-                          delete
-                        </v-icon>
+                        <v-col>
+                            <div class="inline-block m-1 p-1 border-2 border-black" v-for="keyword in category.keywords" :key="keyword">{{ keyword }}
+                                <v-icon class="float-right" size="small" @click="deleteKeyword(category)">
+                                    delete
+                                </v-icon>
+                            </div> 
                       </v-col>
                     </v-row>
                     <v-row>
-                      <v-col>
-                      <span v-for="keyword in category.keywords" :key="keyword">{{ keyword }}</span> 
-                      </v-col>
+                        <v-col sm="12">
+                            <v-icon class="float-right ml-4" size="small" @click="editItem(category)">
+                                edit
+                            </v-icon>
+                            <v-icon class="float-right" size="small" @click="deleteItem(category)">
+                                delete
+                            </v-icon>
+                        </v-col>
                     </v-row>
                   </v-expansion-panel-text>
                 </v-expansion-panel>

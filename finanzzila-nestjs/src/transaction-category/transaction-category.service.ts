@@ -18,7 +18,10 @@ export class TransactionCategoryService {
     ) { }
 
     findAll(): Promise<TransactionCategory[]> {
-        return this.transactionCategoryRepository.find();
+        const queryBuilder = this.transactionCategoryRepository
+            .createQueryBuilder('transaction-category')
+            .leftJoinAndSelect('transaction-category.keywords', 'keywords');
+        return queryBuilder.getMany();
     }
 
     async create(createTransactionCategoryDto: CreateTransactionCategoryDto): Promise<TransactionCategory> {

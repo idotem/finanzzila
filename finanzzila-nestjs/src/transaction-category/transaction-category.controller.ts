@@ -1,17 +1,17 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { TransactionCategoryService } from './transaction-category.service';
-import { TransactionCategory } from './entity/transaction-category.entity';
 import { CreateTransactionCategoryDto } from './dto/create-transaction-category-dto';
 import { UpdateTransactionCategoryDto } from './dto/update-transaction-category-dto';
+import { CategoryDto } from './dto/category-dto';
 
 @Controller('transaction-categories')
 export class TransactionCategoryController {
     constructor(private readonly transactionCategoryService: TransactionCategoryService) { }
 
     @Get()
-    async findAll(): Promise<TransactionCategory[]> {
+    async findAll(): Promise<CategoryDto[]> {
         const t = await this.transactionCategoryService.findAll();
-        return t;
+        return t.map((tc) => new CategoryDto(tc.id, tc.name, tc.keywords.map((k) => k.value)));
     }
 
     @Post()

@@ -1,9 +1,7 @@
 export class CreateKeywordDto {
-    categoryId: number;
     value: string;
 
-    constructor(categoryId: number, value: string){
-        this.categoryId = categoryId;
+    constructor(value: string){
         this.value = value;
     };
 }

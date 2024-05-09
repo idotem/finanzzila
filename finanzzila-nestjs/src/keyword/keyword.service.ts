@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Keyword } from './entities/keyword.entity';
 import { TransactionCategory } from 'src/transaction-category/entity/transaction-category.entity';
-import { TransactionCategoryService } from 'src/transaction-category/transaction-category.service';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -12,13 +11,13 @@ export class KeywordService {
     constructor(
         @InjectRepository(Keyword)
         private readonly keywordRepository: Repository<Keyword>,
-        private readonly categoryService: TransactionCategoryService
     ) { }
 
-    async create(createKeywordDto: CreateKeywordDto) {
-        const category: TransactionCategory = await this.categoryService.findById(createKeywordDto.categoryId);
-        const keyword: Keyword = new Keyword(createKeywordDto.value, category);
-        this.keywordRepository.save(keyword);
+    async createAllForCategory(category: TransactionCategory, createKeywordDtoList: CreateKeywordDto[]) {
+        createKeywordDtoList.forEach((ckd) => {
+            const keyword: Keyword = new Keyword(ckd.value, category);
+            this.keywordRepository.save(keyword);
+        })
     }
 
     findAll() {
@@ -28,7 +27,7 @@ export class KeywordService {
     findAllByCategoryId(catId: number) {
         const queryBuilder = this.keywordRepository
             .createQueryBuilder('keyword')
-            .leftJoinAndSelect('transaction.category', 'category');
+            .leftJoinAndSelect('keyword.category', 'category');
         queryBuilder.andWhere('keyword.category.id = :catId', { catId: catId });
         return queryBuilder.getMany();
 
@@ -40,22 +39,13 @@ export class KeywordService {
         return queryBuilder.getOne();
     }
 
-    async update(id: number, updateKeywordDto: UpdateKeywordDto) {
-        const keyword: Keyword = await this.findOne(id);
-        const category: TransactionCategory =
-            await this.categoryService.findById(updateKeywordDto.categoryId);
-        if (keyword) {
-            keyword.value = updateKeywordDto.value;
-            if (category) {
-                keyword.category = category;
-            }
-        } else {
-            console.log("Keyword was not found, id:", id);
-        }
+    async updateAllForCategory(category: TransactionCategory, updateKeywordDtoList: UpdateKeywordDto[]) {
+       this.removeAllForCategory(category); 
+       this.createAllForCategory(category, updateKeywordDtoList);
     }
 
-    remove(id: number): void {
-        const options: any = { id: id };
-        this.keywordRepository.delete(options);
+    async removeAllForCategory(category: TransactionCategory): Promise<void> {
+        const entitiesToDelete = await this.findAllByCategoryId(category.id);
+        await this.keywordRepository.remove(entitiesToDelete);
     }
 }

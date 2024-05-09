@@ -1,7 +1,7 @@
 import axiosInstance from '@/config/axios/axios';
 import { TransactionCategory } from '../components/model/TransactionCategory';
 import { Category } from '@/components/model/Category';
-import { CreateKeywordDto } from '@/components/model/CreateKeywordDto';
+import type CategoryDto from '@/components/model/CategoryDto';
 
 export default class CategoryService {
     static async getAllTransactionCategories(): Promise<TransactionCategory[]> {
@@ -20,13 +20,28 @@ export default class CategoryService {
         return categories;
     }
 
-    static async addKeywordForCategory(
-        categoryId: number,
-        keyword: string
-    ): Promise<void> {
-        await axiosInstance.post(
-            '/keywords',
-            new CreateKeywordDto(categoryId, keyword)
+    static async create(
+        createCategoryDto: CategoryDto
+    ): Promise<Category | any> {
+        const res = await axiosInstance.post<Category>(
+            '/transaction-categories',
+            createCategoryDto
         );
+        return res;
+    }
+
+    static async update(
+        id: number,
+        updatingItem: CategoryDto
+    ): Promise<Category | any> {
+        const res = await axiosInstance.put<Category>(
+            `/transaction-categories/${id}`,
+            updatingItem
+        );
+        return res;
+    }
+
+    static async delete(id: number): Promise<void> {
+        await axiosInstance.delete(`/transaction-categories/${id}`);
     }
 }

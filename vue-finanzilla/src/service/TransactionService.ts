@@ -54,12 +54,15 @@ export default class TransactionService {
         return await axiosInstance.delete(`transactions/${id}`);
     }
 
-    static async update(id: number, editingItem: TransactionDto): Promise<AxiosResponse> {
+    static async update(
+        id: number,
+        editingItem: TransactionDto
+    ): Promise<AxiosResponse> {
         return await axiosInstance.put(`transactions/${id}`, editingItem);
     }
 
-    static async add(itemToAdd: TransactionDto): Promise<AxiosResponse> {
-        return await axiosInstance.post(`transactions/`, itemToAdd);
+    static async add(addingItem: TransactionDto): Promise<AxiosResponse> {
+        return await axiosInstance.post(`transactions/`, addingItem);
     }
 
     static async findById(id: number): Promise<AxiosResponse> {

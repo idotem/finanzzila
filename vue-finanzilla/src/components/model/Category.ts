@@ -1,9 +1,11 @@
-export class Category {
-    id: number;
-    name: string;
-    keywords: string[];
+import type KeywordDto from './KeywordDto';
 
-    constructor(id: number, name: string, keywords: string[]) {
+export class Category {
+    id: number | undefined;
+    name: string;
+    keywords: KeywordDto[];
+
+    constructor(id: number | undefined, name: string, keywords: KeywordDto[]) {
         this.id = id;
         this.name = name;
         this.keywords = keywords;

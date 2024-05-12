@@ -16,15 +16,16 @@ import {
     VDataTable
 } from 'vuetify/components';
 import { ref, onMounted } from 'vue';
-import type { Category } from '../model/Category';
+import { Category } from '../model/Category';
 import CategoryDto from '../model/CategoryDto';
-import CreateKeywordDto from '../model/CreateKeywordDto';
+import KeywordDto from '../model/KeywordDto';
 
 const errorMessage = ref('');
 const categories = ref<Category[]>([]);
 const dialog = ref<boolean>(false);
 const dialogDelete = ref<boolean>(false);
-const editingItem = ref<CategoryDto>(new CategoryDto(undefined, '', []));
+const editingCategory = ref<Category>(new Category(undefined, '', []));
+const addingKeyword = ref<string>('');
 const deletingItem = ref<Category | undefined>(undefined);
 
 const categoriesHeaders = [
@@ -49,23 +50,23 @@ const fetchCategories = async () => {
     });
 };
 
-function editItem(item: any) {
-    editingItem.value = {
-        ...item,
-        keywords: item.keywords.map((k: string) => new CreateKeywordDto(k))
-    };
+function editCategory(item: CategoryDto | any) {
+    editingCategory.value = item;
     dialog.value = true;
 }
 
-function deleteItem(item: any) {
+function deleteCategory(item: any) {
     deletingItem.value = item;
     dialogDelete.value = true;
 }
 
-function deleteKeyword(keyword: any) {}
+function deleteKeyword(keyword: KeywordDto | any) {
+    const indexDeleting = editingCategory.value.keywords.indexOf(keyword);
+    editingCategory.value.keywords.splice(indexDeleting, 1);
+}
 
-function deleteItemConfirm() {
-    if (deletingItem.value) {
+function deleteCategoryConfirm() {
+    if (deletingItem.value?.id) {
         CategoryService.delete(deletingItem.value?.id)
             .then(() => {
                 fetchCategories();
@@ -79,7 +80,7 @@ function deleteItemConfirm() {
 
 function close() {
     dialog.value = false;
-    editingItem.value = new CategoryDto(undefined, '', []);
+    editingCategory.value = new CategoryDto(undefined, '', []);
 }
 
 function closeDelete() {
@@ -87,10 +88,19 @@ function closeDelete() {
     deletingItem.value = undefined;
 }
 
-function addKeywordForCategory(category: Category) {}
+function addKeywordForCategory() {
+    if (addingKeyword.value === '') {
+        console.log("Can't add empty keyword");
+        return;
+    }
+    editingCategory.value.keywords.push(
+        new KeywordDto(undefined, addingKeyword.value)
+    );
+    addingKeyword.value = '';
+}
 
 function save() {
-    const itemToSave = editingItem.value;
+    const itemToSave = editingCategory.value;
     if (!itemToSave.name) {
         console.error('Category must have a name.', itemToSave);
         return;
@@ -133,7 +143,7 @@ function save() {
                                 Configure categories and keywords
                             </h1>
                         </v-col>
-                        <v-col cols="12" sm="12" md="6" class="justify-bottom">
+                        <v-col sm="12" class="justify-bottom">
                             <v-btn
                                 prepend-icon="add"
                                 color="rgb(59 7 100)"
@@ -159,7 +169,7 @@ function save() {
                                         ) in item.keywords"
                                         :key="index"
                                     >
-                                        {{ keyword }}
+                                        {{ keyword.value }}
                                         <span
                                             v-if="
                                                 index !=
@@ -175,11 +185,13 @@ function save() {
                                         v-model="dialog"
                                         max-width="600px"
                                     >
-                                        <v-card>
+                                        <v-card
+                                            class="bg-violet-950 text-white"
+                                        >
                                             <v-card-title>
                                                 <span
                                                     v-if="
-                                                        editingItem?.name ===
+                                                        editingCategory?.id ===
                                                         undefined
                                                     "
                                                     class="text-h5"
@@ -198,17 +210,36 @@ function save() {
                                                         >
                                                             <v-text-field
                                                                 v-model="
-                                                                    editingItem.name
+                                                                    editingCategory.name
                                                                 "
                                                                 label="Category Name"
                                                             ></v-text-field>
+                                                        </v-col>
+                                                        <v-col sm="10">
+                                                            <v-text-field
+                                                                v-model="
+                                                                    addingKeyword
+                                                                "
+                                                                label="Add new keyword"
+                                                            ></v-text-field>
+                                                        </v-col>
+                                                        <v-col
+                                                            sm="2"
+                                                            class="mt-3"
+                                                        >
+                                                            <v-btn
+                                                                @click="
+                                                                    addKeywordForCategory
+                                                                "
+                                                                >Add</v-btn
+                                                            >
                                                         </v-col>
                                                         <v-col
                                                             cols="12"
                                                             sm="12"
                                                         >
                                                             <div
-                                                                class="h-96 overflow-scroll"
+                                                                class="h-96 divide-y overflow-y-scroll"
                                                             >
                                                                 Keywords for
                                                                 category:
@@ -216,17 +247,40 @@ function save() {
                                                                     v-for="(
                                                                         keyword,
                                                                         index
-                                                                    ) in editingItem.keywords"
+                                                                    ) in editingCategory.keywords"
                                                                     :key="index"
                                                                 >
-                                                                    <v-text-field
-                                                                        width="20"
-                                                                        density="compact"
-                                                                        v-model="
-                                                                            keyword.value
-                                                                        "
+                                                                    <v-row
+                                                                        class="mt-2"
                                                                     >
-                                                                    </v-text-field>
+                                                                        <v-col
+                                                                            sm="10"
+                                                                        >
+                                                                            <v-text-field
+                                                                                width="20"
+                                                                                density="compact"
+                                                                                v-model="
+                                                                                    keyword.value
+                                                                                "
+                                                                            >
+                                                                            </v-text-field>
+                                                                        </v-col>
+                                                                        <v-col
+                                                                            sm="2"
+                                                                        >
+                                                                            <v-icon
+                                                                                class="float-left mt-2"
+                                                                                size="small"
+                                                                                @click="
+                                                                                    deleteKeyword(
+                                                                                        keyword
+                                                                                    )
+                                                                                "
+                                                                            >
+                                                                                delete
+                                                                            </v-icon>
+                                                                        </v-col>
+                                                                    </v-row>
                                                                 </div>
                                                             </div>
                                                         </v-col>
@@ -273,7 +327,9 @@ function save() {
                                                 <v-btn
                                                     color="blue-darken-1"
                                                     variant="text"
-                                                    @click="deleteItemConfirm"
+                                                    @click="
+                                                        deleteCategoryConfirm
+                                                    "
                                                     >OK</v-btn
                                                 >
                                                 <v-spacer></v-spacer>
@@ -285,13 +341,13 @@ function save() {
                                     <v-icon
                                         class="me-2"
                                         size="small"
-                                        @click="editItem(item)"
+                                        @click="editCategory(item)"
                                     >
                                         edit
                                     </v-icon>
                                     <v-icon
                                         size="small"
-                                        @click="deleteItem(item)"
+                                        @click="deleteCategory(item)"
                                     >
                                         delete
                                     </v-icon>

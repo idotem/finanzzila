@@ -1,10 +1,8 @@
-import { CreateKeywordDto } from './dto/create-keyword.dto';
-import { UpdateKeywordDto } from './dto/update-keyword.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Keyword } from './entities/keyword.entity';
-import { TransactionCategory } from 'src/transaction-category/entity/transaction-category.entity';
 import { Injectable } from '@nestjs/common';
+import { TransactionCategory } from 'src/transaction/entities/transaction-category.entity';
 
 @Injectable()
 export class KeywordService {
@@ -13,14 +11,16 @@ export class KeywordService {
         private readonly keywordRepository: Repository<Keyword>,
     ) { }
 
-    async createAllForCategory(category: TransactionCategory, createKeywordDtoList: CreateKeywordDto[]) {
-        createKeywordDtoList.forEach((ckd) => {
+    /*
+    async createAllForCategory(category: TransactionCategory, createKeywordDtoList: CreateKeywordDto[]) :Promise<void> {
+        createKeywordDtoList.forEach(async (ckd) => {
             const keyword: Keyword = new Keyword(ckd.value, category);
-            this.keywordRepository.save(keyword);
-        })
-    }
+            await this.keywordRepository.save(keyword);
+        });
+    }     
+    */
 
-    findAll() {
+    async findAll() : Promise<Keyword[]>{
         return this.keywordRepository.find();
     }
 
@@ -33,16 +33,23 @@ export class KeywordService {
 
     }
 
-    findOne(id: number): Promise<Keyword> {
+    async findOne(id: number): Promise<Keyword> {
         const queryBuilder = this.keywordRepository.createQueryBuilder('keyword');
         queryBuilder.andWhere('keyword.id = :id', { id: id });
-        return queryBuilder.getOne();
+        return await queryBuilder.getOne();
     }
-
-    async updateAllForCategory(category: TransactionCategory, updateKeywordDtoList: UpdateKeywordDto[]) {
-       this.removeAllForCategory(category); 
-       this.createAllForCategory(category, updateKeywordDtoList);
+    
+    /*
+    async updateAllForCategory(category: TransactionCategory, updateKeywordDtoList: UpdateKeywordDto[]) : Promise<void>{
+        try{
+            await this.removeAllForCategory(category); 
+            return await this.createAllForCategory(category, updateKeywordDtoList);
+        } catch(e) {
+            console.log("UPDATE ALL FOR CATEGORY ", e.detail)
+            return e;
+        }
     }
+    */
 
     async removeAllForCategory(category: TransactionCategory): Promise<void> {
         const entitiesToDelete = await this.findAllByCategoryId(category.id);

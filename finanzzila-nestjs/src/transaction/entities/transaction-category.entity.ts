@@ -15,12 +15,13 @@ export class TransactionCategory {
     @JoinColumn({name: 'transaction_id'})
     transactions: Transaction[];
 
-    @OneToMany(() => Keyword, keyword => keyword.category)
+    @OneToMany(() => Keyword, keyword => keyword.category, { onDelete: 'CASCADE', cascade: true})
     @JoinColumn({name: 'keyword_id'})
     keywords: Keyword[];
 
-    constructor(name: string) {
+    constructor(name: string, keywords: Keyword[]) {
         this.name = name;
+        this.keywords = keywords;
     }
 }
 

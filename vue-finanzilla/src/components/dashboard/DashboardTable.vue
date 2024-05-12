@@ -76,12 +76,12 @@ function calculateStats(transactions: Transaction[]) {
     // these should be in minus(-)
     totalExpenses.value = transactions.reduce(
         (acc, curr) =>
-            curr.category.name !== 'INCOME' ? (acc += curr.amount) : acc,
+            curr.category.name !== 'Income' ? (acc += curr.amount) : acc,
         0
     );
     totalIncome.value = transactions.reduce(
         (acc, curr) =>
-            curr.category.name === 'INCOME' ? (acc += curr.amount) : acc,
+            curr.category.name === 'Income' ? (acc += curr.amount) : acc,
         0
     );
     differenceExpensesIncome.value = totalIncome.value + totalExpenses.value;

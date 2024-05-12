@@ -1,14 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { Workbook } from 'exceljs';
 import Transaction from './entities/transaction.entity'
-import { TransactionCategory } from '../transaction-category/entity/transaction-category.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TransactionCategoryService } from 'src/transaction-category/transaction-category.service';
 import { TransactionFilterDto } from './dto/filter-transaction.dto';
 import * as fs from 'fs';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { KeywordService } from 'src/keyword/keyword.service';
+import { Keyword } from 'src/keyword/entities/keyword.entity';
+import { TransactionCategory } from './entities/transaction-category.entity';
+import { TransactionCategoryService } from './transaction-category.service';
 
 @Injectable()
 export class TransactionService {
@@ -16,8 +18,37 @@ export class TransactionService {
     constructor(
         @InjectRepository(Transaction)
         private readonly transactionRepository: Repository<Transaction>,
-        private readonly transactionCategoryService: TransactionCategoryService,
+        private readonly keywordService: KeywordService,
+        @Inject(forwardRef(() => TransactionCategoryService))
+        private readonly transactionCategoryService: TransactionCategoryService
     ) { }
+
+    checkIfNameOfTransactionContainsGivenWord(
+        nameOfTransactionPlace: string,
+        wordThatsContained: string,
+    ): boolean {
+        return nameOfTransactionPlace.includes(wordThatsContained);
+    }
+
+    async updateTransactionsAfterCategoriesGetUpdated() : Promise<void>{
+        const transactions = await this.findAllFiltered(new TransactionFilterDto(undefined, undefined, undefined));
+        const keywords: Keyword[] = await this.keywordService.findAll();
+        const categories = await this.transactionCategoryService.findAll();
+        transactions.forEach((tr) => {
+            let categoryToChange = tr.category;
+            if (tr.amount > 0) {
+                categoryToChange = categories.find((c) => c.name === 'Income');
+            }
+            for(let i = 0; i < keywords.length; i++) {
+                if(this.checkIfNameOfTransactionContainsGivenWord(tr.nameOfPlace, keywords[i].value)) {
+                    categoryToChange = keywords[i].category;         
+                    break;
+                }
+            }
+            tr.category = categoryToChange;
+        })
+        this.transactionRepository.save(transactions);
+    }
 
     async create(createTransactionDto: CreateTransactionDto) {
         const category: TransactionCategory = await this.transactionCategoryService
@@ -38,11 +69,8 @@ export class TransactionService {
         const category: TransactionCategory = await this.transactionCategoryService
             .findById(updateTransactionDto.category);
         const transaction: Transaction = await this.findOne(id);
-        if (!category) {
-            console.log("Transaction category can not be empty on transacation update (Not Found)");
-        }
         if (!transaction) {
-            console.log("Transaction Not Found on transaction update");
+            throw new NotFoundException(`Transaction with ${id} was not found`);
         }
         transaction.category = category;
         transaction.amount = updateTransactionDto.amount;
@@ -56,20 +84,17 @@ export class TransactionService {
         this.transactionRepository.delete(options);
     }
 
-    async checkIfFileAlreadyUploaded(fileName: string): Promise<boolean> {
+    async checkIfFileAlreadyUploaded(fileName: string): Promise<void> {
         const uploadedFiles = await this.findAllUploadedReports();
         if (uploadedFiles.find((f) => f === fileName)) {
-            console.log('File already uploaded and transactions entered: ', fileName);
-            return true;
+            throw new ConflictException(`File with filename ${fileName} already exists`);
         }
-        return false;
     }
 
     async populateTransactions(file: Express.Multer.File): Promise<Transaction[]> {
-        if (await this.checkIfFileAlreadyUploaded(file.originalname)) {
-            return;
-        };
+        //await this.checkIfFileAlreadyUploaded(file.originalname);
         const categories = await this.transactionCategoryService.findAll();
+        const keywords: Keyword[] = await this.keywordService.findAll();
         const transactions: Transaction[] = []
         const workbook = new Workbook();
         await workbook.xlsx.load(file.buffer)
@@ -82,10 +107,9 @@ export class TransactionService {
                     const transDate: Date = row.values[1];
                     const transName: string = row.values[2].toString();
                     const transAmount: number = row.values[4];
-                    const category: TransactionCategory = getCategory(transName, transAmount);
+                    const category: TransactionCategory = getCategoryV2(transName, transAmount);
                     const transaction = new Transaction(transDate, transName,
                         transAmount, category)
-                    console.log(rowNumber, " ", category, transDate, transName, transAmount, transaction)
                     if (category) {
                         transactions.push(transaction);
                     }
@@ -96,6 +120,26 @@ export class TransactionService {
                     wordThatsContained: string,
                 ): boolean {
                     return nameOfTransactionPlace.includes(wordThatsContained);
+                }
+                
+                function getCategoryV2(nameOfTransactionPlace: string, amountOfTransaction: number) {
+                    if (amountOfTransaction === undefined && amountOfTransaction === null) {
+                        console.log("Ignored or invalid transaction with name: ",
+                                    nameOfTransactionPlace,
+                                    "and amount: ",
+                                    amountOfTransaction);
+                                    return undefined;
+                    }
+                    if (amountOfTransaction > 0) {
+                        return categories.find((c) => c.name === 'Income');
+                    }
+                    for(let i = 0; i < keywords.length; i++) {
+                        if(checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, keywords[i].value)) {
+                            console.log("TRUE ", keywords[i].category)
+                            return keywords[i].category;         
+                        }
+                    }
+                    return categories.find((c) => c.name === 'NOT_MAPPED');
                 }
 
                 function getCategory(

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put } from '@nestjs/common';
 import { TransactionCategoryService } from './transaction-category.service';
 import { CreateTransactionCategoryDto } from './dto/create-transaction-category-dto';
 import { UpdateTransactionCategoryDto } from './dto/update-transaction-category-dto';
@@ -26,7 +26,7 @@ export class TransactionCategoryController {
 
     @Put(':id')
     update(@Param('id') id: string, @Body() updateTransactionCategoryDto: UpdateTransactionCategoryDto) {
-        return this.transactionCategoryService.update(+id, updateTransactionCategoryDto);
+            return this.transactionCategoryService.update(+id, updateTransactionCategoryDto);
     }
 
     @Delete(':id')

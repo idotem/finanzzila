@@ -1,5 +1,5 @@
-import { TransactionCategory } from "../../transaction-category/entity/transaction-category.entity";
 import { Entity, Column, PrimaryGeneratedColumn, JoinColumn, ManyToOne } from "typeorm";
+import { TransactionCategory } from "./transaction-category.entity";
 
 @Entity()
 export default class Transaction {

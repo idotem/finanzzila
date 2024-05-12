@@ -1,6 +1,8 @@
 import axiosInstance from '@/config/axios/axios';
 import Transaction from '../components/model/Transaction';
 import type TransactionFilterDto from '../components/model/TransactionFilterDto';
+import type { AxiosResponse } from 'axios';
+import type TransactionDto from '@/components/model/TransactionDto';
 
 export default class TransactionService {
     static async getAllFiltered(
@@ -46,5 +48,24 @@ export default class TransactionService {
                 )
         );
         return transactions;
+    }
+
+    static async delete(id: number): Promise<AxiosResponse> {
+        return await axiosInstance.delete(`transactions/${id}`);
+    }
+
+    static async update(
+        id: number,
+        editingItem: TransactionDto
+    ): Promise<AxiosResponse> {
+        return await axiosInstance.put(`transactions/${id}`, editingItem);
+    }
+
+    static async add(addingItem: TransactionDto): Promise<AxiosResponse> {
+        return await axiosInstance.post(`transactions/`, addingItem);
+    }
+
+    static async findById(id: number): Promise<AxiosResponse> {
+        return await axiosInstance.get(`transactions/${id}`);
     }
 }

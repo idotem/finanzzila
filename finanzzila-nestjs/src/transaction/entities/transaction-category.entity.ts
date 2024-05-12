@@ -1,3 +1,4 @@
+import { Keyword } from 'src/keyword/entities/keyword.entity';
 import Transaction from '../../transaction/entities/transaction.entity';
 import { Entity, Column, OneToMany, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
 
@@ -14,8 +15,13 @@ export class TransactionCategory {
     @JoinColumn({name: 'transaction_id'})
     transactions: Transaction[];
 
-    constructor(name: string) {
+    @OneToMany(() => Keyword, keyword => keyword.category, { onDelete: 'CASCADE', cascade: true})
+    @JoinColumn({name: 'keyword_id'})
+    keywords: Keyword[];
+
+    constructor(name: string, keywords: Keyword[]) {
         this.name = name;
+        this.keywords = keywords;
     }
 }
 

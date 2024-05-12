@@ -5,6 +5,7 @@ import App from './App.vue';
 import router from './router';
 import { createVuetify } from 'vuetify';
 import './assets/tailwind.css';
+import 'vuetify/styles';
 // Import Vuetify styles
 import 'material-design-icons-iconfont/dist/material-design-icons.css'; // Ensure your project is capable of handling css files
 import { aliases, md } from 'vuetify/iconsets/md';

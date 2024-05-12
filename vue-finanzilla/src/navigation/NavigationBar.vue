@@ -11,6 +11,9 @@ import { VNavigationDrawer, VList, VListItem } from 'vuetify/components';
             <v-list-item prepend-icon="paid" to="/transactions">
                 <p class="text-slate-300 text-2xl">Transactions</p>
             </v-list-item>
+            <v-list-item prepend-icon="paid" to="/configuration">
+                <p class="text-slate-300 text-2xl">Config</p>
+            </v-list-item>
             <v-list-item prepend-icon="information" to="/about">
                 <p class="text-slate-300 text-2xl">About</p>
             </v-list-item>

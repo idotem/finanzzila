@@ -15,6 +15,11 @@ const router = createRouter({
             component: () => import('../views/TransactionsView.vue')
         },
         {
+            path: '/configuration',
+            name: 'ConfigurationTab',
+            component: () => import('../views/ConfigurationView.vue')
+        },
+        {
             path: '/about',
             name: 'about',
             // route level code-splitting

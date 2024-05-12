@@ -1,15 +1,20 @@
+
 import { Module } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { TransactionController } from './transaction.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import Transaction from './entities/transaction.entity'
-import { TransactionCategoryService } from 'src/transaction-category/transaction-category.service';
-import { TransactionCategory } from 'src/transaction-category/entity/transaction-category.entity';
+import { Keyword } from 'src/keyword/entities/keyword.entity';
+import { KeywordService } from 'src/keyword/keyword.service';
+import { TransactionCategory } from './entities/transaction-category.entity';
+import { TransactionCategoryService } from './transaction-category.service';
+import { TransactionCategoryController } from './transaction-category.controller';
+import { CategorySubscriber } from './category-subscriber';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Transaction]),
-    TypeOrmModule.forFeature([TransactionCategory])],
-    controllers: [TransactionController],
-    providers: [TransactionService, TransactionCategoryService],
+    imports: [TypeOrmModule.forFeature([TransactionCategory, Keyword, Transaction])],
+    controllers: [TransactionController, TransactionCategoryController],
+    providers: [TransactionService, TransactionCategoryService, KeywordService, CategorySubscriber],
 })
 export class TransactionModule { }
+

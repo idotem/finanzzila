@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 export default function EditScreenInfo({ path }: { path: string }) {
     const [transactions, setTransactions] = useState<any>([]);
     function randomNumber() {
-        return Math.floor(Math.random() * 26) + 125;
+        return Math.floor(Math.random() * 26) + 45;
     }
     function generateRandomColor(): string {
         // Generating a random number between 0 and 0xFFFFFF
@@ -18,32 +18,32 @@ export default function EditScreenInfo({ path }: { path: string }) {
     }
 
     useEffect(() => {
-        getTransactions();
         async function getTransactions() {
             const data: any = await createDatabase();
             if (!data) {
-                console.log('DATA LOADDE');
                 return;
             }
-            const DATA: Record<string, unknown>[] = [
+            const trData: any = [
                 {
-                    value: data[0].value,
+                    value: data[randomNumber()].intValue,
                     color: generateRandomColor(),
-                    label: `${data[0].intValue}`,
+                    label: `${data[randomNumber()].value}`,
                 },
                 {
-                    value: data[1].value,
+                    value: data[randomNumber()].intValue,
                     color: generateRandomColor(),
-                    label: `${data[1].intValue}`,
+                    label: `${data[randomNumber()].value}`,
                 },
                 {
-                    value: data[2].value,
+                    value: data[randomNumber()].intValue,
                     color: generateRandomColor(),
-                    label: `${data[2].intValue}`,
+                    label: `${data[randomNumber()].value}`,
                 },
             ];
-            setTransactions(DATA);
+            console.log(trData);
+            setTransactions(trData);
         }
+        getTransactions();
     }, []);
 
     return (
@@ -58,7 +58,17 @@ export default function EditScreenInfo({ path }: { path: string }) {
                 <Text
                     style={styles.getStartedText}
                     lightColor="rgba(0,0,0,0.8)"
-                    darkColor="rgba(255,255,255,0.8)"></Text>
+                    darkColor="rgba(255,255,255,0.8)">
+                    {transactions.map((t: any, index: number) => {
+                        return (
+                            <View key={index}>
+                                <Text>{t.value}</Text>
+                                <Text>{t.label}</Text>
+                                <Text>{t.value}</Text>
+                            </View>
+                        );
+                    })}
+                </Text>
             </View>
 
             <View style={{ height: 300 }}>

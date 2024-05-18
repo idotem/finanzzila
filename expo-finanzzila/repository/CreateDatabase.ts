@@ -13,6 +13,7 @@ async function createDatabase() {
     INSERT INTO test (value, intValue) VALUES ('test3', 789);
     `);
     const allRows = await db.getAllAsync('SELECT * FROM test');
+    console.log(allRows);
     return allRows;
 }
 

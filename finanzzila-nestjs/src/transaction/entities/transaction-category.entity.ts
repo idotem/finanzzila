@@ -15,7 +15,7 @@ export class TransactionCategory {
     @JoinColumn({name: 'transaction_id'})
     transactions: Transaction[];
 
-    @OneToMany(() => Keyword, keyword => keyword.category, { onDelete: 'CASCADE', cascade: true})
+    @OneToMany(() => Keyword, keyword => keyword.category, { onDelete: 'CASCADE', cascade: true, eager: false})
     @JoinColumn({name: 'keyword_id'})
     keywords: Keyword[];
 

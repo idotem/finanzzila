@@ -18,6 +18,16 @@ export class KeywordService {
             await this.keywordRepository.save(keyword);
         });
     }     
+
+    async updateAllForCategory(category: TransactionCategory, updateKeywordDtoList: UpdateKeywordDto[]) : Promise<void>{
+        try{
+            await this.removeAllForCategory(category); 
+            return await this.createAllForCategory(category, updateKeywordDtoList);
+        } catch(e) {
+            console.log("UPDATE ALL FOR CATEGORY ", e.detail)
+            return e;
+        }
+    }
     */
 
     async findAll() : Promise<Keyword[]>{
@@ -38,18 +48,6 @@ export class KeywordService {
         queryBuilder.andWhere('keyword.id = :id', { id: id });
         return await queryBuilder.getOne();
     }
-    
-    /*
-    async updateAllForCategory(category: TransactionCategory, updateKeywordDtoList: UpdateKeywordDto[]) : Promise<void>{
-        try{
-            await this.removeAllForCategory(category); 
-            return await this.createAllForCategory(category, updateKeywordDtoList);
-        } catch(e) {
-            console.log("UPDATE ALL FOR CATEGORY ", e.detail)
-            return e;
-        }
-    }
-    */
 
     async removeAllForCategory(category: TransactionCategory): Promise<void> {
         const entitiesToDelete = await this.findAllByCategoryId(category.id);

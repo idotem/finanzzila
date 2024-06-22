@@ -13,14 +13,15 @@ import {
 } from 'vuetify/components';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import TransactionsPieChart from '../charts/TransactionsPieChart.vue';
-import TransactionsBarChart from '../charts/TransactionsBarChart.vue';
+import TransactionsChart from '../charts/TransactionsChart.vue';
 import Transaction from '../model/Transaction';
 import TransactionFilterDto from '../model/TransactionFilterDto';
 import TransactionService from '../../service/TransactionService';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import CategoryService from '../../service/CategoryService';
 import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
+
+const timePeriods = ['All time', 'Yearly', 'Monthly'];
 
 const transactions = ref<Transaction[]>([]);
 const categories = ref<TransactionCategory[]>([]);
@@ -65,23 +66,19 @@ watch(filterCategoryId, () => {
 });
 
 const fetchCategories = async () => {
-    CategoryService.getAllTransactionCategories().then(
-        (trC: TransactionCategory[]) => {
-            categories.value = trC;
-        }
-    );
+    CategoryService.getAllTransactionCategories().then((trC: TransactionCategory[]) => {
+        categories.value = trC;
+    });
 };
 
 function calculateStats(transactions: Transaction[]) {
     // these should be in minus(-)
     totalExpenses.value = transactions.reduce(
-        (acc, curr) =>
-            curr.category.name !== 'Income' ? (acc += curr.amount) : acc,
+        (acc, curr) => (curr.category.name !== 'Income' ? (acc += curr.amount) : acc),
         0
     );
     totalIncome.value = transactions.reduce(
-        (acc, curr) =>
-            curr.category.name === 'Income' ? (acc += curr.amount) : acc,
+        (acc, curr) => (curr.category.name === 'Income' ? (acc += curr.amount) : acc),
         0
     );
     differenceExpensesIncome.value = totalIncome.value + totalExpenses.value;
@@ -90,13 +87,13 @@ function calculateStats(transactions: Transaction[]) {
 async function uploadFile() {
     if (files.value && files.value.length > 0) {
         try {
-            await TransactionService.uploadFileTransactions(
-                files.value[0]
-            ).then((tr: Transaction[]) => {
-                transactions.value = tr;
-                calculateStats(tr);
-                files.value = undefined;
-            });
+            await TransactionService.uploadFileTransactions(files.value[0]).then(
+                (tr: Transaction[]) => {
+                    transactions.value = tr;
+                    calculateStats(tr);
+                    files.value = undefined;
+                }
+            );
         } catch (error) {
             console.error(error);
             files.value = undefined;
@@ -124,10 +121,7 @@ async function uploadFile() {
                         counter
                     >
                         <template v-slot:selection="{ fileNames }">
-                            <template
-                                v-for="(fileName, index) in fileNames"
-                                :key="fileName"
-                            >
+                            <template v-for="(fileName, index) in fileNames" :key="fileName">
                                 <v-chip
                                     v-if="index < 2"
                                     class="text-purple-950 text-xl"
@@ -150,17 +144,13 @@ async function uploadFile() {
                                 @click="uploadFile"
                                 >Upload</v-btn
                             >
-                            <!-- color="#1ABC9C" -->
                         </template>
                     </v-hover>
                 </v-col>
                 <v-col cols="0" sm="1" md="3">
-                    <label class="text-lg text-black" for="filterDateFrom"
-                        >Group by time period (Averages):</label
-                    >
                     <v-select
-                        :items="['All time', 'Yearly', 'Monthly', 'Weekly']"
-                        label="Time Period"
+                        :items="timePeriods"
+                        label="Time Period (Averages)"
                         density="compact"
                         v-model="timePeriod"
                         item-color="success"
@@ -169,14 +159,13 @@ async function uploadFile() {
                     </v-select>
                 </v-col>
                 <v-col cols="12" sm="5" md="4">
-                    <label class="text-lg text-black" for="filterDateFrom"
-                        >Pick a date range:</label
-                    >
                     <VueDatePicker
                         dark
                         v-model="rangeDateFilter"
                         :enable-time-picker="false"
                         :range="{ partialRange: false }"
+                        placeholder="Pick a date range"
+                        color="success"
                     >
                     </VueDatePicker>
                 </v-col>
@@ -185,20 +174,19 @@ async function uploadFile() {
                 <v-col cols="12" md="12" xl="6" :key="1" style="height: 36rem">
                     <v-sheet
                         class="p-4 shadow-black shadow-lg bg-cyan-950 rounded-xl"
-                        style="
-                            height: 34rem;
-                            overflow-x: scroll;
-                            overflow-y: hidden;
-                        "
+                        style="height: 34rem; overflow-x: hidden; overflow-y: hidden"
                     >
                         <div
                             style="height: 31rem; min-width: 40rem"
                             v-if="transactions && transactions.length !== 0"
                         >
-                            <TransactionsPieChart
+                            <TransactionsChart
                                 :transactionsProp="transactions"
+                                :timePeriodProp="timePeriod"
+                                chartTypeProp="Doughnut"
+                                :dateFilterProp="rangeDateFilter"
                             >
-                            </TransactionsPieChart>
+                            </TransactionsChart>
                         </div>
                         <h2 v-else-if="errorMessage">{{ errorMessage }}</h2>
                         <h1 v-else>No transactions, no pie</h1>
@@ -207,20 +195,19 @@ async function uploadFile() {
                 <v-col cols="12" md="12" xl="6" key="2" style="height: 36rem">
                     <v-sheet
                         class="p-4 shadow-black shadow-lg pb-10 bg-cyan-950 rounded-xl items-center"
-                        style="
-                            height: 34rem;
-                            overflow-x: scroll;
-                            overflow-y: hidden;
-                        "
+                        style="height: 34rem; overflow-x: hidden; overflow-y: hidden"
                     >
                         <div
                             style="height: 31rem; min-width: 40rem"
                             v-if="transactions && transactions.length !== 0"
                         >
-                            <TransactionsBarChart
+                            <TransactionsChart
                                 :transactionsProp="transactions"
+                                :timePeriodProp="timePeriod"
+                                chartTypeProp="Bar"
+                                :dateFilterProp="rangeDateFilter"
                             >
-                            </TransactionsBarChart>
+                            </TransactionsChart>
                         </div>
                         <h2 v-else-if="errorMessage">{{ errorMessage }}</h2>
                         <h1 v-else>No transactions, no pie</h1>
@@ -245,30 +232,15 @@ async function uploadFile() {
                     </select>
                     <p>
                         Total amount earned:
-                        {{
-                            convertNumberToCurrency(
-                                totalIncome,
-                                currentCurrency
-                            )
-                        }}
+                        {{ convertNumberToCurrency(totalIncome, currentCurrency) }}
                     </p>
                     <p>
                         Total amount spend:
-                        {{
-                            convertNumberToCurrency(
-                                totalExpenses,
-                                currentCurrency
-                            )
-                        }}
+                        {{ convertNumberToCurrency(totalExpenses, currentCurrency) }}
                     </p>
                     <p>
                         Difference:
-                        {{
-                            convertNumberToCurrency(
-                                differenceExpensesIncome,
-                                currentCurrency
-                            )
-                        }}
+                        {{ convertNumberToCurrency(differenceExpensesIncome, currentCurrency) }}
                     </p>
                     <p>
                         First transaction date:
@@ -286,10 +258,5 @@ async function uploadFile() {
 h1,
 h2 {
     text-align: center;
-}
-
-th,
-td {
-    padding: 10px;
 }
 </style>

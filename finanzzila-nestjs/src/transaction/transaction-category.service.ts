@@ -67,5 +67,14 @@ export class TransactionCategoryService {
         const options: any = { id: id };
         this.transactionCategoryRepository.delete(options);
     }
+
+    async addKeywordForCategory(category: TransactionCategory, keyword: string){
+        const catKeywords = await this.keywordService.findAllByCategoryId(category.id);
+        console.log("CATKEYWORDS", catKeywords);
+        console.log("keyword", keyword);
+        catKeywords.push(new Keyword(keyword));
+        category.keywords = catKeywords;
+        this.transactionCategoryRepository.save(category);
+    }
 }
 

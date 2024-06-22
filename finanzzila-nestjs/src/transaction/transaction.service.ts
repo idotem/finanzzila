@@ -53,6 +53,8 @@ export class TransactionService {
     async create(createTransactionDto: CreateTransactionDto) {
         const category: TransactionCategory = await this.transactionCategoryService
             .findById(createTransactionDto.category);
+        await this.transactionCategoryService.addKeywordForCategory(category, 
+                                                                    createTransactionDto.categoryKeyword)
         const transaction: Transaction = new Transaction(
             createTransactionDto.date,
             createTransactionDto.nameOfPlace,
@@ -68,6 +70,9 @@ export class TransactionService {
     async update(id: number, updateTransactionDto: UpdateTransactionDto) {
         const category: TransactionCategory = await this.transactionCategoryService
             .findById(updateTransactionDto.category);
+        await this.transactionCategoryService.addKeywordForCategory(category, 
+                                                                    updateTransactionDto.categoryKeyword)
+
         const transaction: Transaction = await this.findOne(id);
         if (!transaction) {
             throw new NotFoundException(`Transaction with ${id} was not found`);

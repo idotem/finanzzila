@@ -8,7 +8,6 @@ export default class TransactionService {
     static async getAllFiltered(
         filter: TransactionFilterDto
     ): Promise<Transaction[]> {
-        console.log(filter);
         const res = await axiosInstance.get('/transactions', {
             params: {
                 dateFrom: filter.dateFrom,

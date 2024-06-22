@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'vue-chartjs';
 import Transaction from '../model/Transaction';
@@ -190,4 +190,6 @@ const options: any = {
         :options="options"
         class="text-slate-200"
     />
-</template>
+</template> -->
+<script></script>
+<template><main></main></template>

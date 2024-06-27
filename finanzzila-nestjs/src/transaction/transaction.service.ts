@@ -31,10 +31,12 @@ export class TransactionService {
     }
 
     async updateTransactionsAfterCategoriesGetUpdated() : Promise<void>{
-        const transactions = await this.findAllFiltered(new TransactionFilterDto(undefined, undefined, undefined));
+        const categories: TransactionCategory[] = await this.transactionCategoryService.findAll();
+        const notMappedCategoryId: number = categories.find((c) => c.name === 'NOT_MAPPED').id;
+        const transactions: Transaction[] = await this.findAllFiltered(
+            new TransactionFilterDto(undefined, undefined, notMappedCategoryId));
         const keywords: Keyword[] = await this.keywordService.findAll();
-        const categories = await this.transactionCategoryService.findAll();
-        transactions.forEach((tr) => {
+        transactions.filter((tr) => tr.manuallyOverried === false) .forEach((tr) => {
             let categoryToChange = tr.category;
             if (tr.amount > 0) {
                 categoryToChange = categories.find((c) => c.name === 'Income');
@@ -45,43 +47,56 @@ export class TransactionService {
                     break;
                 }
             }
-            tr.category = categoryToChange;
+            if(categoryToChange !== null){
+                tr.category = categoryToChange;
+            }
         })
         this.transactionRepository.save(transactions);
     }
 
-    async create(createTransactionDto: CreateTransactionDto) {
-        const category: TransactionCategory = await this.transactionCategoryService
+    async create(createTransactionDto: CreateTransactionDto): Promise<Transaction>{
+        let category: TransactionCategory = await this.transactionCategoryService
             .findById(createTransactionDto.category);
-        await this.transactionCategoryService.addKeywordForCategory(category, 
-                                                                    createTransactionDto.categoryKeyword)
         const transaction: Transaction = new Transaction(
             createTransactionDto.date,
             createTransactionDto.nameOfPlace,
             createTransactionDto.amount,
             category)
-        return this.transactionRepository.save(transaction);
+        const savedTransaction = await this.transactionRepository.save(transaction);
+        if(createTransactionDto.categoryKeyword !== null && 
+           createTransactionDto.categoryKeyword !== undefined){
+            category = await this.transactionCategoryService
+                .addKeywordForCategory(category, createTransactionDto.categoryKeyword)
+        }
+        return savedTransaction;
     }
 
     async findOne(id: number): Promise<Transaction> {
         return await this.transactionRepository.findOne({where: {id}});
     }
 
-    async update(id: number, updateTransactionDto: UpdateTransactionDto) {
-        const category: TransactionCategory = await this.transactionCategoryService
-            .findById(updateTransactionDto.category);
-        await this.transactionCategoryService.addKeywordForCategory(category, 
-                                                                    updateTransactionDto.categoryKeyword)
-
+    async update(id: number, updateTransactionDto: UpdateTransactionDto) :Promise<Transaction> {
         const transaction: Transaction = await this.findOne(id);
         if (!transaction) {
             throw new NotFoundException(`Transaction with ${id} was not found`);
+        }
+        const category: TransactionCategory = await this.transactionCategoryService
+            .findById(updateTransactionDto.category);
+        const oldTransactionCategoryName = transaction.category.name;
+        if(oldTransactionCategoryName !== 'NOT_MAPPED' && oldTransactionCategoryName !== category.name){
+            transaction.manuallyOverried = true;
         }
         transaction.category = category;
         transaction.amount = updateTransactionDto.amount;
         transaction.date = updateTransactionDto.date;
         transaction.nameOfPlace = updateTransactionDto.nameOfPlace;
-        return this.transactionRepository.save(transaction);
+        const savedTransaction = await this.transactionRepository.save(transaction);
+        if(updateTransactionDto.categoryKeyword !== null && 
+           updateTransactionDto.categoryKeyword !== undefined){
+            await this.transactionCategoryService
+                .addKeywordForCategory(category, updateTransactionDto.categoryKeyword);
+        }
+        return savedTransaction; 
     }
 
     remove(id: number): void {

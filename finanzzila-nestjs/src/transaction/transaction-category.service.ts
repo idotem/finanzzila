@@ -68,13 +68,13 @@ export class TransactionCategoryService {
         this.transactionCategoryRepository.delete(options);
     }
 
-    async addKeywordForCategory(category: TransactionCategory, keyword: string){
+    async addKeywordForCategory(category: TransactionCategory, keyword: string): Promise<TransactionCategory> {
+        console.log("IN ADD KEYWORD FOR CATEGORY -- on start", category, keyword);
         const catKeywords = await this.keywordService.findAllByCategoryId(category.id);
-        console.log("CATKEYWORDS", catKeywords);
-        console.log("keyword", keyword);
         catKeywords.push(new Keyword(keyword));
         category.keywords = catKeywords;
-        this.transactionCategoryRepository.save(category);
+        console.log("IN ADD KEYWORD FOR CATEGORY -- before save", category, keyword);
+        return this.transactionCategoryRepository.save(category);
     }
 }
 

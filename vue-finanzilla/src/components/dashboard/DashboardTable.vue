@@ -9,7 +9,9 @@ import {
     VCol,
     VChip,
     VHover,
-    VSelect
+    VSelect,
+    VOverlay,
+    VProgressCircular
 } from 'vuetify/components';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
@@ -31,14 +33,15 @@ const rangeDateFilter = ref<Date[]>([]);
 const timePeriod = ref<string>('All time');
 const filterCategoryId = ref<number | undefined>(undefined);
 const totalExpenses = ref<number>();
+const isLoading = ref<boolean>(false);
 const totalIncome = ref<number>();
 const differenceExpensesIncome = ref<number>();
 const currentCurrency = ref<string>('MKD');
 
 onMounted(async () => {
     try {
-        await fetchTransactions();
         await fetchCategories();
+        await fetchTransactions();
     } catch (error) {
         errorMessage.value = 'Error fetching data';
         console.error('Error fetching data:', error);
@@ -47,14 +50,19 @@ onMounted(async () => {
 
 const fetchTransactions = async () => {
     const filter: TransactionFilterDto = new TransactionFilterDto(
-        rangeDateFilter.value[0],
-        rangeDateFilter.value[1],
+        rangeDateFilter.value ? rangeDateFilter.value[0] : undefined,
+        rangeDateFilter.value ? rangeDateFilter.value[1] : undefined,
         filterCategoryId.value
     );
-    TransactionService.getAllFiltered(filter).then((tr: Transaction[]) => {
-        transactions.value = tr;
-        calculateStats(tr);
-    });
+    TransactionService.getAllFiltered(filter)
+        .then((tr: Transaction[]) => {
+            transactions.value = tr;
+            calculateStats(tr);
+            isLoading.value = false;
+        })
+        .catch(() => {
+            isLoading.value = false;
+        });
 };
 
 watch(rangeDateFilter, () => {
@@ -66,25 +74,32 @@ watch(filterCategoryId, () => {
 });
 
 const fetchCategories = async () => {
-    CategoryService.getAllTransactionCategories().then((trC: TransactionCategory[]) => {
-        categories.value = trC;
-    });
+    isLoading.value = true;
+    CategoryService.getAllTransactionCategories()
+        .then((trC: TransactionCategory[]) => {
+            categories.value = trC;
+            isLoading.value = false;
+        })
+        .catch(() => {
+            isLoading.value = false;
+        });
 };
 
 function calculateStats(transactions: Transaction[]) {
     // these should be in minus(-)
     totalExpenses.value = transactions.reduce(
-        (acc, curr) => (curr.category.name !== 'Income' ? (acc += curr.amount) : acc),
+        (acc, curr) => (curr.category?.name !== 'Income' ? (acc += curr.amount) : acc),
         0
     );
     totalIncome.value = transactions.reduce(
-        (acc, curr) => (curr.category.name === 'Income' ? (acc += curr.amount) : acc),
+        (acc, curr) => (curr.category?.name === 'Income' ? (acc += curr.amount) : acc),
         0
     );
     differenceExpensesIncome.value = totalIncome.value + totalExpenses.value;
 }
 
 async function uploadFile() {
+    isLoading.value = true;
     if (files.value && files.value.length > 0) {
         try {
             await TransactionService.uploadFileTransactions(files.value[0]).then(
@@ -92,39 +107,47 @@ async function uploadFile() {
                     transactions.value = tr;
                     calculateStats(tr);
                     files.value = undefined;
+                    isLoading.value = false;
                 }
             );
         } catch (error) {
             console.error(error);
             files.value = undefined;
+            isLoading.value = false;
         }
     }
+}
+
+function clearDateRange() {
+    rangeDateFilter.value = [];
 }
 </script>
 
 <template>
     <main>
         <h1 class="text-3xl text-black">Dashboard</h1>
+        <v-overlay :model-value="isLoading" class="align-center justify-center">
+            <v-progress-circular color="primary" size="64" indeterminate></v-progress-circular>
+        </v-overlay>
         <v-container>
             <v-row align="start">
                 <v-col cols="10" sm="4" md="3">
                     <v-file-input
-                        center-affix
                         v-model="files"
                         class="text-black"
                         density="default"
-                        color="#21183C"
+                        base-color="#000000"
+                        color="#000000"
                         label="Upload file with transactions"
                         accept=".xlsx"
-                        prepend-icon="attach_file"
-                        variant="underlined"
-                        counter
+                        variant="outlined"
+                        bg-color="#2dd4bf"
                     >
                         <template v-slot:selection="{ fileNames }">
                             <template v-for="(fileName, index) in fileNames" :key="fileName">
                                 <v-chip
                                     v-if="index < 2"
-                                    class="text-purple-950 text-xl"
+                                    class="text-black-500 text-xl bg-teal-500 border-[1px] border-[#022754] rounded-lg"
                                     size="large"
                                     label
                                 >
@@ -140,7 +163,7 @@ async function uploadFile() {
                             <v-btn
                                 v-bind="props"
                                 v-if="files?.length"
-                                :color="isHovering ? '#ffffff' : '#3b0764'"
+                                :color="isHovering ? '#022754' : '#3b0764'"
                                 @click="uploadFile"
                                 >Upload</v-btn
                             >
@@ -166,6 +189,7 @@ async function uploadFile() {
                         :range="{ partialRange: false }"
                         placeholder="Pick a date range"
                         color="success"
+                        :on-cleared="() => clearDateRange()"
                     >
                     </VueDatePicker>
                 </v-col>
@@ -174,7 +198,12 @@ async function uploadFile() {
                 <v-col cols="12" md="12" xl="6" :key="1" style="height: 36rem">
                     <v-sheet
                         class="p-4 shadow-black shadow-lg bg-cyan-950 rounded-xl"
-                        style="height: 34rem; overflow-x: hidden; overflow-y: hidden"
+                        style="
+                            height: 34rem;
+                            overflow-x: hidden;
+                            overflow-y: hidden;
+                            min-width: 40rem;
+                        "
                     >
                         <div
                             style="height: 31rem; min-width: 40rem"
@@ -184,18 +213,23 @@ async function uploadFile() {
                                 :transactionsProp="transactions"
                                 :timePeriodProp="timePeriod"
                                 chartTypeProp="Doughnut"
-                                :dateFilterProp="rangeDateFilter"
+                                :dateFilterProp="rangeDateFilter ? rangeDateFilter : []"
                             >
                             </TransactionsChart>
                         </div>
                         <h2 v-else-if="errorMessage">{{ errorMessage }}</h2>
-                        <h1 v-else>No transactions, no pie</h1>
+                        <h1 v-else class="text-lg mt-5 text-slate-300">No transactions, no PIE</h1>
                     </v-sheet>
                 </v-col>
                 <v-col cols="12" md="12" xl="6" key="2" style="height: 36rem">
                     <v-sheet
                         class="p-4 shadow-black shadow-lg pb-10 bg-cyan-950 rounded-xl items-center"
-                        style="height: 34rem; overflow-x: hidden; overflow-y: hidden"
+                        style="
+                            height: 34rem;
+                            overflow-x: hidden;
+                            overflow-y: hidden;
+                            min-width: 40rem;
+                        "
                     >
                         <div
                             style="height: 31rem; min-width: 40rem"
@@ -210,7 +244,7 @@ async function uploadFile() {
                             </TransactionsChart>
                         </div>
                         <h2 v-else-if="errorMessage">{{ errorMessage }}</h2>
-                        <h1 v-else>No transactions, no pie</h1>
+                        <h1 v-else class="text-lg mt-5 text-slate-300">No transactions, no BAR</h1>
                     </v-sheet>
                 </v-col>
             </v-row>

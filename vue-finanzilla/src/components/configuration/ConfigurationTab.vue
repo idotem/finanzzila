@@ -164,6 +164,7 @@ function save() {
                                 v-if="categories"
                                 :headers="categoriesHeaders"
                                 :items="categories"
+                                height="49vh"
                             >
                                 <template v-slot:item.keywords="{ item }">
                                     <div class="border-black border-b-4">

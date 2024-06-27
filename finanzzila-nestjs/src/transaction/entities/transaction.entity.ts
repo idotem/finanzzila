@@ -9,15 +9,18 @@ export default class Transaction {
     @Column({ type: 'date' })
     date: Date;
 
-    @Column({ type: 'varchar', length: 50 })
+    @Column({ type: 'varchar', length: 50, name: 'name_of_place' })
     nameOfPlace: string;
 
     @Column({ type: 'int' })
     amount: number;
 
-    @ManyToOne(() => TransactionCategory, category => category.transactions)
-    @JoinColumn({ name: 'category_id' })
+    @ManyToOne(() => TransactionCategory, category => category.transactions, { nullable: false, eager: true })
+    @JoinColumn({ name: 'category_id'})
     category: TransactionCategory;
+
+    @Column({ type: 'boolean', default: false, name: 'manually_overried' })
+    manuallyOverried: boolean;
 
     constructor(date: Date, nameOfPlace: string,
         amount: number, category: TransactionCategory) {

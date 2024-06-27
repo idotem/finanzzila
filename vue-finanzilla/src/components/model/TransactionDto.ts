@@ -1,17 +1,20 @@
 export default class TransactionDto {
-    date: Date;
-    nameOfPlace: string;
-    amount: number;
-    category: number;
-    categoryKeyword: string;
+    id: number | undefined;
+    date: Date | undefined;
+    nameOfPlace: string | undefined;
+    amount: number | undefined;
+    category: number | undefined;
+    categoryKeyword: string | undefined;
 
     constructor(
-        date: Date,
-        nameOfPlace: string,
-        amount: number,
-        category: number,
-        categoryKeyword: string
+        id: number | undefined,
+        date: Date | undefined,
+        nameOfPlace: string | undefined,
+        amount: number | undefined,
+        category: number | undefined,
+        categoryKeyword: string | undefined
     ) {
+        this.id = id;
         this.date = date;
         this.nameOfPlace = nameOfPlace;
         this.amount = amount;

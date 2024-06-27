@@ -27,25 +27,32 @@ ChartJS.register(
     ChartDataLabels,
     ArcElement
 );
+type TransactionChartProps = {
+    transactionsProp: Transaction[];
+    timePeriodProp: string;
+    dateFilterProp: Date[] | null;
+    chartTypeProp: string;
+};
 
-const props = defineProps({
-    transactionsProp: {
-        type: Array as () => Transaction[],
-        required: true
-    },
-    timePeriodProp: {
-        type: String,
-        required: true
-    },
-    chartTypeProp: {
-        type: String as () => 'Bar' | 'Doughnut',
-        required: true
-    },
-    dateFilterProp: {
-        type: Array as () => Date[],
-        required: true
-    }
-});
+const props = defineProps<TransactionChartProps>();
+// const props = defineProps({
+//     transactionsProp: {
+//         type: Array as () => Transaction[],
+//         required: true
+//     },
+//     timePeriodProp: {
+//         type: String,
+//         required: true
+//     },
+//     chartTypeProp: {
+//         type: String as () => 'Bar' | 'Doughnut',
+//         required: true
+//     },
+//     dateFilterProp: {
+//         type: Array as () => Date[],
+//         required: true
+//     }
+// });
 
 const categories = ref<TransactionCategory[]>([]);
 const transactions = ref<Transaction[]>([]);
@@ -59,7 +66,7 @@ watch(
     () => props,
     (newValue) => {
         transactions.value = newValue.transactionsProp;
-        categories.value = newValue.transactionsProp.map((t) => t.category);
+        categories.value = newValue.transactionsProp?.map((t) => t.category);
         timePeriod.value = newValue.timePeriodProp;
         groupTransactions(newValue.transactionsProp, newValue.timePeriodProp);
     },
@@ -85,9 +92,9 @@ function countMonths() {
     const uniqueMonths = new Set();
     for (const transaction of transactions.value) {
         const date = new Date(transaction.date);
-        uniqueMonths.add(date.getMonth());
+        uniqueMonths.add(date.getMonth() + '.' + date.getFullYear());
     }
-    return uniqueMonths.size;
+    return uniqueMonths.size - 1;
 }
 
 function countYears() {
@@ -96,7 +103,7 @@ function countYears() {
         const date = new Date(transaction.date);
         uniqueYears.add(date.getFullYear());
     }
-    return uniqueYears.size;
+    return uniqueYears.size - 1;
 }
 
 function groupTransactionsAverageDelimiter(
@@ -281,8 +288,8 @@ function getBarChartOptions(rotateAxis: string): any {
                 return;
             }
             const categoryId = categoriesForChart.value[firstPoint.index].categoryId;
-            const dateFilterFrom: any = props.dateFilterProp[0];
-            const dateFilterTo: any = props.dateFilterProp[1];
+            const dateFilterFrom: any = props.dateFilterProp ? props.dateFilterProp[0] : undefined;
+            const dateFilterTo: any = props.dateFilterProp ? props.dateFilterProp[1] : undefined;
 
             router.push({
                 name: 'Transactions',
@@ -332,8 +339,8 @@ const doughtnutChartOptions: any = {
             return;
         }
         const categoryId = categoriesForChart.value[firstPoint.index].categoryId;
-        const dateFilterFrom: any = props.dateFilterProp[0];
-        const dateFilterTo: any = props.dateFilterProp[1];
+        const dateFilterFrom: any = props.dateFilterProp ? props.dateFilterProp[0] : undefined;
+        const dateFilterTo: any = props.dateFilterProp ? props.dateFilterProp[1] : undefined;
 
         router.push({
             name: 'Transactions',

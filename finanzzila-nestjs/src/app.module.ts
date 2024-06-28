@@ -19,7 +19,7 @@ import { KeywordModule } from './keyword/keyword.module';
             username: 'postgres',
             entities: [TransactionCategory, Transaction, Keyword],
             autoLoadEntities: true,
-            database: 'dev_finanzzila',
+            database: 'finazzila',
             synchronize: true,
             logging: true,
         }),

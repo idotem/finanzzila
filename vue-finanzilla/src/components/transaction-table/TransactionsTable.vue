@@ -181,7 +181,7 @@ function save() {
     if (editingItem.value.id !== undefined) {
         TransactionService.update(editingItem.value.id, itemToSave)
             .then((res) => {
-                alert(`Successfully updated transaction ${res.data?.id}`);
+                // alert(`Successfully updated transaction ${res.data?.id}`);
                 loading.value = false;
                 fetchTransactions();
                 close();

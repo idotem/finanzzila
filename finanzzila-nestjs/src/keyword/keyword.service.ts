@@ -8,8 +8,8 @@ import { TransactionCategory } from 'src/transaction/entities/transaction-catego
 export class KeywordService {
     constructor(
         @InjectRepository(Keyword)
-        private readonly keywordRepository: Repository<Keyword>,
-    ) { }
+        private readonly keywordRepository: Repository<Keyword>
+    ) {}
 
     /*
     async createAllForCategory(category: TransactionCategory, createKeywordDtoList: CreateKeywordDto[]) :Promise<void> {
@@ -30,7 +30,7 @@ export class KeywordService {
     }
     */
 
-    async findAll() : Promise<Keyword[]>{
+    async findAll(): Promise<Keyword[]> {
         return this.keywordRepository.find();
     }
 
@@ -40,7 +40,6 @@ export class KeywordService {
             .leftJoinAndSelect('keyword.category', 'category');
         queryBuilder.andWhere('keyword.category.id = :catId', { catId: catId });
         return queryBuilder.getMany();
-
     }
 
     async findOne(id: number): Promise<Keyword> {

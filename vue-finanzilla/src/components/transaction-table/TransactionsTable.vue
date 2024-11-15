@@ -26,7 +26,6 @@ import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import TransactionFilterDto from '../model/TransactionFilterDto';
 import TransactionDto from '../model/TransactionDto';
-import LoadingSpinner from '../configuration/LoadingSpinner.vue';
 
 type TransactionTableProps = {
     categoryId?: number | undefined;

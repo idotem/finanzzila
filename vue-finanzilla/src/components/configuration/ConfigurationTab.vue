@@ -13,7 +13,9 @@ import {
     VCardTitle,
     VCardText,
     VCardActions,
-    VDataTable
+    VDataTable,
+    VRadioGroup,
+    VRadio
 } from 'vuetify/components';
 import { ref, onMounted, watch } from 'vue';
 import { Category } from '../model/Category';
@@ -24,13 +26,14 @@ const errorMessage = ref('');
 const categories = ref<Category[]>([]);
 const dialog = ref<boolean>(false);
 const dialogDelete = ref<boolean>(false);
-const editingCategory = ref<Category>(new Category(undefined, '', []));
+const editingCategory = ref<Category>(new Category(undefined, '', [], undefined));
 const addingKeyword = ref<string>('');
 const deletingItem = ref<Category | undefined>(undefined);
 
 const categoriesHeaders = [
     { title: 'Name', key: 'name' },
     { title: 'Keywords', key: 'keywords' },
+    { title: 'Wants/Needs', key: 'isWants' },
     { title: 'Actions', key: 'actions', sortable: false }
 ];
 
@@ -45,7 +48,7 @@ onMounted(async () => {
 
 watch(dialog, () => {
     if (!dialog.value) {
-        editingCategory.value = new Category(undefined, '', []);
+        editingCategory.value = new Category(undefined, '', [], undefined);
     }
 });
 
@@ -86,7 +89,7 @@ function deleteCategoryConfirm() {
 
 function close() {
     dialog.value = false;
-    editingCategory.value = new CategoryDto(undefined, '', []);
+    editingCategory.value = new CategoryDto(undefined, '', [], undefined);
 }
 
 function closeDelete() {
@@ -105,6 +108,7 @@ function addKeywordForCategory() {
 
 function save() {
     const itemToSave = editingCategory.value;
+    console.log('ITEM TO SAVE', itemToSave);
     if (!itemToSave.name) {
         console.error('Category must have a name.', itemToSave);
         return;
@@ -180,6 +184,19 @@ function save() {
                                         </span>
                                     </div>
                                 </template>
+                                <template v-slot:item.isWants="{ item }">
+                                    <div>
+                                        <span
+                                            v-if="
+                                                item.isWants === undefined || item.isWants === null
+                                            "
+                                            >Not specified</span
+                                        >
+                                        <span v-else-if="item.isWants === 1">Wants</span>
+                                        <span v-else>Needs</span>
+                                    </div>
+                                </template>
+
                                 <template v-slot:top>
                                     <v-dialog v-model="dialog" max-width="600px">
                                         <v-card class="bg-[#011936] text-slate-100 overflow-hidden">
@@ -199,6 +216,26 @@ function save() {
                                                                 v-model="editingCategory.name"
                                                                 label="Category Name"
                                                             ></v-text-field>
+                                                        </v-col>
+                                                        <v-col cols="12" sm="12">
+                                                            <label for="wantsneedsradio"
+                                                                >Is this category in wants or
+                                                                needs?</label
+                                                            >
+                                                            <v-radio-group
+                                                                id="wantsneedsradio"
+                                                                v-model="editingCategory.isWants"
+                                                                v-on:input="$emit('input', $event)"
+                                                            >
+                                                                <v-radio
+                                                                    value="1"
+                                                                    label="Wants"
+                                                                ></v-radio>
+                                                                <v-radio
+                                                                    value="0"
+                                                                    label="Needs"
+                                                                ></v-radio>
+                                                            </v-radio-group>
                                                         </v-col>
                                                         <v-col sm="10">
                                                             <v-text-field

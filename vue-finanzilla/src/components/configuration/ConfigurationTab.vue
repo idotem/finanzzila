@@ -15,7 +15,8 @@ import {
     VCardActions,
     VDataTable,
     VRadioGroup,
-    VRadio
+    VRadio,
+    VColorPicker
 } from 'vuetify/components';
 import { ref, onMounted, watch } from 'vue';
 import { Category } from '../model/Category';
@@ -26,9 +27,10 @@ const errorMessage = ref('');
 const categories = ref<Category[]>([]);
 const dialog = ref<boolean>(false);
 const dialogDelete = ref<boolean>(false);
-const editingCategory = ref<Category>(new Category(undefined, '', [], undefined));
+const editingCategory = ref<Category>(new Category(undefined, '', [], undefined, undefined));
 const addingKeyword = ref<string>('');
 const deletingItem = ref<Category | undefined>(undefined);
+const showColorPicker = ref<boolean>(false);
 
 const categoriesHeaders = [
     { title: 'Name', key: 'name' },
@@ -47,8 +49,9 @@ onMounted(async () => {
 });
 
 watch(dialog, () => {
+    console.log('EDITING CATEGORY: ', editingCategory);
     if (!dialog.value) {
-        editingCategory.value = new Category(undefined, '', [], undefined);
+        editingCategory.value = new Category(undefined, '', [], undefined, undefined);
     }
 });
 
@@ -89,7 +92,7 @@ function deleteCategoryConfirm() {
 
 function close() {
     dialog.value = false;
-    editingCategory.value = new CategoryDto(undefined, '', [], undefined);
+    editingCategory.value = new CategoryDto(undefined, '', [], undefined, undefined);
 }
 
 function closeDelete() {
@@ -134,6 +137,10 @@ function save() {
                 console.error('Unsuccessfully added category', err);
             });
     }
+}
+
+function changeShowColorPicker(): void {
+    showColorPicker.value = showColorPicker.value ? false : true;
 }
 </script>
 
@@ -199,7 +206,7 @@ function save() {
 
                                 <template v-slot:top>
                                     <v-dialog v-model="dialog" max-width="600px">
-                                        <v-card class="bg-[#011936] text-slate-100 overflow-hidden">
+                                        <v-card class="bg-[#011936] text-slate-100 overflow-auto">
                                             <v-card-title>
                                                 <span
                                                     v-if="editingCategory?.id === undefined"
@@ -216,6 +223,31 @@ function save() {
                                                                 v-model="editingCategory.name"
                                                                 label="Category Name"
                                                             ></v-text-field>
+                                                        </v-col>
+                                                        <v-col cols="12" sm="12" class="h-20">
+                                                            <v-btn
+                                                                class="{{editingCategory.id !== undefined ? 'bg-['+editingCategory.color+']' : 'bg-green'}} w-full text-center text-xl opacity-50"
+                                                                type="button"
+                                                                @click="changeShowColorPicker"
+                                                            >
+                                                                Pick category color
+                                                            </v-btn>
+                                                            <v-dialog v-model="showColorPicker">
+                                                                <v-color-picker
+                                                                    class="m-auto"
+                                                                    v-model="editingCategory.color"
+                                                                    hide-inputs
+                                                                    show-swatches
+                                                                ></v-color-picker>
+                                                                <v-btn
+                                                                    class="text-base float-right m-auto w-10"
+                                                                    color="success"
+                                                                    variant="text"
+                                                                    @click="changeShowColorPicker"
+                                                                >
+                                                                    Pick
+                                                                </v-btn>
+                                                            </v-dialog>
                                                         </v-col>
                                                         <v-col cols="12" sm="12">
                                                             <label for="wantsneedsradio"

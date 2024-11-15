@@ -8,7 +8,7 @@ export default class CategoryService {
     static async getAllTransactionCategories(): Promise<TransactionCategory[]> {
         const res = await axiosInstance.get('/transaction-categories');
         const categories: TransactionCategory[] = res.data.map(
-            (t: any) => new TransactionCategory(t.id, t.name)
+            (t: any) => new TransactionCategory(t.id, t.name, t.isWants, t.color)
         );
         return categories;
     }
@@ -22,7 +22,8 @@ export default class CategoryService {
                     t.id,
                     t.name,
                     t.keywords.map((k: KeywordDto) => new KeywordDto(k.id, k.value)),
-                    t.isWants
+                    t.isWants,
+                    t.color
                 )
         );
         console.log(categories);

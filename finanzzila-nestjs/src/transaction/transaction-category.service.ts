@@ -32,7 +32,8 @@ export class TransactionCategoryService {
         const category: TransactionCategory = new TransactionCategory(
             createTransactionCategoryDto.name,
             keywords,
-            createTransactionCategoryDto.isWants
+            createTransactionCategoryDto.isWants,
+            createTransactionCategoryDto.color
         );
         const savedCategory = await this.transactionCategoryRepository.save(category);
         return savedCategory;

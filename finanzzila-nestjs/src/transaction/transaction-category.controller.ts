@@ -7,14 +7,20 @@ import { KeywordDto } from 'src/keyword/dto/keyword-dto';
 
 @Controller('transaction-categories')
 export class TransactionCategoryController {
-    constructor(private readonly transactionCategoryService: TransactionCategoryService) { }
+    constructor(private readonly transactionCategoryService: TransactionCategoryService) {}
 
     @Get()
     async findAll(): Promise<CategoryDto[]> {
         const t = await this.transactionCategoryService.findAll();
-        return t.map((tc) => new CategoryDto(tc.id, 
-                                             tc.name, 
-                                             tc.keywords.map((k)=> new KeywordDto(k.id, k.value))));
+        return t.map(
+            (tc) =>
+                new CategoryDto(
+                    tc.id,
+                    tc.name,
+                    tc.keywords.map((k) => new KeywordDto(k.id, k.value)),
+                    tc.isWants
+                )
+        );
     }
 
     @Post()
@@ -28,7 +34,10 @@ export class TransactionCategoryController {
     }
 
     @Put(':id')
-    update(@Param('id') id: string, @Body() updateTransactionCategoryDto: UpdateTransactionCategoryDto) {
+    update(
+        @Param('id') id: string,
+        @Body() updateTransactionCategoryDto: UpdateTransactionCategoryDto
+    ) {
         return this.transactionCategoryService.update(+id, updateTransactionCategoryDto);
     }
 

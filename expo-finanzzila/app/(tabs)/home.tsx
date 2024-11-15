@@ -6,7 +6,7 @@ import { Text, View } from '@/components/Themed';
 export default function TabOneScreen() {
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>WE DID ITT</Text>
+            <Text style={styles.title}>Transactions</Text>
             <View
                 style={styles.separator}
                 lightColor="#eee"
@@ -24,12 +24,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     title: {
-        fontSize: 20,
+        marginTop: -100,
+        fontSize: 25,
         fontWeight: 'bold',
+        color: 'white',
     },
     separator: {
         marginVertical: 30,
         height: 1,
-        width: '80%',
+        width: '90%',
     },
 });

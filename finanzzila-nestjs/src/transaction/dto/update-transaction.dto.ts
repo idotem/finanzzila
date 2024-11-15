@@ -8,8 +8,13 @@ export class UpdateTransactionDto extends PartialType(CreateTransactionDto) {
     category: number;
     categoryKeyword: string;
 
-    constructor(date: Date, nameOfPlace: string, amount: number,
-        category: number, categoryKeyword: string) {
+    constructor(
+        date: Date,
+        nameOfPlace: string,
+        amount: number,
+        category: number,
+        categoryKeyword: string
+    ) {
         super(false);
         this.date = date;
         this.nameOfPlace = nameOfPlace;

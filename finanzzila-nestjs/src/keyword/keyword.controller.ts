@@ -3,7 +3,7 @@ import { KeywordService } from './keyword.service';
 
 @Controller('keywords')
 export class KeywordController {
-    constructor(private readonly keywordService: KeywordService) { }
+    constructor(private readonly keywordService: KeywordService) {}
 
     @Get()
     findAll() {

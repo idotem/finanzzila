@@ -15,23 +15,21 @@ export default class CategoryService {
 
     static async getAllCategories(): Promise<Category[]> {
         const res = await axiosInstance.get('/transaction-categories');
+        console.log(res);
         const categories: Category[] = res.data.map(
             (t: any) =>
                 new Category(
                     t.id,
                     t.name,
-                    t.keywords.map(
-                        (k: KeywordDto) => new KeywordDto(k.id, k.value)
-                    )
+                    t.keywords.map((k: KeywordDto) => new KeywordDto(k.id, k.value)),
+                    t.isWants
                 )
         );
         console.log(categories);
         return categories;
     }
 
-    static async create(
-        createCategoryDto: CategoryDto
-    ): Promise<Category | any> {
+    static async create(createCategoryDto: CategoryDto): Promise<Category | any> {
         const res = await axiosInstance.post<Category>(
             '/transaction-categories',
             createCategoryDto
@@ -39,10 +37,7 @@ export default class CategoryService {
         return res;
     }
 
-    static async update(
-        id: number,
-        updatingItem: CategoryDto
-    ): Promise<Category | any> {
+    static async update(id: number, updatingItem: CategoryDto): Promise<Category | any> {
         const res = await axiosInstance.put<Category>(
             `/transaction-categories/${id}`,
             updatingItem

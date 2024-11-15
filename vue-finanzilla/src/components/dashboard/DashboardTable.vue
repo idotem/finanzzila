@@ -37,6 +37,9 @@ const isLoading = ref<boolean>(false);
 const totalIncome = ref<number>();
 const differenceExpensesIncome = ref<number>();
 const currentCurrency = ref<string>('MKD');
+const wantsTransactionsSum = ref<number>();
+const needsTransactionsSum = ref<number>();
+const notWantsNorNeedsTranSum = ref<number>();
 
 onMounted(async () => {
     try {
@@ -58,6 +61,7 @@ const fetchTransactions = async () => {
         .then((tr: Transaction[]) => {
             transactions.value = tr;
             calculateStats(tr);
+            calculateWantsAndNeeds(tr);
             isLoading.value = false;
         })
         .catch(() => {
@@ -86,15 +90,17 @@ const fetchCategories = async () => {
 };
 
 function calculateStats(transactions: Transaction[]) {
-    // these should be in minus(-)
-    totalExpenses.value = transactions.reduce(
-        (acc, curr) => (curr.category?.name !== 'Income' ? (acc += curr.amount) : acc),
-        0
-    );
-    totalIncome.value = transactions.reduce(
-        (acc, curr) => (curr.category?.name === 'Income' ? (acc += curr.amount) : acc),
-        0
-    );
+    let incomeSum: number = 0;
+    let expensesSum: number = 0;
+    transactions.forEach((transaction) => {
+        if (transaction.category?.name === 'Income' && transaction.amount > 0) {
+            incomeSum += transaction.amount;
+        } else {
+            expensesSum += transaction.amount;
+        }
+    });
+    totalIncome.value = incomeSum;
+    totalExpenses.value = expensesSum;
     differenceExpensesIncome.value = totalIncome.value + totalExpenses.value;
 }
 
@@ -106,6 +112,7 @@ async function uploadFile() {
                 (tr: Transaction[]) => {
                     transactions.value = tr;
                     calculateStats(tr);
+                    calculateWantsAndNeeds(tr);
                     files.value = undefined;
                     isLoading.value = false;
                 }
@@ -120,6 +127,31 @@ async function uploadFile() {
 
 function clearDateRange() {
     rangeDateFilter.value = [];
+}
+
+function calculateWantsAndNeeds(transactions: Transaction[]) {
+    let wantsSum: number = 0;
+    let needsSum: number = 0;
+    let notWantsNorNeeds: number = 0;
+    transactions.forEach((transaction) => {
+        if (transaction.category?.name === 'Income') {
+            return;
+        }
+        switch (transaction.category.isWants) {
+            case 1:
+                wantsSum += transaction.amount;
+                break;
+            case 0:
+                needsSum += transaction.amount;
+                break;
+            default:
+                notWantsNorNeeds += transaction.amount;
+                break;
+        }
+    });
+    wantsTransactionsSum.value = wantsSum;
+    needsTransactionsSum.value = needsSum;
+    notWantsNorNeedsTranSum.value = notWantsNorNeeds;
 }
 </script>
 
@@ -251,38 +283,109 @@ function clearDateRange() {
             <v-row
                 class="bg-cyan-950 text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg mb-4"
             >
-                <v-col cols="12">
-                    <h1 class="text-center text-xl">General statistics</h1>
+                <v-col md="12" sm="12">
+                    <h3 class="text-center text-xl">
+                        Showing results for dates(filtered):
+                        <p class="font-bold inline">
+                            {{
+                                rangeDateFilter[0]
+                                    ? rangeDateFilter[0].toISOString().split('T')[0]
+                                    : transactions[transactions.length - 1]?.date
+                            }}
+                            --
+                            {{
+                                rangeDateFilter[1]
+                                    ? rangeDateFilter[1].toISOString().split('T')[0]
+                                    : transactions[0]?.date
+                            }}
+                        </p>
+                        in currency:
+                        <select
+                            class="font-bold text-center text-cyan cursor-pointer h-9 rounded-sm text-slate-300 p-2"
+                            name="changeCurrency"
+                            v-model="currentCurrency"
+                        >
+                            <option value="MKD">MKD</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                    </h3>
                 </v-col>
-                <v-col class="text-lg" md="6" sm="12">
-                    <select
-                        class="w-1/5 h-9 rounded-sm bg-[#212121] text-slate-300 p-2"
-                        name="changeCurrency"
-                        v-model="currentCurrency"
+                <v-col md="9" sm="12">
+                    <v-col
+                        class="text-lg inline-table border-r-2 border-cyan-100 min-h-56"
+                        md="6"
+                        sm="12"
                     >
-                        <option value="MKD">MKD</option>
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                    </select>
-                    <p>
-                        Total amount earned:
-                        {{ convertNumberToCurrency(totalIncome, currentCurrency) }}
-                    </p>
-                    <p>
-                        Total amount spend:
-                        {{ convertNumberToCurrency(totalExpenses, currentCurrency) }}
-                    </p>
-                    <p>
-                        Difference:
-                        {{ convertNumberToCurrency(differenceExpensesIncome, currentCurrency) }}
-                    </p>
-                    <p>
-                        First transaction date:
-                        {{ transactions[transactions.length - 1]?.date }}
-                    </p>
-                    <p>Last transaction date: {{ transactions[0]?.date }}</p>
+                        <h1 class="text-center text-xl font-bold mb-5">General statistics</h1>
+                        <div>
+                            Total amount earned:
+                            <p class="float-right text-cyan font-bold">
+                                {{ convertNumberToCurrency(totalIncome, currentCurrency) }}
+                            </p>
+                        </div>
+                        <div>
+                            Total amount spent:
+                            <p class="float-right text-cyan font-bold">
+                                {{ convertNumberToCurrency(totalExpenses, currentCurrency) }}
+                            </p>
+                        </div>
+
+                        <div>
+                            Difference:
+                            <p class="float-right text-cyan font-bold">
+                                {{
+                                    convertNumberToCurrency(
+                                        differenceExpensesIncome,
+                                        currentCurrency
+                                    )
+                                }}
+                            </p>
+                        </div>
+                        <div>
+                            First transaction date:
+                            <p class="float-right">
+                                {{ transactions[transactions.length - 1]?.date }}
+                            </p>
+                        </div>
+                        <div>
+                            Last transaction date:
+                            <p class="float-right">
+                                {{ transactions[0]?.date }}
+                            </p>
+                        </div>
+                    </v-col>
+                    <v-col
+                        class="inline-table text-lg border-r-2 border-cyan-100 min-h-56"
+                        md="6"
+                        sm="12"
+                    >
+                        <h1 class="mb-5 font-bold text-xl">Wants and needs</h1>
+                        <div>
+                            Wants:
+                            <p class="float-right text-cyan font-bold">
+                                {{ convertNumberToCurrency(wantsTransactionsSum, currentCurrency) }}
+                            </p>
+                        </div>
+                        <div>
+                            Needs:
+                            <p class="float-right text-cyan font-bold">
+                                {{ convertNumberToCurrency(needsTransactionsSum, currentCurrency) }}
+                            </p>
+                        </div>
+                        <div>
+                            Not Wants Nor Needs:
+                            <p class="float-right text-cyan font-bold">
+                                {{
+                                    convertNumberToCurrency(
+                                        notWantsNorNeedsTranSum,
+                                        currentCurrency
+                                    )
+                                }}
+                            </p>
+                        </div>
+                    </v-col>
                 </v-col>
-                <v-col md="6" sm="12"> </v-col>
             </v-row>
         </v-container>
     </main>

@@ -24,12 +24,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     title: {
-        fontSize: 20,
+        marginTop: -100,
+        fontSize: 25,
         fontWeight: 'bold',
     },
     separator: {
         marginVertical: 30,
         height: 1,
-        width: '80%',
+        width: '90%',
     },
 });

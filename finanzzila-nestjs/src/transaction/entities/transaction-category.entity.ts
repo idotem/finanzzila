@@ -4,24 +4,30 @@ import { Entity, Column, OneToMany, PrimaryGeneratedColumn, JoinColumn } from 't
 
 @Entity()
 export class TransactionCategory {
-
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({name: 'name', unique: true})
+    @Column({ name: 'name', unique: true })
     name: string;
 
-    @OneToMany(() => Transaction, transaction => transaction.category)
-    @JoinColumn({name: 'transaction_id'})
+    @OneToMany(() => Transaction, (transaction) => transaction.category)
+    @JoinColumn({ name: 'transaction_id' })
     transactions: Transaction[];
 
-    @OneToMany(() => Keyword, keyword => keyword.category, { onDelete: 'CASCADE', cascade: true, eager: false})
-    @JoinColumn({name: 'keyword_id'})
+    @OneToMany(() => Keyword, (keyword) => keyword.category, {
+        onDelete: 'CASCADE',
+        cascade: true,
+        eager: false
+    })
+    @JoinColumn({ name: 'keyword_id' })
     keywords: Keyword[];
 
-    constructor(name: string, keywords: Keyword[]) {
+    @Column({ name: 'isWants', nullable: true })
+    isWants: number;
+
+    constructor(name: string, keywords: Keyword[], isWants: number) {
         this.name = name;
         this.keywords = keywords;
+        this.isWants = isWants;
     }
 }
-

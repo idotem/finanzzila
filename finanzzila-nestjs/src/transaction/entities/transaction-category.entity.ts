@@ -25,7 +25,6 @@ export class TransactionCategory {
     @Column({ name: 'isWants', nullable: true })
     isWants: number;
 
-<<<<<<< HEAD
     @Column({ name: 'color', nullable: true })
     color: string;
 
@@ -34,11 +33,5 @@ export class TransactionCategory {
         this.keywords = keywords;
         this.isWants = isWants;
         this.color = color;
-=======
-    constructor(name: string, keywords: Keyword[], isWants: number) {
-        this.name = name;
-        this.keywords = keywords;
-        this.isWants = isWants;
->>>>>>> main
     }
 }

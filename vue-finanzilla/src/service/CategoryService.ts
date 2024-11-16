@@ -22,12 +22,8 @@ export default class CategoryService {
                     t.id,
                     t.name,
                     t.keywords.map((k: KeywordDto) => new KeywordDto(k.id, k.value)),
-<<<<<<< HEAD
                     t.isWants,
                     t.color
-=======
-                    t.isWants
->>>>>>> main
                 )
         );
         console.log(categories);

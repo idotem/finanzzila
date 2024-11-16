@@ -11,7 +11,7 @@ import { KeywordModule } from './keyword/keyword.module';
 
 @Module({
     imports: [
-       TypeOrmModule.forRoot({
+        TypeOrmModule.forRoot({
             type: 'postgres',
             host: 'localhost',
             port: 5432,
@@ -19,15 +19,15 @@ import { KeywordModule } from './keyword/keyword.module';
             username: 'postgres',
             entities: [TransactionCategory, Transaction, Keyword],
             autoLoadEntities: true,
-            database: 'finazzila',
+            database: 'dev_finanzzila',
             synchronize: true,
-            logging: true,
+            logging: true
         }),
         UserModule,
         TransactionModule,
-        KeywordModule,
+        KeywordModule
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [AppService]
 })
 export class AppModule {}

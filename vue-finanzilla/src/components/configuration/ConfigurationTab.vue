@@ -15,12 +15,8 @@ import {
     VCardActions,
     VDataTable,
     VRadioGroup,
-<<<<<<< HEAD
     VRadio,
     VColorPicker
-=======
-    VRadio
->>>>>>> main
 } from 'vuetify/components';
 import { ref, onMounted, watch } from 'vue';
 import { Category } from '../model/Category';
@@ -31,11 +27,7 @@ const errorMessage = ref('');
 const categories = ref<Category[]>([]);
 const dialog = ref<boolean>(false);
 const dialogDelete = ref<boolean>(false);
-<<<<<<< HEAD
 const editingCategory = ref<Category>(new Category(undefined, '', [], undefined, undefined));
-=======
-const editingCategory = ref<Category>(new Category(undefined, '', [], undefined));
->>>>>>> main
 const addingKeyword = ref<string>('');
 const deletingItem = ref<Category | undefined>(undefined);
 const showColorPicker = ref<boolean>(false);
@@ -58,11 +50,7 @@ onMounted(async () => {
 
 watch(dialog, () => {
     if (!dialog.value) {
-<<<<<<< HEAD
         editingCategory.value = new Category(undefined, '', [], undefined, undefined);
-=======
-        editingCategory.value = new Category(undefined, '', [], undefined);
->>>>>>> main
     }
 });
 
@@ -103,11 +91,7 @@ function deleteCategoryConfirm() {
 
 function close() {
     dialog.value = false;
-<<<<<<< HEAD
     editingCategory.value = new CategoryDto(undefined, '', [], undefined, undefined);
-=======
-    editingCategory.value = new CategoryDto(undefined, '', [], undefined);
->>>>>>> main
 }
 
 function closeDelete() {
@@ -221,14 +205,10 @@ function changeShowColorPicker(): void {
                                     </div>
                                 </template>
                                 <template v-slot:item.isWants="{ item }">
-<<<<<<< HEAD
                                     <div
                                         class="text-xl font-bold"
                                         :style="{ color: `${item.color}` }"
                                     >
-=======
-                                    <div>
->>>>>>> main
                                         <span
                                             v-if="
                                                 item.isWants === undefined || item.isWants === null
@@ -266,7 +246,6 @@ function changeShowColorPicker(): void {
                                                                 label="Category Name"
                                                             ></v-text-field>
                                                         </v-col>
-<<<<<<< HEAD
                                                         <v-col cols="12" sm="12" class="h-20">
                                                             <v-btn
                                                                 class="w-full text-center text-xl"
@@ -295,8 +274,6 @@ function changeShowColorPicker(): void {
                                                                 </v-btn>
                                                             </v-dialog>
                                                         </v-col>
-=======
->>>>>>> main
                                                         <v-col cols="12" sm="12">
                                                             <label for="wantsneedsradio"
                                                                 >Is this category in wants or

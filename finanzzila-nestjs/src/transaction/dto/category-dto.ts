@@ -5,11 +5,13 @@ export class CategoryDto {
     name: string;
     keywords: KeywordDto[];
     isWants: number;
+    color: string;
 
-    constructor(id: number, name: string, keywords: KeywordDto[], isWants: number) {
+    constructor(id: number, name: string, keywords: KeywordDto[], isWants: number, color: string) {
         this.id = id;
         this.name = name;
         this.keywords = keywords;
         this.isWants = isWants;
+        this.color = color;
     }
 }

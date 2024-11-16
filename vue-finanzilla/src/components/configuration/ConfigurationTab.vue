@@ -49,7 +49,6 @@ onMounted(async () => {
 });
 
 watch(dialog, () => {
-    console.log('EDITING CATEGORY: ', editingCategory);
     if (!dialog.value) {
         editingCategory.value = new Category(undefined, '', [], undefined, undefined);
     }
@@ -149,7 +148,7 @@ function changeShowColorPicker(): void {
         <h1 class="text-3xl text-black mb-4">Configuration</h1>
         <v-container>
             <v-row>
-                <v-col md="6" sm="12">
+                <v-col sm="12">
                     <v-row
                         class="bg-cyan-950 text-slate-200 p-4 m-2 pb-10 rounded-xl shadow-black shadow-lg mb-1"
                     >
@@ -177,8 +176,22 @@ function changeShowColorPicker(): void {
                                 :items="categories"
                                 height="49vh"
                             >
+                                <template v-slot:item.name="{ item }">
+                                    <div
+                                        class="text-xl font-bold"
+                                        :style="{ color: `${item.color}` }"
+                                    >
+                                        <span>
+                                            {{ item.name }}
+                                        </span>
+                                    </div>
+                                </template>
+
                                 <template v-slot:item.keywords="{ item }">
-                                    <div class="border-black border-b-4">
+                                    <div
+                                        :style="{ color: `${item.color}` }"
+                                        class="border-black border-b-4"
+                                    >
                                         <span
                                             v-for="(keyword, index) in item.keywords"
                                             :key="index"
@@ -192,7 +205,10 @@ function changeShowColorPicker(): void {
                                     </div>
                                 </template>
                                 <template v-slot:item.isWants="{ item }">
-                                    <div>
+                                    <div
+                                        class="text-xl font-bold"
+                                        :style="{ color: `${item.color}` }"
+                                    >
                                         <span
                                             v-if="
                                                 item.isWants === undefined || item.isWants === null
@@ -206,7 +222,13 @@ function changeShowColorPicker(): void {
 
                                 <template v-slot:top>
                                     <v-dialog v-model="dialog" max-width="600px">
-                                        <v-card class="bg-[#011936] text-slate-100 overflow-auto">
+                                        <v-card
+                                            class="bg-[#011936] text-slate-100 overflow-auto"
+                                            :style="{
+                                                border: `1px solid ${editingCategory.color}`,
+                                                borderRadius: `10px`
+                                            }"
+                                        >
                                             <v-card-title>
                                                 <span
                                                     v-if="editingCategory?.id === undefined"
@@ -226,7 +248,10 @@ function changeShowColorPicker(): void {
                                                         </v-col>
                                                         <v-col cols="12" sm="12" class="h-20">
                                                             <v-btn
-                                                                class="{{editingCategory.id !== undefined ? 'bg-['+editingCategory.color+']' : 'bg-green'}} w-full text-center text-xl opacity-50"
+                                                                class="w-full text-center text-xl"
+                                                                :style="{
+                                                                    backgroundColor: `${editingCategory.color !== undefined ? editingCategory.color : 'darkcyan'}`
+                                                                }"
                                                                 type="button"
                                                                 @click="changeShowColorPicker"
                                                             >
@@ -381,10 +406,15 @@ function changeShowColorPicker(): void {
                                     </v-dialog>
                                 </template>
                                 <template v-slot:[`item.actions`]="{ item }">
-                                    <v-icon class="me-2" size="small" @click="editCategory(item)">
+                                    <v-icon
+                                        class="me-2"
+                                        color="cyan"
+                                        size="small"
+                                        @click="editCategory(item)"
+                                    >
                                         edit
                                     </v-icon>
-                                    <v-icon size="small" @click="deleteCategory(item)">
+                                    <v-icon size="small" color="red" @click="deleteCategory(item)">
                                         delete
                                     </v-icon>
                                 </template>
@@ -392,13 +422,6 @@ function changeShowColorPicker(): void {
                             <p v-else-if="errorMessage">{{ errorMessage }}</p>
                             <p v-else>Loading..</p>
                         </v-col>
-                    </v-row>
-                </v-col>
-                <v-col md="6" sm="12">
-                    <v-row
-                        class="bg-cyan-950 text-slate-200 m-2 p-4 pb-10 rounded-xl shadow-black shadow-lg mb-1"
-                    >
-                        <h1 class="text-lg text-white">Another config</h1>
                     </v-row>
                 </v-col>
             </v-row>

@@ -60,6 +60,7 @@ export class TransactionCategoryService {
             category.name = updateTransactionCategoryDto.name;
             category.keywords = keywords;
             category.isWants = updateTransactionCategoryDto.isWants;
+            category.color = updateTransactionCategoryDto.color;
             console.log('CATEGORY TO SAVE', category);
             console.log('isWants type:', typeof category.isWants);
             const cat = await this.transactionCategoryRepository.save(category);

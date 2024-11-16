@@ -32,8 +32,12 @@ export class TransactionCategoryService {
         const category: TransactionCategory = new TransactionCategory(
             createTransactionCategoryDto.name,
             keywords,
+<<<<<<< HEAD
             createTransactionCategoryDto.isWants,
             createTransactionCategoryDto.color
+=======
+            createTransactionCategoryDto.isWants
+>>>>>>> main
         );
         const savedCategory = await this.transactionCategoryRepository.save(category);
         return savedCategory;
@@ -60,7 +64,10 @@ export class TransactionCategoryService {
             category.name = updateTransactionCategoryDto.name;
             category.keywords = keywords;
             category.isWants = updateTransactionCategoryDto.isWants;
+<<<<<<< HEAD
             category.color = updateTransactionCategoryDto.color;
+=======
+>>>>>>> main
             console.log('CATEGORY TO SAVE', category);
             console.log('isWants type:', typeof category.isWants);
             const cat = await this.transactionCategoryRepository.save(category);

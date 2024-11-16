@@ -18,8 +18,12 @@ export class TransactionCategoryController {
                     tc.id,
                     tc.name,
                     tc.keywords.map((k) => new KeywordDto(k.id, k.value)),
+<<<<<<< HEAD
                     tc.isWants,
                     tc.color
+=======
+                    tc.isWants
+>>>>>>> main
                 )
         );
     }

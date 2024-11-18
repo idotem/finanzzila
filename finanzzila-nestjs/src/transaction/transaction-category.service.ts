@@ -62,12 +62,11 @@ export class TransactionCategoryService {
             category.isWants = updateTransactionCategoryDto.isWants;
             category.color = updateTransactionCategoryDto.color;
             console.log('CATEGORY TO SAVE', category);
-            console.log('isWants type:', typeof category.isWants);
             const cat = await this.transactionCategoryRepository.save(category);
             console.log('SAVED CATEGORY', cat);
             return cat;
         } catch (e) {
-            console.log('UPDATE ', e.detail);
+            console.log('UPDATE CATEGORY THREW EXCEPTION: ', e.detail);
             if (/(value)[\s\S]+(already exists)/.test(e.detail)) {
                 throw new BadRequestException(e.detail);
             }

@@ -21,7 +21,7 @@ import { KeywordModule } from './keyword/keyword.module';
             autoLoadEntities: true,
             database: 'dev_finanzzila',
             synchronize: true,
-            logging: true
+            logging: false
         }),
         UserModule,
         TransactionModule,

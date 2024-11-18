@@ -20,10 +20,10 @@ export class CategorySubscriber implements EntitySubscriberInterface<Transaction
         await this.transactionService.updateTransactionsAfterCategoriesGetUpdated();
     }
     async beforeUpdate(event: UpdateEvent<TransactionCategory>) {
-        console.log('Before update:', event.entity);
+        console.log('EventSub: TransactionCategory before update:', event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<TransactionCategory>) {
-        console.log('After update:', event.databaseEntity);
+        console.log('EventSub: TransactionCategory after update:', event.databaseEntity);
     }
 }

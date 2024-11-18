@@ -37,34 +37,41 @@ export class TransactionService {
     }
 
     async updateTransactionsAfterCategoriesGetUpdated(): Promise<void> {
+        console.log('UPDATING TRANSACTIONS AFTER CATEGORY GETS UPDATED');
         const categories: TransactionCategory[] = await this.transactionCategoryService.findAll();
         const notMappedCategoryId: number = categories.find((c) => c.name === 'NOT_MAPPED').id;
         const transactions: Transaction[] = await this.findAllFiltered(
             new TransactionFilterDto(undefined, undefined, notMappedCategoryId)
         );
         const keywords: Keyword[] = await this.keywordService.findAll();
-        transactions
-            .filter((tr) => tr.manuallyOverried === false)
-            .forEach((tr) => {
-                let categoryToChange = tr.category;
-                if (tr.amount > 0) {
-                    categoryToChange = categories.find((c) => c.name === 'Income');
+        console.log('cat.lenght', categories.length);
+        console.log('tr.lenght', transactions.length);
+        console.log('keywords.lenght', keywords.length);
+        for (const tr of transactions) {
+            console.log('tr.amount: ', tr.amount);
+            console.log('tr.manually overried: ', tr.manuallyOverried);
+            console.log('tr.name: ', tr.nameOfPlace);
+            if (tr.manuallyOverried) {
+                continue;
+            }
+            if (tr.amount > 0) {
+                console.log('manually overried: ', tr.manuallyOverried);
+                console.log('tr.name: ', tr.nameOfPlace);
+                tr.category = categories.find((c) => c.name === 'Income');
+                continue;
+            }
+            for (let i = 0; i < keywords.length; i++) {
+                if (
+                    this.checkIfNameOfTransactionContainsGivenWord(
+                        tr.nameOfPlace,
+                        keywords[i].value
+                    )
+                ) {
+                    tr.category = keywords[i].category;
+                    break;
                 }
-                for (let i = 0; i < keywords.length; i++) {
-                    if (
-                        this.checkIfNameOfTransactionContainsGivenWord(
-                            tr.nameOfPlace,
-                            keywords[i].value
-                        )
-                    ) {
-                        categoryToChange = keywords[i].category;
-                        break;
-                    }
-                }
-                if (categoryToChange !== null) {
-                    tr.category = categoryToChange;
-                }
-            });
+            }
+        }
         this.transactionRepository.save(transactions);
     }
 
@@ -154,33 +161,14 @@ export class TransactionService {
                 const transDate: Date = row.values[1];
                 const transName: string = row.values[2].toString();
                 const transAmount: number = row.values[4];
-                const category: TransactionCategory = getCategoryV2(transName, transAmount);
+                const category: TransactionCategory = getCategory(transName, transAmount);
                 if (category && category.name === 'Fuel and liquids') {
-                    if (transAmount % 500 === 0) {
-                        const transaction = new Transaction(
-                            transDate,
-                            transName,
-                            transAmount,
-                            category
-                        );
-                        transactions.push(transaction);
-                    } else {
-                        const marketCat = categories.find((c) => c.name === 'Market');
-                        const splittedFuelTrans = new Transaction(
-                            transDate,
-                            transName,
-                            transAmount - (transAmount % 500),
-                            category
-                        );
-                        const splittedMarketTrans = new Transaction(
-                            transDate,
-                            transName,
-                            transAmount % 500,
-                            marketCat
-                        );
-                        transactions.push(splittedMarketTrans);
-                        transactions.push(splittedFuelTrans);
-                    }
+                    splitTransactionsFromFuelStationsToFuelAndMarket(
+                        transAmount,
+                        transDate,
+                        transName,
+                        category
+                    );
                 } else if (category) {
                     const transaction = new Transaction(
                         transDate,
@@ -192,9 +180,38 @@ export class TransactionService {
                 }
             });
 
-            //function splitFuelTransaction(transactions: Transaction[], transDate: Date, transName: string,
-            //                             transAmount: number, category: TransactionCategory){
-            //}
+            function splitTransactionsFromFuelStationsToFuelAndMarket(
+                transAmount: number,
+                transDate: Date,
+                transName: string,
+                category: TransactionCategory
+            ) {
+                if (transAmount % 500 === 0) {
+                    const transaction = new Transaction(
+                        transDate,
+                        transName,
+                        transAmount,
+                        category
+                    );
+                    transactions.push(transaction);
+                } else {
+                    const marketCat = categories.find((c) => c.name === 'Market');
+                    const splittedFuelTrans = new Transaction(
+                        transDate,
+                        transName,
+                        transAmount - (transAmount % 500),
+                        category
+                    );
+                    const splittedMarketTrans = new Transaction(
+                        transDate,
+                        transName,
+                        transAmount % 500,
+                        marketCat
+                    );
+                    transactions.push(splittedMarketTrans);
+                    transactions.push(splittedFuelTrans);
+                }
+            }
 
             function checkIfNameOfTransactionContainsGivenWord(
                 nameOfTransactionPlace: string,
@@ -203,8 +220,8 @@ export class TransactionService {
                 return nameOfTransactionPlace.includes(wordThatsContained);
             }
 
-            function getCategoryV2(nameOfTransactionPlace: string, amountOfTransaction: number) {
-                if (amountOfTransaction === undefined && amountOfTransaction === null) {
+            function getCategory(nameOfTransactionPlace: string, amountOfTransaction: number) {
+                if (amountOfTransaction === undefined || amountOfTransaction === null) {
                     console.log(
                         'Ignored or invalid transaction with name: ',
                         nameOfTransactionPlace,
@@ -228,240 +245,6 @@ export class TransactionService {
                     }
                 }
                 return categories.find((c) => c.name === 'NOT_MAPPED');
-            }
-
-            function getCategory(
-                nameOfTransactionPlace: string,
-                amountOfTransaction: number
-            ): TransactionCategory {
-                if (amountOfTransaction === undefined && amountOfTransaction === null) {
-                    console.log(
-                        'Ignored or invalid transaction with name: ',
-                        nameOfTransactionPlace,
-                        'and amount: ',
-                        amountOfTransaction
-                    );
-                    return undefined;
-                }
-                if (amountOfTransaction > 0) {
-                    return categories.find((c) => c.name === 'INCOME');
-                }
-                switch (true) {
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'BP '):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'B.S. '):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'MAKPETROL'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'OKTA'
-                    ): {
-                        return categories.find((c) => c.name === 'FUEL_AND_CAR');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'BON APETIT'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'SILBO-CENTAR'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'RESTORAN MIDA SKOPJE'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'ROJAL BURGER'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'M S BEJKERI'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'BIFE'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'GURMAN'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'VRSHNIK'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'MESARNICA'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'GIRO'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'POPOVSKI'
-                    ): {
-                        return categories.find((c) => c.name === 'FOOD');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'TINEKS'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'LA NOI'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'CENA TREJD'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'KAM'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'MARKETI'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'Ramstor'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'RAMSTOR'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'VERO'):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'ZUR'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'MARKET'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'STOKOMAK'
-                    ): {
-                        return categories.find((c) => c.name === 'MARKET');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        '230706724686'
-                    ): {
-                        return categories.find((c) => c.name === 'INVESTING_AND_FEES');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'LITERATURA'
-                    ): {
-                        return categories.find((c) => c.name === 'BOOKS');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'КОМЕРЦИЈАЛНА'
-                    ): {
-                        return categories.find((c) => c.name === 'COMMERCIAL_BANK');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'KOFI'):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'BAR'):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'KAFE'):
-                        if (amountOfTransaction <= 300) {
-                            return categories.find((c) => c.name === 'CAFE_AND_BARS');
-                        } else {
-                            return categories.find((c) => c.name === 'RESTAURANTS');
-                        }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'DM DROGERIE'
-                    ): {
-                        return categories.find((c) => c.name === 'HYGIENE');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'CINEPLEXX'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'KUPIKARTA'
-                    ): {
-                        return categories.find((c) => c.name === 'ENTERTAINMENT');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'VAIKIKI'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'ZARA'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'NJU JORKER'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'KOTON'
-                    ): {
-                        return categories.find((c) => c.name === 'CLOTHES_AND_WEARABLES');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'ANHOC'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'NEPTUN'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'SETEK'
-                    ): {
-                        return categories.find((c) => c.name === 'SOFTWARE_AND_HARDWARE');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'ALIEXPRESS'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'aliexpress'
-                    ): {
-                        return categories.find((c) => c.name === 'ALIEXPRESS');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'APTEKA'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'VIOLA'
-                    ): {
-                        return categories.find((c) => c.name === 'MEDICAL');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'KBSATM'
-                    ): {
-                        return categories.find((c) => c.name === 'ATM');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'CVEKARNICA'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'PANDORA'
-                    ): {
-                        return categories.find((c) => c.name === 'GIFTS');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'JUSK'):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'JUMBO'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'BAZARO'
-                    ): {
-                        return categories.find((c) => c.name === 'EVERYTHING_STORE');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'IKNOW.UKIM.MK'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'EKVUS'
-                    ): {
-                        return categories.find((c) => c.name === 'EDUCATION');
-                    }
-                    default: {
-                        return categories.find((c) => c.name === 'NOT_MAPPED');
-                    }
-                }
             }
         });
         await this.transactionRepository.save(transactions);

@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     ConflictException,
     Inject,
     Injectable,
@@ -16,17 +17,20 @@ import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { KeywordService } from 'src/keyword/keyword.service';
 import { Keyword } from 'src/keyword/entities/keyword.entity';
 import { TransactionCategory } from './entities/transaction-category.entity';
-import { TransactionCategoryService } from './transaction-category.service';
+import { CreateTransactionCategoryDto } from './dto/create-transaction-category-dto';
+import { UpdateTransactionCategoryDto } from './dto/update-transaction-category-dto';
+import { KeywordDto } from 'src/keyword/dto/keyword-dto';
 
 @Injectable()
 export class TransactionService {
     uploadedReportsFolderPath = './uploaded-reports-dev';
+
     constructor(
         @InjectRepository(Transaction)
         private readonly transactionRepository: Repository<Transaction>,
         private readonly keywordService: KeywordService,
-        @Inject(forwardRef(() => TransactionCategoryService))
-        private readonly transactionCategoryService: TransactionCategoryService
+        @InjectRepository(TransactionCategory)
+        private readonly transactionCategoryRepository: Repository<TransactionCategory>
     ) {}
 
     checkIfNameOfTransactionContainsGivenWord(
@@ -37,27 +41,21 @@ export class TransactionService {
     }
 
     async updateTransactionsAfterCategoriesGetUpdated(): Promise<void> {
-        console.log('UPDATING TRANSACTIONS AFTER CATEGORY GETS UPDATED');
-        const categories: TransactionCategory[] = await this.transactionCategoryService.findAll();
-        const notMappedCategoryId: number = categories.find((c) => c.name === 'NOT_MAPPED').id;
-        const transactions: Transaction[] = await this.findAllFiltered(
-            new TransactionFilterDto(undefined, undefined, notMappedCategoryId)
+        const categories: TransactionCategory[] = await this.findAllCategories();
+        const notMappedCategory: TransactionCategory = categories.find(
+            (c) => c.name === 'NOT_MAPPED'
+        );
+        const incomeCategory: TransactionCategory = categories.find((c) => c.name === 'INCOME');
+        const transactions: Transaction[] = await this.findAllTransactionsFiltered(
+            new TransactionFilterDto(undefined, undefined, notMappedCategory.id)
         );
         const keywords: Keyword[] = await this.keywordService.findAll();
-        console.log('cat.lenght', categories.length);
-        console.log('tr.lenght', transactions.length);
-        console.log('keywords.lenght', keywords.length);
         for (const tr of transactions) {
-            console.log('tr.amount: ', tr.amount);
-            console.log('tr.manually overried: ', tr.manuallyOverried);
-            console.log('tr.name: ', tr.nameOfPlace);
             if (tr.manuallyOverried) {
                 continue;
             }
             if (tr.amount > 0) {
-                console.log('manually overried: ', tr.manuallyOverried);
-                console.log('tr.name: ', tr.nameOfPlace);
-                tr.category = categories.find((c) => c.name === 'Income');
+                tr.category = incomeCategory;
                 continue;
             }
             for (let i = 0; i < keywords.length; i++) {
@@ -71,12 +69,15 @@ export class TransactionService {
                     break;
                 }
             }
+            if (tr.category === null || tr.category === undefined) {
+                tr.category = notMappedCategory;
+            }
         }
         this.transactionRepository.save(transactions);
     }
 
-    async create(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
-        let category: TransactionCategory = await this.transactionCategoryService.findById(
+    async createTransaction(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
+        let category: TransactionCategory = await this.findCategoryById(
             createTransactionDto.category
         );
         const transaction: Transaction = new Transaction(
@@ -90,7 +91,7 @@ export class TransactionService {
             createTransactionDto.categoryKeyword !== null &&
             createTransactionDto.categoryKeyword !== undefined
         ) {
-            category = await this.transactionCategoryService.addKeywordForCategory(
+            category = await this.addKeywordForCategory(
                 category,
                 createTransactionDto.categoryKeyword
             );
@@ -98,16 +99,19 @@ export class TransactionService {
         return savedTransaction;
     }
 
-    async findOne(id: number): Promise<Transaction> {
+    async findTransactionById(id: number): Promise<Transaction> {
         return await this.transactionRepository.findOne({ where: { id } });
     }
 
-    async update(id: number, updateTransactionDto: UpdateTransactionDto): Promise<Transaction> {
-        const transaction: Transaction = await this.findOne(id);
+    async updateTransaction(
+        id: number,
+        updateTransactionDto: UpdateTransactionDto
+    ): Promise<Transaction> {
+        const transaction: Transaction = await this.findTransactionById(id);
         if (!transaction) {
             throw new NotFoundException(`Transaction with ${id} was not found`);
         }
-        const category: TransactionCategory = await this.transactionCategoryService.findById(
+        const category: TransactionCategory = await this.findCategoryById(
             updateTransactionDto.category
         );
         const oldTransactionCategoryName = transaction.category.name;
@@ -126,15 +130,12 @@ export class TransactionService {
             updateTransactionDto.categoryKeyword !== null &&
             updateTransactionDto.categoryKeyword !== undefined
         ) {
-            await this.transactionCategoryService.addKeywordForCategory(
-                category,
-                updateTransactionDto.categoryKeyword
-            );
+            await this.addKeywordForCategory(category, updateTransactionDto.categoryKeyword);
         }
         return savedTransaction;
     }
 
-    remove(id: number): void {
+    deleteTransactionById(id: number): void {
         const options: any = { id: id };
         this.transactionRepository.delete(options);
     }
@@ -148,7 +149,7 @@ export class TransactionService {
 
     async populateTransactions(file: Express.Multer.File): Promise<Transaction[]> {
         //await this.checkIfFileAlreadyUploaded(file.originalname);
-        const categories = await this.transactionCategoryService.findAll();
+        const categories = await this.findAllCategories();
         const keywords: Keyword[] = await this.keywordService.findAll();
         const transactions: Transaction[] = [];
         const workbook = new Workbook();
@@ -240,7 +241,6 @@ export class TransactionService {
                             keywords[i].value
                         )
                     ) {
-                        console.log('TRUE ', keywords[i].category);
                         return keywords[i].category;
                     }
                 }
@@ -250,13 +250,13 @@ export class TransactionService {
         await this.transactionRepository.save(transactions);
 
         fs.writeFileSync(`${this.uploadedReportsFolderPath}/${file.originalname}`, file.buffer);
-        const tr = await this.findAllFiltered(
+        const tr = await this.findAllTransactionsFiltered(
             new TransactionFilterDto(undefined, undefined, undefined)
         );
         return tr;
     }
 
-    findAllFiltered(transactionFilter: TransactionFilterDto): Promise<Transaction[]> {
+    findAllTransactionsFiltered(transactionFilter: TransactionFilterDto): Promise<Transaction[]> {
         const queryBuilder = this.transactionRepository
             .createQueryBuilder('transaction')
             .leftJoinAndSelect('transaction.category', 'category');
@@ -294,5 +294,109 @@ export class TransactionService {
                 }
             });
         });
+    }
+
+    //CATEGORY:
+
+    findAllCategories(): Promise<TransactionCategory[]> {
+        const queryBuilder = this.transactionCategoryRepository
+            .createQueryBuilder('transaction-category')
+            .leftJoinAndSelect('transaction-category.keywords', 'keywords');
+        const r = queryBuilder.getMany();
+        return r;
+    }
+
+    async createCategory(
+        createTransactionCategoryDto: CreateTransactionCategoryDto
+    ): Promise<TransactionCategory> {
+        const keywords: Keyword[] = createTransactionCategoryDto.keywords.map(
+            (kd) => new Keyword(kd.value)
+        );
+        const category: TransactionCategory = new TransactionCategory(
+            createTransactionCategoryDto.name,
+            keywords,
+            createTransactionCategoryDto.isWants,
+            createTransactionCategoryDto.color
+        );
+        const savedCategory = await this.transactionCategoryRepository.save(category);
+        this.updateTransactionsAfterCategoriesGetUpdated();
+        return savedCategory;
+    }
+
+    async updateCategory(
+        id: number,
+        updateTransactionCategoryDto: UpdateTransactionCategoryDto
+    ): Promise<TransactionCategory> {
+        const category: TransactionCategory = await this.findCategoryById(id);
+        const keywords: Keyword[] = await Promise.all(
+            updateTransactionCategoryDto.keywords.map(async (kd) => {
+                if (kd.id) {
+                    const editingKeyword = await this.keywordService.findOne(kd.id);
+                    editingKeyword.value = kd.value;
+                    return editingKeyword;
+                }
+                const keyword = new Keyword(kd.value);
+                return keyword;
+            })
+        );
+        try {
+            category.name = updateTransactionCategoryDto.name;
+            category.keywords = keywords;
+            category.isWants = updateTransactionCategoryDto.isWants;
+            category.color = updateTransactionCategoryDto.color;
+            const cat = await this.transactionCategoryRepository.save(category);
+            if (
+                this.categoryKeywordsGotUpdated(
+                    category.keywords,
+                    updateTransactionCategoryDto.keywords
+                )
+            ) {
+                this.updateTransactionsAfterCategoriesGetUpdated();
+            }
+            return cat;
+        } catch (e) {
+            console.log('UPDATE CATEGORY THREW EXCEPTION: ', e.detail);
+            if (/(value)[\s\S]+(already exists)/.test(e.detail)) {
+                throw new BadRequestException(e.detail);
+            }
+        }
+    }
+
+    categoryKeywordsGotUpdated(keywords: Keyword[], updatedKeywords: KeywordDto[]): boolean {
+        const ukIds: number[] = updatedKeywords.map((uk) => uk.id);
+        if (keywords.length !== updatedKeywords.length) {
+            return false;
+        }
+        for (const keyword of keywords) {
+            if (!ukIds.includes(keyword.id)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    async findCategoryById(id: number): Promise<TransactionCategory> {
+        const cat = await this.transactionCategoryRepository.findOne({ where: { id } });
+        if (!cat) {
+            throw new NotFoundException(`Category with ${id} was not found`);
+        }
+        return cat;
+    }
+
+    deleteCategoryById(id: number): void {
+        const options: any = { id: id };
+        this.transactionCategoryRepository.delete(options);
+    }
+
+    async addKeywordForCategory(
+        category: TransactionCategory,
+        keyword: string
+    ): Promise<TransactionCategory> {
+        const catKeywords = await this.keywordService.findAllByCategoryId(category.id);
+        catKeywords.push(new Keyword(keyword));
+        category.keywords = catKeywords;
+        const savedKeywod = this.transactionCategoryRepository.save(category);
+        this.updateTransactionsAfterCategoriesGetUpdated();
+        return savedKeywod;
     }
 }

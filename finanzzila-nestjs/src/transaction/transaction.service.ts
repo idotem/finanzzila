@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     ConflictException,
     Inject,
     Injectable,
@@ -16,17 +17,20 @@ import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { KeywordService } from 'src/keyword/keyword.service';
 import { Keyword } from 'src/keyword/entities/keyword.entity';
 import { TransactionCategory } from './entities/transaction-category.entity';
-import { TransactionCategoryService } from './transaction-category.service';
+import { CreateTransactionCategoryDto } from './dto/create-transaction-category-dto';
+import { UpdateTransactionCategoryDto } from './dto/update-transaction-category-dto';
+import { KeywordDto } from 'src/keyword/dto/keyword-dto';
 
 @Injectable()
 export class TransactionService {
     uploadedReportsFolderPath = './uploaded-reports-dev';
+
     constructor(
         @InjectRepository(Transaction)
         private readonly transactionRepository: Repository<Transaction>,
         private readonly keywordService: KeywordService,
-        @Inject(forwardRef(() => TransactionCategoryService))
-        private readonly transactionCategoryService: TransactionCategoryService
+        @InjectRepository(TransactionCategory)
+        private readonly transactionCategoryRepository: Repository<TransactionCategory>
     ) {}
 
     checkIfNameOfTransactionContainsGivenWord(
@@ -37,39 +41,43 @@ export class TransactionService {
     }
 
     async updateTransactionsAfterCategoriesGetUpdated(): Promise<void> {
-        const categories: TransactionCategory[] = await this.transactionCategoryService.findAll();
-        const notMappedCategoryId: number = categories.find((c) => c.name === 'NOT_MAPPED').id;
-        const transactions: Transaction[] = await this.findAllFiltered(
-            new TransactionFilterDto(undefined, undefined, notMappedCategoryId)
+        const categories: TransactionCategory[] = await this.findAllCategories();
+        const notMappedCategory: TransactionCategory = categories.find(
+            (c) => c.name === 'NOT_MAPPED'
+        );
+        const incomeCategory: TransactionCategory = categories.find((c) => c.name === 'INCOME');
+        const transactions: Transaction[] = await this.findAllTransactionsFiltered(
+            new TransactionFilterDto(undefined, undefined, notMappedCategory.id)
         );
         const keywords: Keyword[] = await this.keywordService.findAll();
-        transactions
-            .filter((tr) => tr.manuallyOverried === false)
-            .forEach((tr) => {
-                let categoryToChange = tr.category;
-                if (tr.amount > 0) {
-                    categoryToChange = categories.find((c) => c.name === 'Income');
+        for (const tr of transactions) {
+            if (tr.manuallyOverried) {
+                continue;
+            }
+            if (tr.amount > 0) {
+                tr.category = incomeCategory;
+                continue;
+            }
+            for (let i = 0; i < keywords.length; i++) {
+                if (
+                    this.checkIfNameOfTransactionContainsGivenWord(
+                        tr.nameOfPlace,
+                        keywords[i].value
+                    )
+                ) {
+                    tr.category = keywords[i].category;
+                    break;
                 }
-                for (let i = 0; i < keywords.length; i++) {
-                    if (
-                        this.checkIfNameOfTransactionContainsGivenWord(
-                            tr.nameOfPlace,
-                            keywords[i].value
-                        )
-                    ) {
-                        categoryToChange = keywords[i].category;
-                        break;
-                    }
-                }
-                if (categoryToChange !== null) {
-                    tr.category = categoryToChange;
-                }
-            });
+            }
+            if (tr.category === null || tr.category === undefined) {
+                tr.category = notMappedCategory;
+            }
+        }
         this.transactionRepository.save(transactions);
     }
 
-    async create(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
-        let category: TransactionCategory = await this.transactionCategoryService.findById(
+    async createTransaction(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
+        let category: TransactionCategory = await this.findCategoryById(
             createTransactionDto.category
         );
         const transaction: Transaction = new Transaction(
@@ -83,7 +91,7 @@ export class TransactionService {
             createTransactionDto.categoryKeyword !== null &&
             createTransactionDto.categoryKeyword !== undefined
         ) {
-            category = await this.transactionCategoryService.addKeywordForCategory(
+            category = await this.addKeywordForCategory(
                 category,
                 createTransactionDto.categoryKeyword
             );
@@ -91,16 +99,19 @@ export class TransactionService {
         return savedTransaction;
     }
 
-    async findOne(id: number): Promise<Transaction> {
+    async findTransactionById(id: number): Promise<Transaction> {
         return await this.transactionRepository.findOne({ where: { id } });
     }
 
-    async update(id: number, updateTransactionDto: UpdateTransactionDto): Promise<Transaction> {
-        const transaction: Transaction = await this.findOne(id);
+    async updateTransaction(
+        id: number,
+        updateTransactionDto: UpdateTransactionDto
+    ): Promise<Transaction> {
+        const transaction: Transaction = await this.findTransactionById(id);
         if (!transaction) {
             throw new NotFoundException(`Transaction with ${id} was not found`);
         }
-        const category: TransactionCategory = await this.transactionCategoryService.findById(
+        const category: TransactionCategory = await this.findCategoryById(
             updateTransactionDto.category
         );
         const oldTransactionCategoryName = transaction.category.name;
@@ -119,15 +130,12 @@ export class TransactionService {
             updateTransactionDto.categoryKeyword !== null &&
             updateTransactionDto.categoryKeyword !== undefined
         ) {
-            await this.transactionCategoryService.addKeywordForCategory(
-                category,
-                updateTransactionDto.categoryKeyword
-            );
+            await this.addKeywordForCategory(category, updateTransactionDto.categoryKeyword);
         }
         return savedTransaction;
     }
 
-    remove(id: number): void {
+    deleteTransactionById(id: number): void {
         const options: any = { id: id };
         this.transactionRepository.delete(options);
     }
@@ -141,7 +149,7 @@ export class TransactionService {
 
     async populateTransactions(file: Express.Multer.File): Promise<Transaction[]> {
         //await this.checkIfFileAlreadyUploaded(file.originalname);
-        const categories = await this.transactionCategoryService.findAll();
+        const categories = await this.findAllCategories();
         const keywords: Keyword[] = await this.keywordService.findAll();
         const transactions: Transaction[] = [];
         const workbook = new Workbook();
@@ -154,33 +162,14 @@ export class TransactionService {
                 const transDate: Date = row.values[1];
                 const transName: string = row.values[2].toString();
                 const transAmount: number = row.values[4];
-                const category: TransactionCategory = getCategoryV2(transName, transAmount);
+                const category: TransactionCategory = getCategory(transName, transAmount);
                 if (category && category.name === 'Fuel and liquids') {
-                    if (transAmount % 500 === 0) {
-                        const transaction = new Transaction(
-                            transDate,
-                            transName,
-                            transAmount,
-                            category
-                        );
-                        transactions.push(transaction);
-                    } else {
-                        const marketCat = categories.find((c) => c.name === 'Market');
-                        const splittedFuelTrans = new Transaction(
-                            transDate,
-                            transName,
-                            transAmount - (transAmount % 500),
-                            category
-                        );
-                        const splittedMarketTrans = new Transaction(
-                            transDate,
-                            transName,
-                            transAmount % 500,
-                            marketCat
-                        );
-                        transactions.push(splittedMarketTrans);
-                        transactions.push(splittedFuelTrans);
-                    }
+                    splitTransactionsFromFuelStationsToFuelAndMarket(
+                        transAmount,
+                        transDate,
+                        transName,
+                        category
+                    );
                 } else if (category) {
                     const transaction = new Transaction(
                         transDate,
@@ -192,9 +181,38 @@ export class TransactionService {
                 }
             });
 
-            //function splitFuelTransaction(transactions: Transaction[], transDate: Date, transName: string,
-            //                             transAmount: number, category: TransactionCategory){
-            //}
+            function splitTransactionsFromFuelStationsToFuelAndMarket(
+                transAmount: number,
+                transDate: Date,
+                transName: string,
+                category: TransactionCategory
+            ) {
+                if (transAmount % 500 === 0) {
+                    const transaction = new Transaction(
+                        transDate,
+                        transName,
+                        transAmount,
+                        category
+                    );
+                    transactions.push(transaction);
+                } else {
+                    const marketCat = categories.find((c) => c.name === 'Market');
+                    const splittedFuelTrans = new Transaction(
+                        transDate,
+                        transName,
+                        transAmount - (transAmount % 500),
+                        category
+                    );
+                    const splittedMarketTrans = new Transaction(
+                        transDate,
+                        transName,
+                        transAmount % 500,
+                        marketCat
+                    );
+                    transactions.push(splittedMarketTrans);
+                    transactions.push(splittedFuelTrans);
+                }
+            }
 
             function checkIfNameOfTransactionContainsGivenWord(
                 nameOfTransactionPlace: string,
@@ -203,8 +221,8 @@ export class TransactionService {
                 return nameOfTransactionPlace.includes(wordThatsContained);
             }
 
-            function getCategoryV2(nameOfTransactionPlace: string, amountOfTransaction: number) {
-                if (amountOfTransaction === undefined && amountOfTransaction === null) {
+            function getCategory(nameOfTransactionPlace: string, amountOfTransaction: number) {
+                if (amountOfTransaction === undefined || amountOfTransaction === null) {
                     console.log(
                         'Ignored or invalid transaction with name: ',
                         nameOfTransactionPlace,
@@ -223,257 +241,22 @@ export class TransactionService {
                             keywords[i].value
                         )
                     ) {
-                        console.log('TRUE ', keywords[i].category);
                         return keywords[i].category;
                     }
                 }
                 return categories.find((c) => c.name === 'NOT_MAPPED');
             }
-
-            function getCategory(
-                nameOfTransactionPlace: string,
-                amountOfTransaction: number
-            ): TransactionCategory {
-                if (amountOfTransaction === undefined && amountOfTransaction === null) {
-                    console.log(
-                        'Ignored or invalid transaction with name: ',
-                        nameOfTransactionPlace,
-                        'and amount: ',
-                        amountOfTransaction
-                    );
-                    return undefined;
-                }
-                if (amountOfTransaction > 0) {
-                    return categories.find((c) => c.name === 'INCOME');
-                }
-                switch (true) {
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'BP '):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'B.S. '):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'MAKPETROL'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'OKTA'
-                    ): {
-                        return categories.find((c) => c.name === 'FUEL_AND_CAR');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'BON APETIT'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'SILBO-CENTAR'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'RESTORAN MIDA SKOPJE'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'ROJAL BURGER'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'M S BEJKERI'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'BIFE'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'GURMAN'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'VRSHNIK'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'MESARNICA'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'GIRO'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'POPOVSKI'
-                    ): {
-                        return categories.find((c) => c.name === 'FOOD');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'TINEKS'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'LA NOI'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'CENA TREJD'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'KAM'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'MARKETI'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'Ramstor'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'RAMSTOR'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'VERO'):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'ZUR'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'MARKET'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'STOKOMAK'
-                    ): {
-                        return categories.find((c) => c.name === 'MARKET');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        '230706724686'
-                    ): {
-                        return categories.find((c) => c.name === 'INVESTING_AND_FEES');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'LITERATURA'
-                    ): {
-                        return categories.find((c) => c.name === 'BOOKS');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'КОМЕРЦИЈАЛНА'
-                    ): {
-                        return categories.find((c) => c.name === 'COMMERCIAL_BANK');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'KOFI'):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'BAR'):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'KAFE'):
-                        if (amountOfTransaction <= 300) {
-                            return categories.find((c) => c.name === 'CAFE_AND_BARS');
-                        } else {
-                            return categories.find((c) => c.name === 'RESTAURANTS');
-                        }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'DM DROGERIE'
-                    ): {
-                        return categories.find((c) => c.name === 'HYGIENE');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'CINEPLEXX'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'KUPIKARTA'
-                    ): {
-                        return categories.find((c) => c.name === 'ENTERTAINMENT');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'VAIKIKI'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'ZARA'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'NJU JORKER'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'KOTON'
-                    ): {
-                        return categories.find((c) => c.name === 'CLOTHES_AND_WEARABLES');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'ANHOC'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'NEPTUN'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'SETEK'
-                    ): {
-                        return categories.find((c) => c.name === 'SOFTWARE_AND_HARDWARE');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'ALIEXPRESS'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'aliexpress'
-                    ): {
-                        return categories.find((c) => c.name === 'ALIEXPRESS');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'APTEKA'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'VIOLA'
-                    ): {
-                        return categories.find((c) => c.name === 'MEDICAL');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'KBSATM'
-                    ): {
-                        return categories.find((c) => c.name === 'ATM');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'CVEKARNICA'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'PANDORA'
-                    ): {
-                        return categories.find((c) => c.name === 'GIFTS');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'JUSK'):
-                    case checkIfNameOfTransactionContainsGivenWord(nameOfTransactionPlace, 'JUMBO'):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'BAZARO'
-                    ): {
-                        return categories.find((c) => c.name === 'EVERYTHING_STORE');
-                    }
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'IKNOW.UKIM.MK'
-                    ):
-                    case checkIfNameOfTransactionContainsGivenWord(
-                        nameOfTransactionPlace,
-                        'EKVUS'
-                    ): {
-                        return categories.find((c) => c.name === 'EDUCATION');
-                    }
-                    default: {
-                        return categories.find((c) => c.name === 'NOT_MAPPED');
-                    }
-                }
-            }
         });
         await this.transactionRepository.save(transactions);
 
         fs.writeFileSync(`${this.uploadedReportsFolderPath}/${file.originalname}`, file.buffer);
-        const tr = await this.findAllFiltered(
+        const tr = await this.findAllTransactionsFiltered(
             new TransactionFilterDto(undefined, undefined, undefined)
         );
         return tr;
     }
 
-    findAllFiltered(transactionFilter: TransactionFilterDto): Promise<Transaction[]> {
+    findAllTransactionsFiltered(transactionFilter: TransactionFilterDto): Promise<Transaction[]> {
         const queryBuilder = this.transactionRepository
             .createQueryBuilder('transaction')
             .leftJoinAndSelect('transaction.category', 'category');
@@ -511,5 +294,109 @@ export class TransactionService {
                 }
             });
         });
+    }
+
+    //CATEGORY:
+
+    findAllCategories(): Promise<TransactionCategory[]> {
+        const queryBuilder = this.transactionCategoryRepository
+            .createQueryBuilder('transaction-category')
+            .leftJoinAndSelect('transaction-category.keywords', 'keywords');
+        const r = queryBuilder.getMany();
+        return r;
+    }
+
+    async createCategory(
+        createTransactionCategoryDto: CreateTransactionCategoryDto
+    ): Promise<TransactionCategory> {
+        const keywords: Keyword[] = createTransactionCategoryDto.keywords.map(
+            (kd) => new Keyword(kd.value)
+        );
+        const category: TransactionCategory = new TransactionCategory(
+            createTransactionCategoryDto.name,
+            keywords,
+            createTransactionCategoryDto.isWants,
+            createTransactionCategoryDto.color
+        );
+        const savedCategory = await this.transactionCategoryRepository.save(category);
+        this.updateTransactionsAfterCategoriesGetUpdated();
+        return savedCategory;
+    }
+
+    async updateCategory(
+        id: number,
+        updateTransactionCategoryDto: UpdateTransactionCategoryDto
+    ): Promise<TransactionCategory> {
+        const category: TransactionCategory = await this.findCategoryById(id);
+        const keywords: Keyword[] = await Promise.all(
+            updateTransactionCategoryDto.keywords.map(async (kd) => {
+                if (kd.id) {
+                    const editingKeyword = await this.keywordService.findOne(kd.id);
+                    editingKeyword.value = kd.value;
+                    return editingKeyword;
+                }
+                const keyword = new Keyword(kd.value);
+                return keyword;
+            })
+        );
+        try {
+            category.name = updateTransactionCategoryDto.name;
+            category.keywords = keywords;
+            category.isWants = updateTransactionCategoryDto.isWants;
+            category.color = updateTransactionCategoryDto.color;
+            const cat = await this.transactionCategoryRepository.save(category);
+            if (
+                this.categoryKeywordsGotUpdated(
+                    category.keywords,
+                    updateTransactionCategoryDto.keywords
+                )
+            ) {
+                this.updateTransactionsAfterCategoriesGetUpdated();
+            }
+            return cat;
+        } catch (e) {
+            console.log('UPDATE CATEGORY THREW EXCEPTION: ', e.detail);
+            if (/(value)[\s\S]+(already exists)/.test(e.detail)) {
+                throw new BadRequestException(e.detail);
+            }
+        }
+    }
+
+    categoryKeywordsGotUpdated(keywords: Keyword[], updatedKeywords: KeywordDto[]): boolean {
+        const ukIds: number[] = updatedKeywords.map((uk) => uk.id);
+        if (keywords.length !== updatedKeywords.length) {
+            return false;
+        }
+        for (const keyword of keywords) {
+            if (!ukIds.includes(keyword.id)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    async findCategoryById(id: number): Promise<TransactionCategory> {
+        const cat = await this.transactionCategoryRepository.findOne({ where: { id } });
+        if (!cat) {
+            throw new NotFoundException(`Category with ${id} was not found`);
+        }
+        return cat;
+    }
+
+    deleteCategoryById(id: number): void {
+        const options: any = { id: id };
+        this.transactionCategoryRepository.delete(options);
+    }
+
+    async addKeywordForCategory(
+        category: TransactionCategory,
+        keyword: string
+    ): Promise<TransactionCategory> {
+        const catKeywords = await this.keywordService.findAllByCategoryId(category.id);
+        catKeywords.push(new Keyword(keyword));
+        category.keywords = catKeywords;
+        const savedKeywod = this.transactionCategoryRepository.save(category);
+        this.updateTransactionsAfterCategoriesGetUpdated();
+        return savedKeywod;
     }
 }

@@ -49,6 +49,7 @@ onMounted(async () => {
 });
 
 watch(dialog, () => {
+    console.log('EDITING CAT:', editingCategory);
     if (!dialog.value) {
         editingCategory.value = new Category(undefined, '', [], undefined, undefined);
     }
@@ -274,7 +275,17 @@ function changeShowColorPicker(): void {
                                                                 </v-btn>
                                                             </v-dialog>
                                                         </v-col>
-                                                        <v-col cols="12" sm="12">
+                                                        <v-col
+                                                            cols="12"
+                                                            sm="12"
+                                                            :class="
+                                                                editingCategory.isWants === 1
+                                                                    ? 'text-red'
+                                                                    : editingCategory.isWants === 0
+                                                                      ? 'text-green'
+                                                                      : 'text-slate'
+                                                            "
+                                                        >
                                                             <label for="wantsneedsradio"
                                                                 >Is this category in wants or
                                                                 needs?</label
@@ -285,11 +296,16 @@ function changeShowColorPicker(): void {
                                                                 v-on:input="$emit('input', $event)"
                                                             >
                                                                 <v-radio
-                                                                    value="1"
+                                                                    selected
+                                                                    :value="null"
+                                                                    label="Not specified"
+                                                                ></v-radio>
+                                                                <v-radio
+                                                                    :value="1"
                                                                     label="Wants"
                                                                 ></v-radio>
                                                                 <v-radio
-                                                                    value="0"
+                                                                    :value="0"
                                                                     label="Needs"
                                                                 ></v-radio>
                                                             </v-radio-group>

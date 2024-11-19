@@ -21,7 +21,7 @@ export class TransactionController {
 
     @Get()
     async findAllFiltered(@Query() filter: TransactionFilterDto): Promise<Transaction[]> {
-        const t = await this.transactionService.findAllFiltered(filter);
+        const t = await this.transactionService.findAllTransactionsFiltered(filter);
         return t;
     }
 
@@ -32,21 +32,21 @@ export class TransactionController {
 
     @Post()
     create(@Body() createTransactionDto: CreateTransactionDto) {
-        return this.transactionService.create(createTransactionDto);
+        return this.transactionService.createTransaction(createTransactionDto);
     }
 
     @Get(':id')
     findOne(@Param('id') id: string) {
-        return this.transactionService.findOne(+id);
+        return this.transactionService.findTransactionById(+id);
     }
 
     @Put(':id')
     update(@Param('id') id: string, @Body() updateTransactionDto: UpdateTransactionDto) {
-        return this.transactionService.update(+id, updateTransactionDto);
+        return this.transactionService.updateTransaction(+id, updateTransactionDto);
     }
 
     @Delete(':id')
     delete(@Param('id') id: string): void {
-        return this.transactionService.remove(+id);
+        return this.transactionService.deleteTransactionById(+id);
     }
 }

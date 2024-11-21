@@ -1,12 +1,12 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
-import { CreateTransactionCategoryDto } from './dto/create-transaction-category-dto';
-import { UpdateTransactionCategoryDto } from './dto/update-transaction-category-dto';
+import { CreateCategoryDto } from './dto/create-category-dto';
+import { UpdateCategoryDto } from './dto/update-category-dto';
 import { CategoryDto } from './dto/category-dto';
 import { KeywordDto } from 'src/keyword/dto/keyword-dto';
 import { TransactionService } from './transaction.service';
 
-@Controller('transaction-categories')
-export class TransactionCategoryController {
+@Controller('categories')
+export class CategoryController {
     constructor(private readonly transactionService: TransactionService) {}
 
     @Get()
@@ -18,23 +18,14 @@ export class TransactionCategoryController {
                     tc.id,
                     tc.name,
                     tc.keywords.map((k) => new KeywordDto(k.id, k.value)),
-<<<<<<< HEAD
                     tc.isWants,
                     tc.color
-=======
-<<<<<<< HEAD
-                    tc.isWants,
-                    tc.color
-=======
-                    tc.isWants
->>>>>>> main
->>>>>>> 0a1f6ad2fd262f08f6a7f46965a588ec49648af0
                 )
         );
     }
 
     @Post()
-    create(@Body() createTransactionCategoryDto: CreateTransactionCategoryDto) {
+    create(@Body() createTransactionCategoryDto: CreateCategoryDto) {
         return this.transactionService.createCategory(createTransactionCategoryDto);
     }
 
@@ -44,10 +35,7 @@ export class TransactionCategoryController {
     }
 
     @Put(':id')
-    update(
-        @Param('id') id: string,
-        @Body() updateTransactionCategoryDto: UpdateTransactionCategoryDto
-    ) {
+    update(@Param('id') id: string, @Body() updateTransactionCategoryDto: UpdateCategoryDto) {
         return this.transactionService.updateCategory(+id, updateTransactionCategoryDto);
     }
 

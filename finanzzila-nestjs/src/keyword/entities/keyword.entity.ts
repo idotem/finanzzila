@@ -1,4 +1,4 @@
-import { TransactionCategory } from 'src/transaction/entities/transaction-category.entity';
+import { Category } from 'src/transaction/entities/category.entity';
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
@@ -7,12 +7,12 @@ export class Keyword {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => TransactionCategory, (category) => category.transactions, {
+    @ManyToOne(() => Category, (category) => category.transactions, {
         onDelete: 'CASCADE',
         eager: true
     })
     @JoinColumn({ name: 'category_id' })
-    category: TransactionCategory;
+    category: Category;
 
     @Column({ type: 'varchar', length: 200, unique: true })
     value: string;

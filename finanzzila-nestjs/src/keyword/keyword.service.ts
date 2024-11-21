@@ -2,7 +2,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Keyword } from './entities/keyword.entity';
 import { Injectable } from '@nestjs/common';
-import { TransactionCategory } from 'src/transaction/entities/transaction-category.entity';
+import { Category } from 'src/transaction/entities/category.entity';
 
 @Injectable()
 export class KeywordService {
@@ -10,25 +10,6 @@ export class KeywordService {
         @InjectRepository(Keyword)
         private readonly keywordRepository: Repository<Keyword>
     ) {}
-
-    /*
-    async createAllForCategory(category: TransactionCategory, createKeywordDtoList: CreateKeywordDto[]) :Promise<void> {
-        createKeywordDtoList.forEach(async (ckd) => {
-            const keyword: Keyword = new Keyword(ckd.value, category);
-            await this.keywordRepository.save(keyword);
-        });
-    }     
-
-    async updateAllForCategory(category: TransactionCategory, updateKeywordDtoList: UpdateKeywordDto[]) : Promise<void>{
-        try{
-            await this.removeAllForCategory(category); 
-            return await this.createAllForCategory(category, updateKeywordDtoList);
-        } catch(e) {
-            console.log("UPDATE ALL FOR CATEGORY ", e.detail)
-            return e;
-        }
-    }
-    */
 
     async findAll(): Promise<Keyword[]> {
         return this.keywordRepository.find();
@@ -48,7 +29,7 @@ export class KeywordService {
         return await queryBuilder.getOne();
     }
 
-    async removeAllForCategory(category: TransactionCategory): Promise<void> {
+    async removeAllForCategory(category: Category): Promise<void> {
         const entitiesToDelete = await this.findAllByCategoryId(category.id);
         await this.keywordRepository.remove(entitiesToDelete);
     }

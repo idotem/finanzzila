@@ -22,6 +22,7 @@ import TransactionService from '../../service/TransactionService';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import CategoryService from '../../service/CategoryService';
 import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
+import CommonCalculations from '../common/CommonCalculations';
 
 const timePeriods = ['All time', 'Yearly', 'Monthly'];
 
@@ -60,7 +61,7 @@ const fetchTransactions = async () => {
     TransactionService.getAllFiltered(filter)
         .then((tr: Transaction[]) => {
             transactions.value = tr;
-            calculateStats(tr);
+            calculateStats(tr, timePeriod.value);
             calculateWantsAndNeeds(tr);
             isLoading.value = false;
         })
@@ -77,6 +78,10 @@ watch(filterCategoryId, () => {
     fetchTransactions();
 });
 
+watch(timePeriod, () => {
+    calculateStats(transactions.value, timePeriod.value);
+});
+
 const fetchCategories = async () => {
     isLoading.value = true;
     CategoryService.getAllTransactionCategories()
@@ -89,7 +94,7 @@ const fetchCategories = async () => {
         });
 };
 
-function calculateStats(transactions: Transaction[]) {
+function calculateStats(transactions: Transaction[], timePeriod: string) {
     let incomeSum: number = 0;
     let expensesSum: number = 0;
     transactions.forEach((transaction) => {
@@ -99,8 +104,12 @@ function calculateStats(transactions: Transaction[]) {
             expensesSum += transaction.amount;
         }
     });
-    totalIncome.value = incomeSum;
-    totalExpenses.value = expensesSum;
+    const delimiter: number = CommonCalculations.getDelimiterBasedOnTimePeriod(
+        transactions,
+        timePeriod
+    );
+    totalIncome.value = incomeSum / delimiter;
+    totalExpenses.value = expensesSum / delimiter;
     differenceExpensesIncome.value = totalIncome.value + totalExpenses.value;
 }
 
@@ -111,7 +120,7 @@ async function uploadFile() {
             await TransactionService.uploadFileTransactions(files.value[0]).then(
                 (tr: Transaction[]) => {
                     transactions.value = tr;
-                    calculateStats(tr);
+                    calculateStats(tr, timePeriod.value);
                     calculateWantsAndNeeds(tr);
                     files.value = undefined;
                     isLoading.value = false;

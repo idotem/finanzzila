@@ -16,6 +16,7 @@ import { ref, watch } from 'vue';
 import { Bar, Doughnut } from 'vue-chartjs';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { useRouter } from 'vue-router';
+import CommonCalculations from '../common/CommonCalculations';
 
 ChartJS.register(
     Title,
@@ -88,24 +89,6 @@ interface GroupedTransactions {
     };
 }
 
-function countMonths() {
-    const uniqueMonths = new Set();
-    for (const transaction of transactions.value) {
-        const date = new Date(transaction.date);
-        uniqueMonths.add(date.getMonth() + '.' + date.getFullYear());
-    }
-    return uniqueMonths.size - 1;
-}
-
-function countYears() {
-    const uniqueYears = new Set();
-    for (const transaction of transactions.value) {
-        const date = new Date(transaction.date);
-        uniqueYears.add(date.getFullYear());
-    }
-    return uniqueYears.size - 1;
-}
-
 function groupTransactionsAverageDelimiter(
     groupedTransactions: GroupedTransactions,
     delimiterForWhichAverageIsReturned: number
@@ -119,16 +102,10 @@ function groupAveragesByTimePeriod(
     groupedTransactions: GroupedTransactions,
     timePeriod: string
 ): GroupedTransactions {
-    switch (timePeriod) {
-        case 'All time':
-            return groupTransactionsAverageDelimiter(groupedTransactions, 1);
-        case 'Monthly':
-            return groupTransactionsAverageDelimiter(groupedTransactions, countMonths());
-        case 'Yearly':
-            return groupTransactionsAverageDelimiter(groupedTransactions, countYears());
-        default:
-            return groupTransactionsAverageDelimiter(groupedTransactions, 1);
-    }
+    return groupTransactionsAverageDelimiter(
+        groupedTransactions,
+        CommonCalculations.getDelimiterBasedOnTimePeriod(transactions.value, timePeriod)
+    );
 }
 
 function groupTransactions(tr: Transaction[], timePeriod: string) {

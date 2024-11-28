@@ -153,16 +153,23 @@ export class TransactionService {
         const keywords: Keyword[] = await this.keywordService.findAll();
         const transactions: Transaction[] = [];
         const workbook = new Workbook();
+        console.log('Transaction population starting: ', file);
         await workbook.xlsx.load(file.buffer).then(function () {
             const worksheet = workbook.getWorksheet('Sheet1');
             worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
                 if (rowNumber === 1) {
                     return;
                 }
-                const transDate: Date = row.values[1];
-                const transName: string = row.values[2].toString();
-                const transAmount: number = row.values[4];
+                const transDate: Date = row.values[1] ? row.values[1] : '01.01.2024';
+                const transName: string = row.values[2]
+                    ? row.values[2].toString()
+                    : 'TRANSACTION WITHOUT NAME';
+                const transAmount: number = parseInt(row.values[4]) ? parseInt(row.values[4]) : 0;
                 const category: TransactionCategory = getCategory(transName, transAmount);
+                console.log('category for row: ', category);
+                console.log('transDate for row: ', transDate);
+                console.log('transName for row: ', transName);
+                console.log('transAmount for row: ', transAmount);
                 if (category && category.name === 'Fuel and liquids') {
                     splitTransactionsFromFuelStationsToFuelAndMarket(
                         transAmount,
@@ -247,6 +254,7 @@ export class TransactionService {
                 return categories.find((c) => c.name === 'NOT_MAPPED');
             }
         });
+        console.log('SAVING TRANSACTIONS');
         await this.transactionRepository.save(transactions);
 
         fs.writeFileSync(`${this.uploadedReportsFolderPath}/${file.originalname}`, file.buffer);

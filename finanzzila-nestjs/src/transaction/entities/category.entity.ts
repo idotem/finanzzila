@@ -16,6 +16,7 @@ export class Category {
 
     @OneToMany(() => Keyword, (keyword) => keyword.category, {
         onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
         cascade: true,
         eager: false
     })

@@ -9,7 +9,9 @@ export class Keyword {
 
     @ManyToOne(() => Category, (category) => category.transactions, {
         onDelete: 'CASCADE',
-        eager: true
+        eager: true,
+        nullable: false,
+        orphanedRowAction: 'delete', // Automatically delete orphaned rows
     })
     @JoinColumn({ name: 'category_id' })
     category: Category;

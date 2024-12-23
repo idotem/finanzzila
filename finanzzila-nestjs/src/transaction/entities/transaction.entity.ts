@@ -9,7 +9,7 @@ export default class Transaction {
     @Column({ type: 'date' })
     date: Date;
 
-    @Column({ type: 'varchar', length: 50, name: 'name_of_place' })
+    @Column({ type: 'varchar', length: 255, name: 'name_of_place' })
     nameOfPlace: string;
 
     @Column({ type: 'int' })

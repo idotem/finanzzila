@@ -38,33 +38,30 @@ export class TransactionService {
     async updateTransactionsAfterCategoriesGetUpdated(): Promise<void> {
         const categories: Category[] = await this.findAllCategories();
         const notMappedCategory: Category = categories.find(
-            (c) => c.name.toLowerCase() === 'not_mapped'
+            (c: Category) => c.name.toLowerCase() === 'not_mapped'
         );
-        const incomeCategory: Category = categories.find((c) => c.name.toLowerCase() === 'income');
         const transactions: Transaction[] = await this.findAllTransactionsFiltered(
             new TransactionFilterDto(undefined, undefined, undefined)
         );
-        const keywords: Keyword[] = await this.keywordService.findAll();
+        const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryIsExpense(1);
+        const incomeKeywords: Keyword[] = await this.keywordService.findAllByCategoryIsExpense(0);
         let updatedTrCategory: boolean = false;
         for (const tr of transactions) {
             if (tr.manuallyOverried) {
                 continue;
             }
             if (tr.amount > 0) {
-                tr.category = incomeCategory;
-                continue;
-            }
-            for (let i = 0; i < keywords.length; i++) {
-                if (
-                    this.checkIfNameOfTransactionContainsGivenWord(
-                        tr.nameOfPlace,
-                        keywords[i].value
-                    )
-                ) {
-                    tr.category = keywords[i].category;
-                    updatedTrCategory = true;
-                    break;
-                }
+                updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(
+                    incomeKeywords,
+                    tr,
+                    updatedTrCategory
+                );
+            } else if (tr.amount <= 0) {
+                updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(
+                    expenseKeywords,
+                    tr,
+                    updatedTrCategory
+                );
             }
             if (!updatedTrCategory) {
                 tr.category = notMappedCategory;
@@ -72,6 +69,26 @@ export class TransactionService {
             updatedTrCategory = false;
         }
         await this.transactionRepository.save(transactions);
+    }
+
+    private determineCategoryFromTrNameAndKeywords(
+        expenseKeywords: Keyword[],
+        tr: Transaction,
+        updatedTrCategory: boolean
+    ) {
+        for (let i = 0; i < expenseKeywords.length; i++) {
+            if (
+                this.checkIfNameOfTransactionContainsGivenWord(
+                    tr.nameOfPlace,
+                    expenseKeywords[i].value
+                )
+            ) {
+                tr.category = expenseKeywords[i].category;
+                updatedTrCategory = true;
+                break;
+            }
+        }
+        return updatedTrCategory;
     }
 
     async createTransaction(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
@@ -383,10 +400,10 @@ export class TransactionService {
         }
         for (const keyword of keywords) {
             if (!ukIds.includes(keyword.id)) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     async findCategoryById(id: number): Promise<Category> {

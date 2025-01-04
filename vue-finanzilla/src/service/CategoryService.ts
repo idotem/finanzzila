@@ -1,5 +1,5 @@
 import axiosInstance from '@/config/axios/axios';
-import { TransactionCategory } from '../components/model/TransactionCategory';
+import { TransactionCategory } from '@/components/model/TransactionCategory';
 import { Category } from '@/components/model/Category';
 import type CategoryDto from '@/components/model/CategoryDto';
 import KeywordDto from '@/components/model/KeywordDto';
@@ -8,7 +8,7 @@ export default class CategoryService {
     static async getAllTransactionCategories(): Promise<TransactionCategory[]> {
         const res = await axiosInstance.get('/categories');
         const categories: TransactionCategory[] = res.data.map(
-            (t: any) => new TransactionCategory(t.id, t.name, t.isWants, t.color)
+            (t: any) => new TransactionCategory(t.id, t.name, t.isWants, t.color, t.isExpense)
         );
         return categories;
     }
@@ -23,7 +23,8 @@ export default class CategoryService {
                     t.name,
                     t.keywords.map((k: KeywordDto) => new KeywordDto(k.id, k.value)),
                     t.isWants,
-                    t.color
+                    t.color,
+                    t.isExpense,
                 )
         );
         console.log(categories);

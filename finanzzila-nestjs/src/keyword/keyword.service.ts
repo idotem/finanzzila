@@ -15,11 +15,21 @@ export class KeywordService {
         return this.keywordRepository.find();
     }
 
-    findAllByCategoryId(catId: number) {
+    async findAllByCategoryId(catId: number) {
         const queryBuilder = this.keywordRepository
             .createQueryBuilder('keyword')
             .leftJoinAndSelect('keyword.category', 'category');
         queryBuilder.andWhere('keyword.category.id = :catId', { catId: catId });
+        return queryBuilder.getMany();
+    }
+
+    async findAllByCategoryIsExpense(categoryIsExpense: number) {
+        const queryBuilder = this.keywordRepository
+            .createQueryBuilder('keyword')
+            .innerJoinAndSelect('keyword.category', 'category');
+        queryBuilder.andWhere('category.isExpense = :categoryIsExpense', {
+            categoryIsExpense: categoryIsExpense
+        });
         return queryBuilder.getMany();
     }
 

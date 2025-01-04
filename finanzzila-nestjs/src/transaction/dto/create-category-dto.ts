@@ -5,14 +5,14 @@ export class CreateCategoryDto {
     keywords: KeywordDto[];
     isWants: number;
     color: string;
-    isExpense: boolean;
+    isExpense: number;
 
     constructor(
         name: string,
         keywords: KeywordDto[],
         isWants: number,
         color: string,
-        isExpense: boolean
+        isExpense: number
     ) {
         this.name = name;
         this.keywords = keywords;

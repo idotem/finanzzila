@@ -19,7 +19,8 @@ export class CategoryController {
                     tc.name,
                     tc.keywords.map((k) => new KeywordDto(k.id, k.value)),
                     tc.isWants,
-                    tc.color
+                    tc.color,
+                    tc.isExpense
                 )
         );
     }

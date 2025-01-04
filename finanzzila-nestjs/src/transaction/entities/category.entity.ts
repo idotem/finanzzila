@@ -29,15 +29,15 @@ export class Category {
     @Column({ name: 'color', nullable: true })
     color: string;
 
-    @Column({ name: 'isExpense', nullable: false, default: true })
-    isExpense: boolean;
+    @Column({ name: 'isExpense', nullable: false, default: 1 })
+    isExpense: number;
 
     constructor(
         name: string,
         keywords: Keyword[],
         isWants: number,
         color: string,
-        isExpense: boolean
+        isExpense: number
     ) {
         this.name = name;
         this.keywords = keywords;

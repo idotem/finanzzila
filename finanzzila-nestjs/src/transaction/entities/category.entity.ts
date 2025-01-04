@@ -1,9 +1,9 @@
 import { Keyword } from 'src/keyword/entities/keyword.entity';
-import Transaction from '../../transaction/entities/transaction.entity';
+import Transaction from './transaction.entity';
 import { Entity, Column, OneToMany, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
 
 @Entity()
-export class TransactionCategory {
+export class Category {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -16,6 +16,7 @@ export class TransactionCategory {
 
     @OneToMany(() => Keyword, (keyword) => keyword.category, {
         onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
         cascade: true,
         eager: false
     })
@@ -28,10 +29,20 @@ export class TransactionCategory {
     @Column({ name: 'color', nullable: true })
     color: string;
 
-    constructor(name: string, keywords: Keyword[], isWants: number, color: string) {
+    @Column({ name: 'isExpense', nullable: false, default: 1 })
+    isExpense: number;
+
+    constructor(
+        name: string,
+        keywords: Keyword[],
+        isWants: number,
+        color: string,
+        isExpense: number
+    ) {
         this.name = name;
         this.keywords = keywords;
         this.isWants = isWants;
         this.color = color;
+        this.isExpense = isExpense;
     }
 }

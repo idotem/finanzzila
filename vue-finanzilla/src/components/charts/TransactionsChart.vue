@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {
-    Chart as ChartJS,
-    Title,
-    Tooltip,
-    Legend,
+    ArcElement,
     BarElement,
     CategoryScale,
+    Chart as ChartJS,
+    Legend,
     LinearScale,
-    ArcElement
+    Title,
+    Tooltip
 } from 'chart.js';
 import { VIcon } from 'vuetify/components';
 import Transaction from '../model/Transaction';
@@ -110,15 +110,16 @@ function groupAveragesByTimePeriod(
 
 function groupTransactions(tr: Transaction[], timePeriod: string) {
     const totalAmount = tr.reduce(
-        (acc, curr) => (curr.category.name !== 'Income' ? acc + Math.abs(curr.amount) : acc),
+        (acc, curr) => (curr.category.isExpense === 1 ? acc + Math.abs(curr.amount) : acc),
         0
     );
     const groupedTransactions: GroupedTransactions = tr.reduce(
         (acc: GroupedTransactions, transaction) => {
             const { amount } = transaction;
             const categoryName = transaction.category.name;
+            const categoryIsExpense = transaction.category.isExpense;
             const categoryId = transaction.category.id;
-            if (categoryName == 'Income') {
+            if (categoryIsExpense === 0) {
                 return acc;
             }
             if (!acc[categoryName]) {

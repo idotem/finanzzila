@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import {
-    VFileInput,
     VBtn,
-    VContainer,
-    VRow,
-    VSheet,
-    VCol,
     VChip,
+    VCol,
+    VContainer,
+    VFileInput,
     VHover,
-    VSelect,
     VOverlay,
-    VProgressCircular
+    VProgressCircular,
+    VRow,
+    VSelect,
+    VSheet
 } from 'vuetify/components';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
@@ -98,7 +98,7 @@ function calculateStats(transactions: Transaction[], timePeriod: string) {
     let incomeSum: number = 0;
     let expensesSum: number = 0;
     transactions.forEach((transaction) => {
-        if (transaction.category?.name === 'Income' && transaction.amount > 0) {
+        if (transaction.category?.isExpense === 0 && transaction.amount > 0) {
             incomeSum += transaction.amount;
         } else {
             expensesSum += transaction.amount;
@@ -143,7 +143,7 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
     let needsSum: number = 0;
     let notWantsNorNeeds: number = 0;
     transactions.forEach((transaction) => {
-        if (transaction.category?.name === 'Income') {
+        if (transaction.category?.isExpense === 0) {
             return;
         }
         switch (transaction.category.isWants) {
@@ -206,8 +206,8 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                                 v-if="files?.length"
                                 :color="isHovering ? '#022754' : '#3b0764'"
                                 @click="uploadFile"
-                                >Upload</v-btn
-                            >
+                                >Upload
+                            </v-btn>
                         </template>
                     </v-hover>
                 </v-col>

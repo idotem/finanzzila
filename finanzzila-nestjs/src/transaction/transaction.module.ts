@@ -5,12 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import Transaction from './entities/transaction.entity';
 import { Keyword } from 'src/keyword/entities/keyword.entity';
 import { KeywordService } from 'src/keyword/keyword.service';
-import { TransactionCategory } from './entities/transaction-category.entity';
-import { TransactionCategoryController } from './transaction-category.controller';
+import { Category } from './entities/category.entity';
+import { CategoryController } from './category.controller';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([TransactionCategory, Keyword, Transaction])],
-    controllers: [TransactionController, TransactionCategoryController],
+    imports: [TypeOrmModule.forFeature([Category, Keyword, Transaction])],
+    controllers: [TransactionController, CategoryController],
     providers: [TransactionService, KeywordService]
 })
 export class TransactionModule {}

@@ -2,26 +2,26 @@
 import CategoryService from '@/service/CategoryService';
 import TransactionService from '@/service/TransactionService';
 import {
-    VDataTable,
+    VBtn,
+    VCard,
+    VCardActions,
+    VCardText,
+    VCardTitle,
+    VCheckbox,
+    VCol,
     VContainer,
+    VDataTable,
+    VDialog,
+    VIcon,
+    VOverlay,
+    VProgressCircular,
     VRow,
     VSheet,
-    VCol,
-    VIcon,
-    VDialog,
     VSpacer,
-    VTextField,
-    VBtn,
-    VCheckbox,
-    VCard,
-    VCardTitle,
-    VCardText,
-    VCardActions,
-    VOverlay,
-    VProgressCircular
+    VTextField
 } from 'vuetify/components';
 import VueDatePicker from '@vuepic/vue-datepicker';
-import { ref, onMounted, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import TransactionFilterDto from '../model/TransactionFilterDto';
@@ -110,6 +110,7 @@ const fetchCategories = async () => {
         loading.value = false;
     });
 };
+
 function editItem(item: any) {
     editingItem.value = { ...item, category: item.category.id };
     dialog.value = true;
@@ -158,11 +159,11 @@ function validateRequest(itemToSave: any) {
     }
     if (
         itemToSave.amount > 0 &&
-        itemToSave.category.name == 'Income' &&
+        itemToSave.category.isExpense === 0 &&
         itemToSave.amount <= 0 &&
-        itemToSave.category.name != 'Income'
+        itemToSave.category.isExpense === 1
     ) {
-        alert('If amount is greater than 0, category MUST be Income and otherway around');
+        alert('If amount is greater than 0, category MUST be Incomes and other way around');
     }
     if (!addCategoryKeyword.value) {
         editingItem.value.categoryKeyword = undefined;
@@ -316,18 +317,31 @@ function save() {
                                                         class="w-full h-9 p-2 rounded-sm bg-[#212121] text-slate-300"
                                                         name="filterCategory"
                                                         v-model="editingItem.category"
-                                                        v-if="
-                                                            (editingItem.amount !== undefined &&
-                                                                editingItem.amount <= 0) ||
-                                                            !editingItem.amount
-                                                        "
+                                                        v-if="editingItem.amount === undefined"
+                                                    >
+                                                        <option :value="undefined">
+                                                            Clear Choice
+                                                        </option>
+                                                        <option
+                                                            v-for="category in categories"
+                                                            :value="category.id"
+                                                            v-bind:key="category.id"
+                                                        >
+                                                            {{ category.name }}
+                                                        </option>
+                                                    </select>
+                                                    <select
+                                                        class="w-full h-9 p-2 rounded-sm bg-[#212121] text-slate-300"
+                                                        name="filterCategory"
+                                                        v-model="editingItem.category"
+                                                        v-else-if="editingItem.amount <= 0"
                                                     >
                                                         <option :value="undefined">
                                                             Clear Choice
                                                         </option>
                                                         <option
                                                             v-for="category in categories.filter(
-                                                                (cat) => cat.name !== 'Income'
+                                                                (cat) => cat.isExpense === 1
                                                             )"
                                                             :value="category.id"
                                                             v-bind:key="category.id"
@@ -346,7 +360,7 @@ function save() {
                                                         </option>
                                                         <option
                                                             v-for="category in categories.filter(
-                                                                (cat) => cat.name === 'Income'
+                                                                (cat) => cat.isExpense === 0
                                                             )"
                                                             :value="category.id"
                                                             v-bind:key="category.id"
@@ -385,7 +399,7 @@ function save() {
                                                     Cancel
                                                 </v-btn>
                                             </v-col>
-                                            <v-col md="6"> </v-col>
+                                            <v-col md="6"></v-col>
                                             <v-col md="3">
                                                 <v-btn
                                                     class="text-base float-right"
@@ -404,19 +418,19 @@ function save() {
                             <v-dialog v-model="dialogDelete" max-width="600px">
                                 <v-card class="bg-[#011936] text-slate-100">
                                     <v-card-title class="text-h5"
-                                        >Are you sure you want to delete this item?</v-card-title
-                                    >
+                                        >Are you sure you want to delete this item?
+                                    </v-card-title>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
                                         <v-btn color="error" variant="text" @click="closeDelete"
-                                            >Cancel</v-btn
-                                        >
+                                            >Cancel
+                                        </v-btn>
                                         <v-btn
                                             color="success"
                                             variant="text"
                                             @click="deleteItemConfirm"
-                                            >OK</v-btn
-                                        >
+                                            >OK
+                                        </v-btn>
                                         <v-spacer></v-spacer>
                                     </v-card-actions>
                                 </v-card>
@@ -426,7 +440,7 @@ function save() {
                             <v-icon class="me-2" size="small" @click="editItem(item)">
                                 edit
                             </v-icon>
-                            <v-icon size="small" @click="deleteItem(item)"> delete </v-icon>
+                            <v-icon size="small" @click="deleteItem(item)"> delete</v-icon>
                         </template>
                     </VDataTable>
                     <p v-else-if="errorMessage">{{ errorMessage }}</p>

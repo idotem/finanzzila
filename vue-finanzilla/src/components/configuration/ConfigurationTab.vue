@@ -145,6 +145,8 @@ function save() {
 function changeShowColorPicker(): void {
     showColorPicker.value = !showColorPicker.value;
 }
+
+const customScrollbar = 'custom-scrollbar';
 </script>
 
 <template>
@@ -174,7 +176,8 @@ function changeShowColorPicker(): void {
                             <VDataTable
                                 hover
                                 color="black"
-                                class="bg-cyan-950 text-slate-200 text-base"
+                                class="bg-cyan-950 text-slate-200 text-base custom-scrollbar"
+                                :class="customScrollbar"
                                 v-if="categories"
                                 :headers="categoriesHeaders"
                                 :items="categories"
@@ -521,5 +524,18 @@ h2 {
 th,
 td {
     padding: 10px;
+}
+
+.custom-scrollbar .v-data-table__wrapper {
+    overflow: hidden;
+}
+
+.custom-scrollbar .v-data-table__wrapper::-webkit-scrollbar {
+    display: none; /* Hides scrollbar in Chrome, Safari, Edge */
+}
+
+.custom-scrollbar .v-data-table__wrapper {
+    -ms-overflow-style: none; /* Hides scrollbar in Internet Explorer */
+    scrollbar-width: none; /* Hides scrollbar in Firefox */
 }
 </style>

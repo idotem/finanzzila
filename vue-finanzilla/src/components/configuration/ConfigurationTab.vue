@@ -235,9 +235,9 @@ const customScrollbar = 'custom-scrollbar';
                                     </div>
                                 </template>
                                 <template v-slot:top>
-                                    <v-dialog v-model="dialog" max-width="600px">
+                                    <v-dialog v-model="dialog" max-width="800px">
                                         <v-card
-                                            class="bg-[#011936] text-slate-100 overflow-auto"
+                                            class="bg-[#011936] text-slate-100"
                                             :style="{
                                                 border: `1px solid ${editingCategory.color}`,
                                                 borderRadius: `10px`
@@ -254,182 +254,202 @@ const customScrollbar = 'custom-scrollbar';
                                             <v-card-text>
                                                 <v-container>
                                                     <v-row>
-                                                        <v-col cols="12" sm="12">
-                                                            <v-text-field
-                                                                v-model="editingCategory.name"
-                                                                label="Category Name"
-                                                            ></v-text-field>
-                                                        </v-col>
-                                                        <v-col cols="12" sm="12" class="h-20">
-                                                            <v-btn
-                                                                class="w-full text-center text-xl"
-                                                                :style="{
-                                                                    backgroundColor: `${editingCategory.color !== undefined ? editingCategory.color : 'darkcyan'}`
-                                                                }"
-                                                                type="button"
-                                                                @click="changeShowColorPicker"
-                                                            >
-                                                                Pick category color
-                                                            </v-btn>
-                                                            <v-dialog v-model="showColorPicker">
-                                                                <v-color-picker
-                                                                    class="m-auto"
-                                                                    v-model="editingCategory.color"
-                                                                    hide-inputs
-                                                                    show-swatches
-                                                                ></v-color-picker>
+                                                        <v-col md="6" sm="12">
+                                                            <v-col cols="12" sm="12">
+                                                                <v-text-field
+                                                                    v-model="editingCategory.name"
+                                                                    label="Category Name"
+                                                                ></v-text-field>
+                                                            </v-col>
+                                                            <v-col cols="12" sm="12" class="h-20">
                                                                 <v-btn
-                                                                    class="text-base float-right m-auto w-10"
-                                                                    color="success"
-                                                                    variant="text"
+                                                                    class="w-full text-center text-xl"
+                                                                    :style="{
+                                                                        backgroundColor: `${editingCategory.color !== undefined ? editingCategory.color : 'darkcyan'}`
+                                                                    }"
+                                                                    type="button"
                                                                     @click="changeShowColorPicker"
                                                                 >
-                                                                    Pick
+                                                                    Pick category color
                                                                 </v-btn>
-                                                            </v-dialog>
-                                                        </v-col>
-                                                        <v-col
-                                                            cols="12"
-                                                            sm="12"
-                                                            :class="
-                                                                editingCategory.isExpense === 1
-                                                                    ? 'text-red'
-                                                                    : editingCategory.isExpense ===
-                                                                        0
-                                                                      ? 'text-green'
-                                                                      : 'text-slate'
-                                                            "
-                                                        >
-                                                            <v-radio-group
-                                                                id="expenseIncomeRadio"
-                                                                v-model="editingCategory.isExpense"
-                                                                v-on:input="$emit('input', $event)"
-                                                                inline
+                                                                <v-dialog v-model="showColorPicker">
+                                                                    <v-color-picker
+                                                                        class="m-auto"
+                                                                        v-model="
+                                                                            editingCategory.color
+                                                                        "
+                                                                        hide-inputs
+                                                                        show-swatches
+                                                                    ></v-color-picker>
+                                                                    <v-btn
+                                                                        class="text-base float-right m-auto w-10"
+                                                                        color="success"
+                                                                        variant="text"
+                                                                        @click="
+                                                                            changeShowColorPicker
+                                                                        "
+                                                                    >
+                                                                        Pick
+                                                                    </v-btn>
+                                                                </v-dialog>
+                                                            </v-col>
+                                                            <v-col
+                                                                cols="12"
+                                                                sm="12"
+                                                                :class="
+                                                                    editingCategory.isExpense === 1
+                                                                        ? 'text-red'
+                                                                        : editingCategory.isExpense ===
+                                                                            0
+                                                                          ? 'text-green'
+                                                                          : 'text-slate'
+                                                                "
                                                             >
-                                                                <v-radio
-                                                                    :class="
-                                                                        editingCategory.isExpense ===
-                                                                        0
-                                                                            ? 'pl-2 pr-4 border-2 mr-2 border-green-500 rounded-lg'
-                                                                            : 'pl-2 pr-4 border-2 mr-2 border-red-500 rounded-lg'
+                                                                <v-radio-group
+                                                                    id="expenseIncomeRadio"
+                                                                    v-model="
+                                                                        editingCategory.isExpense
                                                                     "
-                                                                    selected
-                                                                    :value="1"
-                                                                    label="Expense"
-                                                                ></v-radio>
-                                                                <v-radio
-                                                                    :class="
-                                                                        editingCategory.isExpense ===
-                                                                        0
-                                                                            ? 'pl-2 pr-4 border-2 mr-2 border-green-500 rounded-lg'
-                                                                            : 'pl-2 pr-4 border-2 mr-2 border-red-500 rounded-lg'
+                                                                    v-on:input="
+                                                                        $emit('input', $event)
                                                                     "
-                                                                    :value="0"
-                                                                    label="Income"
-                                                                ></v-radio>
-                                                            </v-radio-group>
-                                                        </v-col>
-                                                        <v-col
-                                                            cols="12"
-                                                            sm="12"
-                                                            :class="
-                                                                editingCategory.isWants === 1
-                                                                    ? 'text-red'
-                                                                    : editingCategory.isWants === 0
-                                                                      ? 'text-green'
-                                                                      : 'text-slate'
-                                                            "
-                                                            v-if="editingCategory.isExpense === 1"
-                                                        >
-                                                            <v-radio-group
-                                                                id="wantsNeedsRadio"
-                                                                v-model="editingCategory.isWants"
-                                                                v-on:input="$emit('input', $event)"
-                                                                inline
-                                                            >
-                                                                <v-radio
-                                                                    :class="
-                                                                        editingCategory.isWants ===
-                                                                        0
-                                                                            ? 'pl-2 pr-4 mb-2 border-2 mr-2 border-green-500 rounded-lg'
-                                                                            : 'pl-2 pr-4 mb-2 border-2 mr-2 border-red-500 rounded-lg'
-                                                                    "
-                                                                    selected
-                                                                    :value="null"
-                                                                    label="Not specified"
-                                                                ></v-radio>
-                                                                <v-radio
-                                                                    :class="
-                                                                        editingCategory.isWants ===
-                                                                        0
-                                                                            ? 'pl-2 pr-4 mb-2 border-2 mr-2 border-green-500 rounded-lg'
-                                                                            : 'pl-2 pr-4 mb-2 border-2 mr-2 border-red-500 rounded-lg'
-                                                                    "
-                                                                    :value="1"
-                                                                    label="Wants"
-                                                                ></v-radio>
-                                                                <v-radio
-                                                                    :class="
-                                                                        editingCategory.isWants ===
-                                                                        0
-                                                                            ? 'pl-2 pr-4 mb-2 border-2 mr-2 border-green-500 rounded-lg'
-                                                                            : 'pl-2 pr-4 mb-2 border-2 mr-2 border-red-500 rounded-lg'
-                                                                    "
-                                                                    :value="0"
-                                                                    label="Needs"
-                                                                ></v-radio>
-                                                            </v-radio-group>
-                                                        </v-col>
-
-                                                        <v-col sm="10">
-                                                            <v-text-field
-                                                                v-model="addingKeyword"
-                                                                label="Add new keyword"
-                                                            ></v-text-field>
-                                                        </v-col>
-                                                        <v-col sm="2" class="mt-3">
-                                                            <v-btn @click="addKeywordForCategory"
-                                                                >Add
-                                                            </v-btn>
-                                                        </v-col>
-                                                        <v-col cols="12" sm="12">
-                                                            <div
-                                                                class="h-96 divide-y overflow-y-scroll overflow-x-hidden"
-                                                            >
-                                                                Keywords for category:
-                                                                <div
-                                                                    v-for="(
-                                                                        keyword, index
-                                                                    ) in editingCategory.keywords"
-                                                                    :key="index"
+                                                                    inline
                                                                 >
-                                                                    <v-row class="mt-2">
-                                                                        <v-col sm="10">
-                                                                            <v-text-field
-                                                                                width="20"
-                                                                                density="compact"
-                                                                                v-model="
-                                                                                    keyword.value
-                                                                                "
-                                                                            >
-                                                                            </v-text-field>
-                                                                        </v-col>
-                                                                        <v-col sm="2">
-                                                                            <v-icon
-                                                                                class="float-left mt-2"
-                                                                                size="small"
-                                                                                @click="
-                                                                                    deleteKeyword(
-                                                                                        keyword
-                                                                                    )
-                                                                                "
-                                                                            >
-                                                                                delete
-                                                                            </v-icon>
-                                                                        </v-col>
-                                                                    </v-row>
+                                                                    <v-radio
+                                                                        :class="
+                                                                            editingCategory.isExpense ===
+                                                                            0
+                                                                                ? 'pl-2 pr-4 border-2 mr-2 border-green-500 rounded-lg'
+                                                                                : 'pl-2 pr-4 border-2 mr-2 border-red-500 rounded-lg'
+                                                                        "
+                                                                        selected
+                                                                        :value="1"
+                                                                        label="Expense"
+                                                                    ></v-radio>
+                                                                    <v-radio
+                                                                        :class="
+                                                                            editingCategory.isExpense ===
+                                                                            0
+                                                                                ? 'pl-2 pr-4 border-2 mr-2 border-green-500 rounded-lg'
+                                                                                : 'pl-2 pr-4 border-2 mr-2 border-red-500 rounded-lg'
+                                                                        "
+                                                                        :value="0"
+                                                                        label="Income"
+                                                                    ></v-radio>
+                                                                </v-radio-group>
+                                                            </v-col>
+                                                            <v-col
+                                                                cols="12"
+                                                                sm="12"
+                                                                :class="
+                                                                    editingCategory.isWants === 1
+                                                                        ? 'text-red'
+                                                                        : editingCategory.isWants ===
+                                                                            0
+                                                                          ? 'text-green'
+                                                                          : 'text-slate'
+                                                                "
+                                                                v-if="
+                                                                    editingCategory.isExpense === 1
+                                                                "
+                                                            >
+                                                                <v-radio-group
+                                                                    id="wantsNeedsRadio"
+                                                                    v-model="
+                                                                        editingCategory.isWants
+                                                                    "
+                                                                    v-on:input="
+                                                                        $emit('input', $event)
+                                                                    "
+                                                                    inline
+                                                                >
+                                                                    <v-radio
+                                                                        :class="
+                                                                            editingCategory.isWants ===
+                                                                            0
+                                                                                ? 'pl-2 pr-4 mb-2 border-2 mr-2 border-green-500 rounded-lg'
+                                                                                : 'pl-2 pr-4 mb-2 border-2 mr-2 border-red-500 rounded-lg'
+                                                                        "
+                                                                        selected
+                                                                        :value="null"
+                                                                        label="Not specified"
+                                                                    ></v-radio>
+                                                                    <v-radio
+                                                                        :class="
+                                                                            editingCategory.isWants ===
+                                                                            0
+                                                                                ? 'pl-2 pr-4 mb-2 border-2 mr-2 border-green-500 rounded-lg'
+                                                                                : 'pl-2 pr-4 mb-2 border-2 mr-2 border-red-500 rounded-lg'
+                                                                        "
+                                                                        :value="1"
+                                                                        label="Wants"
+                                                                    ></v-radio>
+                                                                    <v-radio
+                                                                        :class="
+                                                                            editingCategory.isWants ===
+                                                                            0
+                                                                                ? 'pl-2 pr-4 mb-2 border-2 mr-2 border-green-500 rounded-lg'
+                                                                                : 'pl-2 pr-4 mb-2 border-2 mr-2 border-red-500 rounded-lg'
+                                                                        "
+                                                                        :value="0"
+                                                                        label="Needs"
+                                                                    ></v-radio>
+                                                                </v-radio-group>
+                                                            </v-col>
+                                                        </v-col>
+                                                        <v-col sm="12" md="6">
+                                                            <v-col sm="12">
+                                                                <v-text-field
+                                                                    v-model="addingKeyword"
+                                                                    label="Add new keyword"
+                                                                ></v-text-field>
+                                                            </v-col>
+                                                            <v-col sm="3" class="mb-4">
+                                                                <v-btn
+                                                                    class="bg-cyan-700"
+                                                                    @click="addKeywordForCategory"
+                                                                    >Add
+                                                                </v-btn>
+                                                            </v-col>
+                                                            <v-col cols="12" sm="12">
+                                                                <div
+                                                                    class="h-96 divide-y overflow-y-scroll overflow-x-hidden"
+                                                                >
+                                                                    Keywords for category:
+                                                                    <div
+                                                                        v-for="(
+                                                                            keyword, index
+                                                                        ) in editingCategory.keywords"
+                                                                        :key="index"
+                                                                    >
+                                                                        <v-row class="mt-2">
+                                                                            <v-col sm="10">
+                                                                                <v-text-field
+                                                                                    width="20"
+                                                                                    density="compact"
+                                                                                    v-model="
+                                                                                        keyword.value
+                                                                                    "
+                                                                                >
+                                                                                </v-text-field>
+                                                                            </v-col>
+                                                                            <v-col sm="2">
+                                                                                <v-icon
+                                                                                    class="float-left mt-2"
+                                                                                    size="small"
+                                                                                    @click="
+                                                                                        deleteKeyword(
+                                                                                            keyword
+                                                                                        )
+                                                                                    "
+                                                                                >
+                                                                                    delete
+                                                                                </v-icon>
+                                                                            </v-col>
+                                                                        </v-row>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
+                                                            </v-col>
                                                         </v-col>
                                                     </v-row>
                                                 </v-container>

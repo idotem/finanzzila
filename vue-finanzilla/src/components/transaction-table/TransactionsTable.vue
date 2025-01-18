@@ -26,6 +26,7 @@ import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import TransactionFilterDto from '../model/TransactionFilterDto';
 import TransactionDto from '../model/TransactionDto';
+import '../../assets/base.css';
 
 type TransactionTableProps = {
     categoryId?: number | undefined;

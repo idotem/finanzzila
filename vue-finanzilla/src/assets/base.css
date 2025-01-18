@@ -1,14 +1,20 @@
-/* Globally hide scrollbars */
-.no-scrollbar {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
+/* width */
+::-webkit-scrollbar {
+    width: 15px;
 }
 
-.no-scrollbar::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, and other WebKit-based browsers */
+/* Track */
+::-webkit-scrollbar-track {
+    border-radius: 5px;
 }
 
-/* Optional: To make the content still scrollable */
-.scrollable {
-    overflow: auto;
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: transparent;
 }

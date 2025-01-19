@@ -1,13 +1,16 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
+    content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
     media: false, // or 'media' or 'class'
     theme: {
-      extend: {},
+        extend: {
+            colors: {
+                'app-gray-background': '#535353'
+            }
+        }
     },
     variants: {
-      extend: {},
+        extend: {}
     },
-    plugins: [],
-}
-
+    plugins: []
+};

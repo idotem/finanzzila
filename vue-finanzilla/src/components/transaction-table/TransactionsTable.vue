@@ -26,6 +26,7 @@ import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import TransactionFilterDto from '../model/TransactionFilterDto';
 import TransactionDto from '../model/TransactionDto';
+import '../../assets/base.css';
 
 type TransactionTableProps = {
     categoryId?: number | undefined;
@@ -274,9 +275,7 @@ function save() {
                     >
                         <template v-slot:top>
                             <v-dialog v-model="dialog" max-width="600px">
-                                <v-card
-                                    class="bg-[#011936] text-slate-100 font-bold overflow-hidden"
-                                >
+                                <v-card class="bg-[#011936] text-slate-100 font-bold">
                                     <v-card-title>
                                         <span v-if="editingItem.date === undefined" class="text-h5"
                                             >Add</span

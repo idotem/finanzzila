@@ -165,8 +165,7 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
 </script>
 
 <template>
-    <main>
-        <h1 class="text-3xl text-black">Dashboard</h1>
+    <main class="pt-3">
         <v-overlay :model-value="isLoading" class="align-center justify-center">
             <v-progress-circular color="primary" size="64" indeterminate></v-progress-circular>
         </v-overlay>
@@ -175,10 +174,10 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                 <v-col cols="10" sm="4" md="3">
                     <v-file-input
                         v-model="files"
-                        class="text-black"
+                        class="text-cyan-300"
                         density="default"
-                        base-color="#000000"
-                        color="#000000"
+                        base-color="black"
+                        color="black"
                         label="Upload file with transactions"
                         accept=".xlsx"
                         variant="outlined"
@@ -218,6 +217,8 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                         density="compact"
                         v-model="timePeriod"
                         item-color="success"
+                        color="white"
+                        theme="dark"
                         bg-color="#212121"
                     >
                     </v-select>

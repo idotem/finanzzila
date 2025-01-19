@@ -32,7 +32,7 @@ const toggleDrawer = () => {
 </script>
 
 <template>
-    <v-layout class="bg-teal-500" style="display: flex; flex-direction: column; min-height: 100vh">
+    <v-layout class="bg-app-gray-background" style="display: flex; flex-direction: column; min-height: 100vh">
         <v-app-bar theme="white" color="#011936">
             <v-btn icon @click="toggleDrawer" v-if="isMobile">
                 <v-icon>menu</v-icon>

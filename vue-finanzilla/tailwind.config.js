@@ -3,7 +3,11 @@ export default {
     content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
     media: false, // or 'media' or 'class'
     theme: {
-        extend: {}
+        extend: {
+            colors: {
+                'app-gray-background': '#535353'
+            }
+        }
     },
     variants: {
         extend: {}

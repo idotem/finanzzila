@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {
-    Chart as ChartJS,
-    Title,
-    Tooltip,
-    Legend,
+    ArcElement,
     BarElement,
     CategoryScale,
+    Chart as ChartJS,
+    Legend,
     LinearScale,
-    ArcElement
+    Title,
+    Tooltip
 } from 'chart.js';
 import { VIcon } from 'vuetify/components';
 import Transaction from '../model/Transaction';
@@ -16,6 +16,7 @@ import { ref, watch } from 'vue';
 import { Bar, Doughnut } from 'vue-chartjs';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { useRouter } from 'vue-router';
+import CommonCalculations from '../common/CommonCalculations';
 
 ChartJS.register(
     Title,
@@ -88,24 +89,6 @@ interface GroupedTransactions {
     };
 }
 
-function countMonths() {
-    const uniqueMonths = new Set();
-    for (const transaction of transactions.value) {
-        const date = new Date(transaction.date);
-        uniqueMonths.add(date.getMonth() + '.' + date.getFullYear());
-    }
-    return uniqueMonths.size - 1;
-}
-
-function countYears() {
-    const uniqueYears = new Set();
-    for (const transaction of transactions.value) {
-        const date = new Date(transaction.date);
-        uniqueYears.add(date.getFullYear());
-    }
-    return uniqueYears.size - 1;
-}
-
 function groupTransactionsAverageDelimiter(
     groupedTransactions: GroupedTransactions,
     delimiterForWhichAverageIsReturned: number
@@ -119,29 +102,24 @@ function groupAveragesByTimePeriod(
     groupedTransactions: GroupedTransactions,
     timePeriod: string
 ): GroupedTransactions {
-    switch (timePeriod) {
-        case 'All time':
-            return groupTransactionsAverageDelimiter(groupedTransactions, 1);
-        case 'Monthly':
-            return groupTransactionsAverageDelimiter(groupedTransactions, countMonths());
-        case 'Yearly':
-            return groupTransactionsAverageDelimiter(groupedTransactions, countYears());
-        default:
-            return groupTransactionsAverageDelimiter(groupedTransactions, 1);
-    }
+    return groupTransactionsAverageDelimiter(
+        groupedTransactions,
+        CommonCalculations.getDelimiterBasedOnTimePeriod(transactions.value, timePeriod)
+    );
 }
 
 function groupTransactions(tr: Transaction[], timePeriod: string) {
     const totalAmount = tr.reduce(
-        (acc, curr) => (curr.category.name !== 'Income' ? acc + Math.abs(curr.amount) : acc),
+        (acc, curr) => (curr.category.isExpense === 1 ? acc + Math.abs(curr.amount) : acc),
         0
     );
     const groupedTransactions: GroupedTransactions = tr.reduce(
         (acc: GroupedTransactions, transaction) => {
             const { amount } = transaction;
             const categoryName = transaction.category.name;
+            const categoryIsExpense = transaction.category.isExpense;
             const categoryId = transaction.category.id;
-            if (categoryName == 'Income') {
+            if (categoryIsExpense === 0) {
                 return acc;
             }
             if (!acc[categoryName]) {

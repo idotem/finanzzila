@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import {
-    VFileInput,
     VBtn,
-    VContainer,
-    VRow,
-    VSheet,
-    VCol,
     VChip,
+    VCol,
+    VContainer,
+    VFileInput,
     VHover,
-    VSelect,
     VOverlay,
-    VProgressCircular
+    VProgressCircular,
+    VRow,
+    VSelect,
+    VSheet
 } from 'vuetify/components';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
@@ -22,6 +22,7 @@ import TransactionService from '../../service/TransactionService';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import CategoryService from '../../service/CategoryService';
 import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
+import CommonCalculations from '../common/CommonCalculations';
 
 const timePeriods = ['All time', 'Yearly', 'Monthly'];
 
@@ -60,7 +61,7 @@ const fetchTransactions = async () => {
     TransactionService.getAllFiltered(filter)
         .then((tr: Transaction[]) => {
             transactions.value = tr;
-            calculateStats(tr);
+            calculateStats(tr, timePeriod.value);
             calculateWantsAndNeeds(tr);
             isLoading.value = false;
         })
@@ -77,6 +78,10 @@ watch(filterCategoryId, () => {
     fetchTransactions();
 });
 
+watch(timePeriod, () => {
+    calculateStats(transactions.value, timePeriod.value);
+});
+
 const fetchCategories = async () => {
     isLoading.value = true;
     CategoryService.getAllTransactionCategories()
@@ -89,18 +94,22 @@ const fetchCategories = async () => {
         });
 };
 
-function calculateStats(transactions: Transaction[]) {
+function calculateStats(transactions: Transaction[], timePeriod: string) {
     let incomeSum: number = 0;
     let expensesSum: number = 0;
     transactions.forEach((transaction) => {
-        if (transaction.category?.name === 'Income' && transaction.amount > 0) {
+        if (transaction.category?.isExpense === 0 && transaction.amount > 0) {
             incomeSum += transaction.amount;
         } else {
             expensesSum += transaction.amount;
         }
     });
-    totalIncome.value = incomeSum;
-    totalExpenses.value = expensesSum;
+    const delimiter: number = CommonCalculations.getDelimiterBasedOnTimePeriod(
+        transactions,
+        timePeriod
+    );
+    totalIncome.value = incomeSum / delimiter;
+    totalExpenses.value = expensesSum / delimiter;
     differenceExpensesIncome.value = totalIncome.value + totalExpenses.value;
 }
 
@@ -111,7 +120,7 @@ async function uploadFile() {
             await TransactionService.uploadFileTransactions(files.value[0]).then(
                 (tr: Transaction[]) => {
                     transactions.value = tr;
-                    calculateStats(tr);
+                    calculateStats(tr, timePeriod.value);
                     calculateWantsAndNeeds(tr);
                     files.value = undefined;
                     isLoading.value = false;
@@ -134,7 +143,7 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
     let needsSum: number = 0;
     let notWantsNorNeeds: number = 0;
     transactions.forEach((transaction) => {
-        if (transaction.category?.name === 'Income') {
+        if (transaction.category?.isExpense === 0) {
             return;
         }
         switch (transaction.category.isWants) {
@@ -156,8 +165,7 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
 </script>
 
 <template>
-    <main>
-        <h1 class="text-3xl text-black">Dashboard</h1>
+    <main class="pt-3">
         <v-overlay :model-value="isLoading" class="align-center justify-center">
             <v-progress-circular color="primary" size="64" indeterminate></v-progress-circular>
         </v-overlay>
@@ -166,10 +174,10 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                 <v-col cols="10" sm="4" md="3">
                     <v-file-input
                         v-model="files"
-                        class="text-black"
+                        class="text-cyan-300"
                         density="default"
-                        base-color="#000000"
-                        color="#000000"
+                        base-color="black"
+                        color="black"
                         label="Upload file with transactions"
                         accept=".xlsx"
                         variant="outlined"
@@ -197,8 +205,8 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                                 v-if="files?.length"
                                 :color="isHovering ? '#022754' : '#3b0764'"
                                 @click="uploadFile"
-                                >Upload</v-btn
-                            >
+                                >Upload
+                            </v-btn>
                         </template>
                     </v-hover>
                 </v-col>
@@ -209,6 +217,8 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                         density="compact"
                         v-model="timePeriod"
                         item-color="success"
+                        color="white"
+                        theme="dark"
                         bg-color="#212121"
                     >
                     </v-select>

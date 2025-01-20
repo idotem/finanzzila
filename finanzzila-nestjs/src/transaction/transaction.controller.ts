@@ -1,7 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    Query,
+    UploadedFile,
+    UseInterceptors
+} from '@nestjs/common';
 
 import { TransactionService } from './transaction.service';
-import { UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TransactionFilterDto } from './dto/filter-transaction.dto';
 import Transaction from './entities/transaction.entity';
@@ -21,8 +31,7 @@ export class TransactionController {
 
     @Get()
     async findAllFiltered(@Query() filter: TransactionFilterDto): Promise<Transaction[]> {
-        const t = await this.transactionService.findAllTransactionsFiltered(filter);
-        return t;
+        return await this.transactionService.findAllTransactionsFiltered(filter);
     }
 
     @Get('uploaded-reports')

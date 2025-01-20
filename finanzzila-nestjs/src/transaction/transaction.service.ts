@@ -13,6 +13,7 @@ import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category-dto';
 import { UpdateCategoryDto } from './dto/update-category-dto';
 import { KeywordDto } from 'src/keyword/dto/keyword-dto';
+import { CategoryFilterDto } from './dto/filter-category-dto';
 
 @Injectable()
 export class TransactionService {
@@ -335,6 +336,28 @@ export class TransactionService {
         const queryBuilder = this.transactionCategoryRepository
             .createQueryBuilder('transaction-category')
             .leftJoinAndSelect('transaction-category.keywords', 'keywords');
+        return queryBuilder.getMany();
+    }
+
+    findAllFilteredCategories(filter: CategoryFilterDto): Promise<Category[]> {
+        const queryBuilder = this.transactionCategoryRepository
+            .createQueryBuilder('category')
+            .leftJoinAndSelect('category.keywords', 'keywords');
+        if (filter.name) {
+            queryBuilder.andWhere('category.name LIKE :name', {
+                name: `%${filter.name}%`
+            });
+        }
+        if (filter.isWants) {
+            queryBuilder.andWhere('category.isWants = :isWants', {
+                isWants: filter.isWants
+            });
+        }
+        if (filter.isExpense) {
+            queryBuilder.andWhere('category.isExpense = :isExpense', {
+                isExpense: filter.isExpense
+            });
+        }
         return queryBuilder.getMany();
     }
 

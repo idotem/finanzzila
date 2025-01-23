@@ -151,12 +151,11 @@ const customScrollbar = 'custom-scrollbar';
 
 <template>
     <main>
-        <h1 class="text-3xl text-black mb-4">Configuration</h1>
         <v-container>
             <v-row>
                 <v-col sm="12">
                     <v-row
-                        class="bg-cyan-950 text-slate-200 p-4 m-2 pb-10 rounded-xl shadow-black shadow-lg mb-1"
+                        class="bg-[#073B3A] text-slate-200 p-4 m-2 pb-10 rounded-xl shadow-black shadow-lg mb-1"
                     >
                         <v-col sm="12">
                             <h1 class="text-lg text-white">Configure categories and keywords</h1>
@@ -176,7 +175,7 @@ const customScrollbar = 'custom-scrollbar';
                             <VDataTable
                                 hover
                                 color="black"
-                                class="bg-cyan-950 text-slate-200 text-base custom-scrollbar"
+                                class="bg-[#073B3A] text-slate-200 text-base custom-scrollbar"
                                 :class="customScrollbar"
                                 v-if="categories"
                                 :headers="categoriesHeaders"
@@ -237,7 +236,7 @@ const customScrollbar = 'custom-scrollbar';
                                 <template v-slot:top>
                                     <v-dialog v-model="dialog" max-width="800px">
                                         <v-card
-                                            class="bg-[#011936] text-slate-100"
+                                            class="bg-[#073B3A] text-slate-100"
                                             :style="{
                                                 border: `1px solid ${editingCategory.color}`,
                                                 borderRadius: `10px`
@@ -484,7 +483,7 @@ const customScrollbar = 'custom-scrollbar';
                                     </v-dialog>
                                     <v-dialog v-model="dialogDelete" max-width="600px">
                                         <v-card
-                                            class="bg-[#011936] text-slate-100"
+                                            class="bg-[#073B3A] text-slate-100"
                                             min-height="120px"
                                         >
                                             <v-card-title class="text-h5 text-center pb-5"

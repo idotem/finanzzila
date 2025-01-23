@@ -26,10 +26,10 @@ const handleNavigation = () => {
         :permanent="!props.isMobile"
         :model-value="props.modelValue"
         expand-on-hover
-        color="#011936"
+        color="#123030"
         @update:model-value="(value) => emit('update:modelValue', value)"
     >
-        <v-list density="comfortable" nav color="#1ABC9C" bg-color="#011936">
+        <v-list density="comfortable" nav color="#1ABC9C" bg-color="#123030">
             <v-list-item prepend-icon="dashboard" to="/" @click="handleNavigation">
                 <p class="text-slate-300 text-xl">Dashboard</p>
             </v-list-item>

@@ -25,6 +25,7 @@ import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
 import CommonCalculations from '../common/CommonCalculations';
 
 const timePeriods = ['All time', 'Yearly', 'Monthly'];
+const currencies = ['MKD', 'USD', 'EUR'];
 
 const transactions = ref<Transaction[]>([]);
 const categories = ref<TransactionCategory[]>([]);
@@ -310,15 +311,26 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                             }}
                         </p>
                         in currency:
-                        <select
-                            class="font-bold text-center text-[#DAFFEF] cursor-pointer h-9 rounded-sm p-2"
-                            name="changeCurrency"
+                        <v-select
+                            :items="currencies"
+                            density="compact"
                             v-model="currentCurrency"
+                            item-color="success"
+                            color="white"
+                            theme="dark"
+                            class="w-28"
+                            bg-color="#073B3A"
                         >
-                            <option class="bg-[#073B3A]" value="MKD">MKD</option>
-                            <option class="bg-[#073B3A]" value="USD">USD</option>
-                            <option class="bg-[#073B3A]" value="EUR">EUR</option>
-                        </select>
+                        </v-select>
+<!--                        <select-->
+<!--                            class="font-bold text-center text-[#DAFFEF] cursor-pointer h-9 rounded-sm p-2 w-20"-->
+<!--                            name="changeCurrency"-->
+<!--                            v-model="currentCurrency"-->
+<!--                        >-->
+<!--                            <option class="bg-[#073B3A] pr-2" value="MKD">MKD</option>-->
+<!--                            <option class="bg-[#073B3A] pr-2" value="USD">USD</option>-->
+<!--                            <option class="bg-[#073B3A] pr-2" value="EUR">EUR</option>-->
+<!--                        </select>-->
                     </h3>
                 </v-col>
                 <v-col md="9" sm="12">

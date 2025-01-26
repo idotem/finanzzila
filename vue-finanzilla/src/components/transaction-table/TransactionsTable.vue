@@ -21,12 +21,13 @@ import {
     VTextField
 } from 'vuetify/components';
 import VueDatePicker from '@vuepic/vue-datepicker';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import TransactionFilterDto from '../model/TransactionFilterDto';
 import TransactionDto from '../model/TransactionDto';
 import '../../assets/base.css';
+import LoadingSpinner from '@/utils/LoadingSpinner.vue';
 
 type TransactionTableProps = {
     categoryId?: number | undefined;
@@ -43,6 +44,7 @@ const rangeDateFilter = ref<Date[]>(
     props.dateFilterFrom && props.dateFilterTo ? [props.dateFilterFrom, props.dateFilterTo] : []
 );
 const filterCategoryId = ref<number | undefined>(props.categoryId);
+const companyNameFilter = ref<string>('');
 const categories = ref<TransactionCategory[]>([]);
 const dialog = ref<boolean>(false);
 const dialogDelete = ref<boolean>(false);
@@ -53,11 +55,35 @@ const editingItem = ref<TransactionDto>(
 const deletingItem = ref<any>({});
 
 const transactionsHeaders = [
-    { title: 'Date', key: 'date' },
-    { title: 'Company name', key: 'nameOfPlace' },
-    { title: 'Amount (MKD)', key: 'amount' },
-    { title: 'Category', key: 'category.name' },
-    { title: 'Actions', key: 'actions', sortable: false }
+    {
+        title: 'Date',
+        key: 'date',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    {
+        title: 'Company name',
+        key: 'nameOfPlace',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    {
+        title: 'Amount (MKD)',
+        key: 'amount',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    {
+        title: 'Category',
+        key: 'category.name',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    { key: 'actions', sortable: false }
 ];
 
 onMounted(async () => {
@@ -89,6 +115,15 @@ watch(rangeDateFilter, () => {
 
 watch(filterCategoryId, () => {
     fetchTransactions();
+});
+
+const filteredTransactions = computed(() => {
+    if (!companyNameFilter.value) {
+        return transactions.value;
+    }
+    return transactions.value.filter((transaction) =>
+        transaction.nameOfPlace?.toLowerCase().includes(companyNameFilter.value.toLowerCase())
+    );
 });
 
 watch(dialog, () => {
@@ -209,18 +244,17 @@ function save() {
 
 <template>
     <main>
-        <h1 class="text-3xl text-black mb-4">Transactions</h1>
-        <!-- <LoadingSpinner :isLoading="loading"></LoadingSpinner> -->
+        <LoadingSpinner :isLoading="loading"></LoadingSpinner>
         <v-overlay :opacity="0.8" v-if="loading">
             <v-progress-circular indeterminate size="64" color="green"></v-progress-circular>
         </v-overlay>
 
         <v-container>
             <v-row
-                class="bg-cyan-950 text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg mb-1"
+                class="bg-[#073B3A] text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg w-full"
             >
-                <v-col sm="12" md="6">
-                    <v-sheet class="bg-cyan-950 text-slate-200">
+                <v-col sm="12" md="3">
+                    <v-sheet class="bg-[#073B3A] text-slate-200">
                         <VueDatePicker
                             placeholder="Pick date range"
                             auto-apply
@@ -233,13 +267,26 @@ function save() {
                     </v-sheet>
                 </v-col>
                 <v-col sm="12" md="3">
-                    <v-sheet class="bg-cyan-950 text-slate-200">
+                    <v-sheet class="bg-[#073B3A] text-slate-200">
+                        <v-text-field
+                            density="compact"
+                            placeholder="Filter company name"
+                            bg-color="#212121"
+                            v-model="companyNameFilter"
+                        >
+                        </v-text-field>
+                    </v-sheet>
+                </v-col>
+                <v-col sm="12" md="3">
+                    <v-sheet class="bg-[#073B3A]">
                         <select
-                            class="w-full h-9 rounded-sm bg-[#212121] pl-2 text-slate-300"
+                            class="w-full h-10 rounded-sm bg-[#212121] pl-2 text-slate-300"
                             name="filterCategory"
                             v-model="filterCategoryId"
                         >
-                            <option :value="undefined">Choose Category Filter</option>
+                            <option class="text-slate-500" :value="undefined">
+                                Choose Category Filter
+                            </option>
                             <option
                                 v-for="category in categories"
                                 :value="category.id"
@@ -254,28 +301,28 @@ function save() {
                     <v-btn
                         class="float-right"
                         prepend-icon="add"
-                        color="rgb(59 7 100)"
-                        dark
+                        color="#DAFFEF"
                         @click="dialog = true"
-                        min-height="44px"
+                        min-height="40px"
                     >
-                        <span class="text-white">Add New Transaction</span>
+                        <span class="text-black">Add</span>
                     </v-btn>
                 </v-col>
-                <v-col sm="12">
+                <v-col sm="12" style="width: 100%">
                     <VDataTable
                         hover
                         color="black"
-                        class="bg-cyan-950 text-slate-200 text-xl"
+                        class="bg-[#073B3A] text-slate-200 text-xl"
+                        style="width: 100% !important; table-layout: fixed"
                         v-if="transactions"
                         :headers="transactionsHeaders"
-                        :items="transactions"
+                        :items="filteredTransactions"
                         height="59vh"
                         :loading="loading"
                     >
                         <template v-slot:top>
                             <v-dialog v-model="dialog" max-width="600px">
-                                <v-card class="bg-[#011936] text-slate-100 font-bold">
+                                <v-card class="bg-[#073B3A] text-slate-100 font-bold">
                                     <v-card-title>
                                         <span v-if="editingItem.date === undefined" class="text-h5"
                                             >Add</span
@@ -415,7 +462,7 @@ function save() {
                                 </v-card>
                             </v-dialog>
                             <v-dialog v-model="dialogDelete" max-width="600px">
-                                <v-card class="bg-[#011936] text-slate-100">
+                                <v-card class="bg-[#073B3A] text-slate-100">
                                     <v-card-title class="text-h5"
                                         >Are you sure you want to delete this item?
                                     </v-card-title>
@@ -436,10 +483,17 @@ function save() {
                             </v-dialog>
                         </template>
                         <template v-slot:[`item.actions`]="{ item }">
-                            <v-icon class="me-2" size="small" @click="editItem(item)">
+                            <v-icon
+                                color="#DAFFEF"
+                                class="me-2"
+                                size="small"
+                                @click="editItem(item)"
+                            >
                                 edit
                             </v-icon>
-                            <v-icon size="small" @click="deleteItem(item)"> delete</v-icon>
+                            <v-icon color="red" size="small" @click="deleteItem(item)">
+                                delete
+                            </v-icon>
                         </template>
                     </VDataTable>
                     <p v-else-if="errorMessage">{{ errorMessage }}</p>
@@ -459,5 +513,21 @@ h2 {
 th,
 td {
     padding: 10px;
+}
+.v-data-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.v-data-table :deep(table) {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.v-data-table :deep(th),
+.v-data-table :deep(td) {
+    width: auto;
+    white-space: normal;
+    overflow-wrap: break-word;
 }
 </style>

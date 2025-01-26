@@ -6,9 +6,9 @@ import router from './router';
 import { createVuetify } from 'vuetify';
 import './assets/tailwind.css';
 import 'vuetify/styles';
-// Import Vuetify styles
-import 'material-design-icons-iconfont/dist/material-design-icons.css'; // Ensure your project is capable of handling css files
+import 'material-design-icons-iconfont/dist/material-design-icons.css';
 import { aliases, md } from 'vuetify/iconsets/md';
+import './assets/base.css';
 
 const vuetify = createVuetify({
     icons: {

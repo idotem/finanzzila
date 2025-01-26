@@ -188,7 +188,7 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                             <template v-for="(fileName, index) in fileNames" :key="fileName">
                                 <v-chip
                                     v-if="index < 2"
-                                    class="text-white text-xl  border-[1px] border-[#022754] rounded-lg"
+                                    class="text-white text-xl border-[1px] border-[#022754] rounded-lg"
                                     size="large"
                                     label
                                 >
@@ -294,8 +294,8 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
             <v-row
                 class="bg-[#073B3A] text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg mb-4"
             >
-                <v-col md="12" sm="12">
-                    <h3 class="text-center text-xl">
+                <v-col md="12" sm="12" class="d-flex align-center justify-center gap-2">
+                    <h3 class="text-center text-xl mb-0">
                         Showing results for dates(filtered):
                         <p class="font-bold inline">
                             {{
@@ -311,27 +311,19 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                             }}
                         </p>
                         in currency:
-                        <v-select
-                            :items="currencies"
-                            density="compact"
-                            v-model="currentCurrency"
-                            item-color="success"
-                            color="white"
-                            theme="dark"
-                            class="w-28"
-                            bg-color="#073B3A"
-                        >
-                        </v-select>
-<!--                        <select-->
-<!--                            class="font-bold text-center text-[#DAFFEF] cursor-pointer h-9 rounded-sm p-2 w-20"-->
-<!--                            name="changeCurrency"-->
-<!--                            v-model="currentCurrency"-->
-<!--                        >-->
-<!--                            <option class="bg-[#073B3A] pr-2" value="MKD">MKD</option>-->
-<!--                            <option class="bg-[#073B3A] pr-2" value="USD">USD</option>-->
-<!--                            <option class="bg-[#073B3A] pr-2" value="EUR">EUR</option>-->
-<!--                        </select>-->
                     </h3>
+                    <v-select
+                        :items="currencies"
+                        density="compact"
+                        v-model="currentCurrency"
+                        item-color="success"
+                        color="white"
+                        theme="dark"
+                        bg-color="#073B3A"
+                        style="max-width: 100px"
+                        class="text-center"
+                    >
+                    </v-select>
                 </v-col>
                 <v-col md="9" sm="12">
                     <v-col
@@ -417,5 +409,21 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
 h1,
 h2 {
     text-align: center;
+}
+.v-data-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.v-data-table :deep(table) {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.v-data-table :deep(th),
+.v-data-table :deep(td) {
+    width: auto;
+    white-space: normal;
+    overflow-wrap: break-word;
 }
 </style>

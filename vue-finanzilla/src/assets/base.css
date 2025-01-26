@@ -1,3 +1,7 @@
+/* Import Google Fonts - including JetBrains Mono */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;700&display=swap');
+
 /* width */
 ::-webkit-scrollbar {
     width: 15px;
@@ -17,4 +21,30 @@
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
     background: transparent;
+}
+
+/* Set the font family hierarchy globally */
+:root {
+    font-family: 'JetBrains Mono', 'Roboto', 'Open Sans', sans-serif;
+}
+
+/* Target specific elements that might have their own font definitions */
+input,
+textarea,
+select,
+button,
+option,
+::placeholder,
+.dialog,
+.modal,
+.dropdown-content,
+.select-options {
+    font-family: inherit !important;
+    font-weight: inherit !important;
+}
+
+/* Force font inheritance for all elements */
+* {
+    font-family: inherit;
+    font-weight: inherit !important;
 }

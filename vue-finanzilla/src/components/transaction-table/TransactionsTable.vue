@@ -55,11 +55,35 @@ const editingItem = ref<TransactionDto>(
 const deletingItem = ref<any>({});
 
 const transactionsHeaders = [
-    { title: 'Date', key: 'date' },
-    { title: 'Company name', key: 'nameOfPlace' },
-    { title: 'Amount (MKD)', key: 'amount' },
-    { title: 'Category', key: 'category.name' },
-    { title: 'Actions', key: 'actions', sortable: false }
+    {
+        title: 'Date',
+        key: 'date',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    {
+        title: 'Company name',
+        key: 'nameOfPlace',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    {
+        title: 'Amount (MKD)',
+        key: 'amount',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    {
+        title: 'Category',
+        key: 'category.name',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    { key: 'actions', sortable: false }
 ];
 
 onMounted(async () => {
@@ -227,7 +251,7 @@ function save() {
 
         <v-container>
             <v-row
-                class="bg-[#073B3A] text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg min-w-screen max-w-screen"
+                class="bg-[#073B3A] text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg w-full"
             >
                 <v-col sm="12" md="3">
                     <v-sheet class="bg-[#073B3A] text-slate-200">
@@ -284,11 +308,12 @@ function save() {
                         <span class="text-black">Add</span>
                     </v-btn>
                 </v-col>
-                <v-col sm="12">
+                <v-col sm="12" style="width: 100%">
                     <VDataTable
                         hover
                         color="black"
-                        class="bg-[#073B3A] text-slate-200 text-xl width-full"
+                        class="bg-[#073B3A] text-slate-200 text-xl"
+                        style="width: 100% !important; table-layout: fixed"
                         v-if="transactions"
                         :headers="transactionsHeaders"
                         :items="filteredTransactions"
@@ -488,5 +513,21 @@ h2 {
 th,
 td {
     padding: 10px;
+}
+.v-data-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.v-data-table :deep(table) {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.v-data-table :deep(th),
+.v-data-table :deep(td) {
+    width: auto;
+    white-space: normal;
+    overflow-wrap: break-word;
 }
 </style>

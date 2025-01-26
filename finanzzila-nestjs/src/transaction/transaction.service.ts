@@ -34,8 +34,6 @@ export class TransactionService {
         return nameOfTransactionPlace.includes(wordThatIsContained);
     }
 
-    // TODO: here get expensesKeywords, incomeKeywords
-    // TODO: if amount > 0 use incomeKeywords to map else use expensesKeywords to map. simple as that
     async updateTransactionsAfterCategoriesGetUpdated(): Promise<void> {
         const categories: Category[] = await this.findAllCategories();
         const notMappedCategory: Category = categories.find(
@@ -52,16 +50,11 @@ export class TransactionService {
                 continue;
             }
             if (tr.amount > 0) {
-                updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(
-                    incomeKeywords,
-                    tr,
-                    updatedTrCategory
-                );
+                updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(incomeKeywords, tr);
             } else if (tr.amount <= 0) {
                 updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(
                     expenseKeywords,
-                    tr,
-                    updatedTrCategory
+                    tr
                 );
             }
             if (!updatedTrCategory) {
@@ -72,24 +65,14 @@ export class TransactionService {
         await this.transactionRepository.save(transactions);
     }
 
-    private determineCategoryFromTrNameAndKeywords(
-        expenseKeywords: Keyword[],
-        tr: Transaction,
-        updatedTrCategory: boolean
-    ) {
-        for (let i = 0; i < expenseKeywords.length; i++) {
-            if (
-                this.checkIfNameOfTransactionContainsGivenWord(
-                    tr.nameOfPlace,
-                    expenseKeywords[i].value
-                )
-            ) {
-                tr.category = expenseKeywords[i].category;
-                updatedTrCategory = true;
-                break;
+    private determineCategoryFromTrNameAndKeywords(keywords: Keyword[], tr: Transaction) {
+        for (let i = 0; i < keywords.length; i++) {
+            if (this.checkIfNameOfTransactionContainsGivenWord(tr.nameOfPlace, keywords[i].value)) {
+                tr.category = keywords[i].category;
+                return true;
             }
         }
-        return updatedTrCategory;
+        return false;
     }
 
     async createTransaction(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
@@ -125,18 +108,15 @@ export class TransactionService {
         }
         const category: Category = await this.findCategoryById(updateTransactionDto.category);
         this.checkIfCategoryTypeMatchesTransactionAmount(category, transaction);
-        const oldTransactionCategoryName = transaction.category.name;
-        if (
-            oldTransactionCategoryName.toLowerCase() !== 'not_mapped' &&
-            oldTransactionCategoryName !== category.name
-        ) {
+        const oldTransactionCategoryName: string = transaction.category.name;
+        if (oldTransactionCategoryName !== category.name) {
             transaction.manuallyOverried = true;
         }
         transaction.category = category;
         transaction.amount = updateTransactionDto.amount;
         transaction.date = updateTransactionDto.date;
         transaction.nameOfPlace = updateTransactionDto.nameOfPlace;
-        const savedTransaction = await this.transactionRepository.save(transaction);
+        const savedTransaction: Transaction = await this.transactionRepository.save(transaction);
         if (
             updateTransactionDto.categoryKeyword !== null &&
             updateTransactionDto.categoryKeyword !== undefined
@@ -187,7 +167,8 @@ export class TransactionService {
     async populateTransactions(file: Express.Multer.File): Promise<Transaction[]> {
         //await this.checkIfFileAlreadyUploaded(file.originalname);
         const categories = await this.findAllCategories();
-        const keywords: Keyword[] = await this.keywordService.findAll();
+        const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryIsExpense(1);
+        const incomeKeywords: Keyword[] = await this.keywordService.findAllByCategoryIsExpense(0);
         const transactions: Transaction[] = [];
         const workbook = new Workbook();
         console.log('Transaction population starting: ', file);
@@ -207,33 +188,7 @@ export class TransactionService {
                 console.log('transDate for row: ', transDate);
                 console.log('transName for row: ', transName);
                 console.log('transAmount for row: ', transAmount);
-                if (category && category.name === 'Fuel and liquids') {
-                    if (transAmount % 500 === 0) {
-                        const transaction = new Transaction(
-                            transDate,
-                            transName,
-                            transAmount,
-                            category
-                        );
-                        transactions.push(transaction);
-                    } else {
-                        const marketCat = categories.find((c) => c.name === 'Market');
-                        const splitFuelTrans = new Transaction(
-                            transDate,
-                            transName,
-                            transAmount - (transAmount % 500),
-                            category
-                        );
-                        const splitMarketTrans = new Transaction(
-                            transDate,
-                            transName,
-                            transAmount % 500,
-                            marketCat
-                        );
-                        transactions.push(splitMarketTrans);
-                        transactions.push(splitFuelTrans);
-                    }
-                } else if (category) {
+                if (category) {
                     const transaction = new Transaction(
                         transDate,
                         transName,
@@ -266,16 +221,25 @@ export class TransactionService {
                     return undefined;
                 }
                 if (amountOfTransaction > 0) {
-                    return categories.find((c) => c.name.toLowerCase() === 'income');
+                    for (const iKeyword of incomeKeywords) {
+                        if (
+                            checkIfNameOfTransactionContainsGivenWord(
+                                nameOfTransactionPlace,
+                                iKeyword.value
+                            )
+                        ) {
+                            return iKeyword.category;
+                        }
+                    }
                 }
-                for (let i = 0; i < keywords.length; i++) {
+                for (const eKeyword of expenseKeywords) {
                     if (
                         checkIfNameOfTransactionContainsGivenWord(
                             nameOfTransactionPlace,
-                            keywords[i].value
+                            eKeyword.value
                         )
                     ) {
-                        return keywords[i].category;
+                        return eKeyword.category;
                     }
                 }
                 return categories.find((c) => c.name.toLowerCase() === 'not_mapped');

@@ -33,7 +33,7 @@ const toggleDrawer = () => {
 
 <template>
     <v-layout class="bg-app-gray-background" style="display: flex; flex-direction: column; min-height: 100vh">
-        <v-app-bar theme="white" color="#011936">
+        <v-app-bar theme="white" color="#123030">
             <v-btn icon @click="toggleDrawer" v-if="isMobile">
                 <v-icon>menu</v-icon>
             </v-btn>
@@ -50,10 +50,6 @@ const toggleDrawer = () => {
         <v-main class="d-flex align-center justify-center" style="flex: 1">
             <RouterView></RouterView>
         </v-main>
-
-        <v-footer app class="justify-center" color="#011936">
-            <p class="text-slate-300">Finanzzila</p>
-        </v-footer>
     </v-layout>
 </template>
 

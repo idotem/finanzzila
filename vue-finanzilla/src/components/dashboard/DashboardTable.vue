@@ -25,6 +25,7 @@ import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
 import CommonCalculations from '../common/CommonCalculations';
 
 const timePeriods = ['All time', 'Yearly', 'Monthly'];
+const currencies = ['MKD', 'USD', 'EUR'];
 
 const transactions = ref<Transaction[]>([]);
 const categories = ref<TransactionCategory[]>([]);
@@ -174,20 +175,20 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                 <v-col cols="10" sm="4" md="3">
                     <v-file-input
                         v-model="files"
-                        class="text-cyan-300"
+                        class="text-[#212121]"
                         density="default"
                         base-color="black"
                         color="black"
                         label="Upload file with transactions"
                         accept=".xlsx"
                         variant="outlined"
-                        bg-color="#2dd4bf"
+                        bg-color="#212121"
                     >
                         <template v-slot:selection="{ fileNames }">
                             <template v-for="(fileName, index) in fileNames" :key="fileName">
                                 <v-chip
                                     v-if="index < 2"
-                                    class="text-black-500 text-xl bg-teal-500 border-[1px] border-[#022754] rounded-lg"
+                                    class="text-white text-xl border-[1px] border-[#022754] rounded-lg"
                                     size="large"
                                     label
                                 >
@@ -239,7 +240,7 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
             <v-row align="start" class="mb-2 mt-0">
                 <v-col cols="12" md="12" xl="6" :key="1" style="height: 36rem">
                     <v-sheet
-                        class="p-4 shadow-black shadow-lg bg-cyan-950 rounded-xl"
+                        class="p-4 shadow-black shadow-lg bg-[#073B3A] rounded-xl"
                         style="
                             height: 34rem;
                             overflow-x: hidden;
@@ -265,7 +266,7 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                 </v-col>
                 <v-col cols="12" md="12" xl="6" key="2" style="height: 36rem">
                     <v-sheet
-                        class="p-4 shadow-black shadow-lg pb-10 bg-cyan-950 rounded-xl items-center"
+                        class="p-4 shadow-black shadow-lg pb-10 bg-[#073B3A] rounded-xl items-center"
                         style="
                             height: 34rem;
                             overflow-x: hidden;
@@ -291,10 +292,10 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                 </v-col>
             </v-row>
             <v-row
-                class="bg-cyan-950 text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg mb-4"
+                class="bg-[#073B3A] text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg mb-4"
             >
-                <v-col md="12" sm="12">
-                    <h3 class="text-center text-xl">
+                <v-col md="12" sm="12" class="d-flex align-center justify-center gap-2">
+                    <h3 class="text-center text-xl mb-0">
                         Showing results for dates(filtered):
                         <p class="font-bold inline">
                             {{
@@ -310,16 +311,19 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                             }}
                         </p>
                         in currency:
-                        <select
-                            class="font-bold text-center text-cyan cursor-pointer h-9 rounded-sm text-slate-300 p-2"
-                            name="changeCurrency"
-                            v-model="currentCurrency"
-                        >
-                            <option value="MKD">MKD</option>
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                        </select>
                     </h3>
+                    <v-select
+                        :items="currencies"
+                        density="compact"
+                        v-model="currentCurrency"
+                        item-color="success"
+                        color="white"
+                        theme="dark"
+                        bg-color="#073B3A"
+                        style="max-width: 100px"
+                        class="text-center"
+                    >
+                    </v-select>
                 </v-col>
                 <v-col md="9" sm="12">
                     <v-col
@@ -330,20 +334,20 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                         <h1 class="text-center text-xl font-bold mb-5">General statistics</h1>
                         <div>
                             Total amount earned:
-                            <p class="float-right text-cyan font-bold">
+                            <p class="float-right text-[#DAFFEF] font-bold">
                                 {{ convertNumberToCurrency(totalIncome, currentCurrency) }}
                             </p>
                         </div>
                         <div>
                             Total amount spent:
-                            <p class="float-right text-cyan font-bold">
+                            <p class="float-right text-[#DAFFEF] font-bold">
                                 {{ convertNumberToCurrency(totalExpenses, currentCurrency) }}
                             </p>
                         </div>
 
                         <div>
                             Difference:
-                            <p class="float-right text-cyan font-bold">
+                            <p class="float-right text-[#DAFFEF] font-bold">
                                 {{
                                     convertNumberToCurrency(
                                         differenceExpensesIncome,
@@ -373,19 +377,19 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                         <h1 class="mb-5 font-bold text-xl">Wants and needs</h1>
                         <div>
                             Wants:
-                            <p class="float-right text-cyan font-bold">
+                            <p class="float-right text-[#DAFFEF] font-bold">
                                 {{ convertNumberToCurrency(wantsTransactionsSum, currentCurrency) }}
                             </p>
                         </div>
                         <div>
                             Needs:
-                            <p class="float-right text-cyan font-bold">
+                            <p class="float-right text-[#DAFFEF] font-bold">
                                 {{ convertNumberToCurrency(needsTransactionsSum, currentCurrency) }}
                             </p>
                         </div>
                         <div>
                             Not Wants Nor Needs:
-                            <p class="float-right text-cyan font-bold">
+                            <p class="float-right text-[#DAFFEF] font-bold">
                                 {{
                                     convertNumberToCurrency(
                                         notWantsNorNeedsTranSum,
@@ -405,5 +409,21 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
 h1,
 h2 {
     text-align: center;
+}
+.v-data-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.v-data-table :deep(table) {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.v-data-table :deep(th),
+.v-data-table :deep(td) {
+    width: auto;
+    white-space: normal;
+    overflow-wrap: break-word;
 }
 </style>

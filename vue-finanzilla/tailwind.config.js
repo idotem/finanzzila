@@ -5,7 +5,7 @@ export default {
     theme: {
         extend: {
             colors: {
-                'app-gray-background': '#535353'
+                'app-gray-background': '#8B8982'
             }
         }
     },

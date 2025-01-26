@@ -16,9 +16,10 @@ import {
     VRadioGroup,
     VRow,
     VSpacer,
-    VTextField
+    VTextField,
+    VSelect
 } from 'vuetify/components';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import { Category } from '../model/Category';
 import CategoryDto from '../model/CategoryDto';
 import KeywordDto from '../model/KeywordDto';
@@ -34,13 +35,77 @@ const addingKeyword = ref<string>('');
 const deletingItem = ref<Category | undefined>(undefined);
 const showColorPicker = ref<boolean>(false);
 
+const filters = ref({
+    name: '',
+    keywords: '',
+    isWants: null,
+    isExpense: null
+});
+
 const categoriesHeaders = [
-    { title: 'Name', key: 'name' },
-    { title: 'Keywords', key: 'keywords' },
-    { title: 'Wants/Needs', key: 'isWants' },
-    { title: 'Expense/Income', key: 'isExpense' },
-    { title: 'Actions', key: 'actions', sortable: false }
+    {
+        title: 'Name',
+        key: 'name',
+        sortable: true,
+        width: '20%',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    {
+        title: 'Keywords',
+        key: 'keywords',
+        sortable: true,
+        width: '40%',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    {
+        title: 'Wants/Needs',
+        key: 'isWants',
+        sortable: true,
+        width: '15%',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    {
+        title: 'Expense/Income',
+        key: 'isExpense',
+        sortable: true,
+        width: '15%',
+        headerProps: {
+            style: 'font-weight: 800; font-size: 1.5rem'
+        }
+    },
+    {
+        key: 'actions',
+        sortable: false,
+        width: '10%'
+    }
 ];
+
+const filteredCategories = computed(() => {
+    return categories.value.filter((item) => {
+        if (
+            filters.value.name &&
+            !item.name.toLowerCase().includes(filters.value.name.toLowerCase())
+        )
+            return false;
+        if (
+            filters.value.keywords &&
+            !item.keywords.some((k) =>
+                k.value.toLowerCase().includes(filters.value.keywords.toLowerCase())
+            )
+        )
+            return false;
+        if (filters.value.isWants !== null && item.isWants !== filters.value.isWants) return false;
+        if (filters.value.isExpense !== null && item.isExpense !== filters.value.isExpense)
+            return false;
+        return true;
+    });
+});
 
 onMounted(async () => {
     try {
@@ -145,43 +210,85 @@ function save() {
 function changeShowColorPicker(): void {
     showColorPicker.value = !showColorPicker.value;
 }
-
-const customScrollbar = 'custom-scrollbar';
 </script>
 
 <template>
     <main>
-        <h1 class="text-3xl text-black mb-4">Configuration</h1>
         <v-container>
             <v-row>
                 <v-col sm="12">
                     <v-row
-                        class="bg-cyan-950 text-slate-200 p-4 m-2 pb-10 rounded-xl shadow-black shadow-lg mb-1"
+                        class="bg-[#073B3A] text-slate-200 p-4 m-2 pb-10 rounded-xl shadow-black shadow-lg mb-1"
                     >
-                        <v-col sm="12">
-                            <h1 class="text-lg text-white">Configure categories and keywords</h1>
+                        <v-col cols="9" class="d-flex gap-4 mb-2">
+                            <v-text-field
+                                class="max-w-60"
+                                v-model="filters.name"
+                                label="Name"
+                                density="compact"
+                                color="white"
+                                bg-color="#212121"
+                            ></v-text-field>
+                            <v-text-field
+                                class="max-w-60"
+                                v-model="filters.keywords"
+                                label="Keywords"
+                                density="compact"
+                                color="white"
+                                bg-color="#212121"
+                            ></v-text-field>
+                            <v-select
+                                class="max-w-40"
+                                v-model="filters.isWants"
+                                label="Wants/Needs"
+                                density="compact"
+                                :items="[
+                                    { title: 'All', value: null },
+                                    { title: 'Wants', value: 1 },
+                                    { title: 'Needs', value: 0 }
+                                ]"
+                                item-color="success"
+                                color="white"
+                                theme="dark"
+                                bg-color="#212121"
+                            ></v-select>
+                            <v-select
+                                class="max-w-40"
+                                v-model="filters.isExpense"
+                                label="Expense/Income"
+                                density="compact"
+                                :items="[
+                                    { title: 'All', value: null },
+                                    { title: 'Expense', value: 1 },
+                                    { title: 'Income', value: 0 }
+                                ]"
+                                item-color="success"
+                                color="white"
+                                theme="dark"
+                                bg-color="#212121"
+                            ></v-select>
                         </v-col>
-                        <v-col sm="12" class="justify-bottom">
+                        <v-col cols="3">
                             <v-btn
+                                class="float-right"
                                 prepend-icon="add"
-                                icon-color="#ffffff"
-                                color="rgb(59 7 100)"
-                                dark
+                                color="#DAFFEF"
                                 @click="dialog = true"
+                                min-height="40px"
                             >
-                                <span class="text-white">Add New Category</span>
+                                <span class="text-black">Add</span>
                             </v-btn>
                         </v-col>
+
                         <v-col cols="12">
                             <VDataTable
                                 hover
                                 color="black"
-                                class="bg-cyan-950 text-slate-200 text-base custom-scrollbar"
-                                :class="customScrollbar"
+                                class="bg-[#073B3A] text-slate-200 text-xl width-full"
                                 v-if="categories"
                                 :headers="categoriesHeaders"
-                                :items="categories"
-                                height="49vh"
+                                :items="filteredCategories"
+                                height="59vh"
                             >
                                 <template v-slot:item.name="{ item }">
                                     <div
@@ -203,10 +310,6 @@ const customScrollbar = 'custom-scrollbar';
                                             :key="index"
                                         >
                                             - {{ keyword.value }}
-                                            <br />
-                                            <!-- <span v-if="index != item.keywords.length - 1">{{
-                                            '- '
-                                        }}</span> -->
                                         </span>
                                     </div>
                                 </template>
@@ -237,7 +340,7 @@ const customScrollbar = 'custom-scrollbar';
                                 <template v-slot:top>
                                     <v-dialog v-model="dialog" max-width="800px">
                                         <v-card
-                                            class="bg-[#011936] text-slate-100"
+                                            class="bg-[#073B3A] text-slate-100"
                                             :style="{
                                                 border: `1px solid ${editingCategory.color}`,
                                                 borderRadius: `10px`
@@ -484,7 +587,7 @@ const customScrollbar = 'custom-scrollbar';
                                     </v-dialog>
                                     <v-dialog v-model="dialogDelete" max-width="600px">
                                         <v-card
-                                            class="bg-[#011936] text-slate-100"
+                                            class="bg-[#073B3A] text-slate-100"
                                             min-height="120px"
                                         >
                                             <v-card-title class="text-h5 text-center pb-5"
@@ -514,7 +617,7 @@ const customScrollbar = 'custom-scrollbar';
                                 <template v-slot:[`item.actions`]="{ item }">
                                     <v-icon
                                         class="me-2"
-                                        color="cyan"
+                                        color="#DAFFEF"
                                         size="small"
                                         @click="editCategory(item)"
                                     >
@@ -546,16 +649,20 @@ td {
     padding: 10px;
 }
 
-.custom-scrollbar .v-data-table__wrapper {
-    overflow: hidden;
+.v-data-table {
+    width: 100%;
+    table-layout: fixed;
 }
 
-.custom-scrollbar .v-data-table__wrapper::-webkit-scrollbar {
-    display: none; /* Hides scrollbar in Chrome, Safari, Edge */
+.v-data-table :deep(table) {
+    width: 100%;
+    table-layout: fixed;
 }
 
-.custom-scrollbar .v-data-table__wrapper {
-    -ms-overflow-style: none; /* Hides scrollbar in Internet Explorer */
-    scrollbar-width: none; /* Hides scrollbar in Firefox */
+.v-data-table :deep(th),
+.v-data-table :deep(td) {
+    width: auto;
+    white-space: normal;
+    overflow-wrap: break-word;
 }
 </style>

@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "start": "concurrently \"npm run start:dev --prefix finanzzila-nestjs\" \"npm run dev --prefix vue-finanzilla\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -15,7 +15,7 @@
 ---
 
 ## 📸 Screenshots
-_Add some screenshots here to showcase the app!_
+_Comming soon!_
 
 ---
 

@@ -2,6 +2,8 @@
 import { onMounted, ref, watch } from 'vue';
 import {
     VBtn,
+    VCard,
+    VCardText,
     VChip,
     VCol,
     VContainer,
@@ -11,8 +13,9 @@ import {
     VProgressCircular,
     VRow,
     VSelect,
-    VSheet
+    VDivider
 } from 'vuetify/components';
+import { useTheme } from 'vuetify';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import TransactionsChart from '../charts/TransactionsChart.vue';
@@ -23,6 +26,8 @@ import type { TransactionCategory } from '../model/TransactionCategory';
 import CategoryService from '../../service/CategoryService';
 import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
 import CommonCalculations from '../common/CommonCalculations';
+
+const theme = useTheme();
 
 const timePeriods = ['All time', 'Yearly', 'Monthly'];
 const currencies = ['MKD', 'USD', 'EUR'];
@@ -55,8 +60,8 @@ onMounted(async () => {
 
 const fetchTransactions = async () => {
     const filter: TransactionFilterDto = new TransactionFilterDto(
-        rangeDateFilter.value ? rangeDateFilter.value[0] : undefined,
-        rangeDateFilter.value ? rangeDateFilter.value[1] : undefined,
+        rangeDateFilter.value && rangeDateFilter.value.length > 0 ? rangeDateFilter.value[0] : undefined,
+        rangeDateFilter.value && rangeDateFilter.value.length > 1 ? rangeDateFilter.value[1] : undefined,
         filterCategoryId.value
     );
     TransactionService.getAllFiltered(filter)
@@ -166,31 +171,35 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
 </script>
 
 <template>
-    <main class="pt-3">
+    <main class="py-6 px-4">
         <v-overlay :model-value="isLoading" class="align-center justify-center">
             <v-progress-circular color="primary" size="64" indeterminate></v-progress-circular>
         </v-overlay>
-        <v-container>
-            <v-row align="start">
-                <v-col cols="10" sm="4" md="3">
+
+        <v-container fluid class="pa-0 max-w-7xl mx-auto">
+            <!-- Filter Section -->
+            <v-row class="mb-6" align="center">
+                <v-col cols="12" sm="5" md="4" lg="3">
                     <v-file-input
                         v-model="files"
-                        class="text-[#212121]"
-                        density="default"
-                        base-color="black"
-                        color="black"
+                        density="compact"
+                        color="primary"
+                        bg-color="surface"
                         label="Upload file with transactions"
                         accept=".xlsx"
                         variant="outlined"
-                        bg-color="#212121"
+                        hide-details
+                        prepend-icon=""
+                        prepend-inner-icon="attach_file"
                     >
                         <template v-slot:selection="{ fileNames }">
                             <template v-for="(fileName, index) in fileNames" :key="fileName">
                                 <v-chip
-                                    v-if="index < 2"
-                                    class="text-white text-xl border-[1px] border-[#022754] rounded-lg"
-                                    size="large"
+                                    v-if="index < 1"
+                                    color="primary"
+                                    size="small"
                                     label
+                                    class="font-weight-bold"
                                 >
                                     {{ fileName }}
                                 </v-chip>
@@ -198,207 +207,168 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                         </template>
                     </v-file-input>
                 </v-col>
-                <v-col cols="2" class="m-auto">
-                    <v-hover>
-                        <template v-slot:default="{ isHovering, props }">
-                            <v-btn
-                                v-bind="props"
-                                v-if="files?.length"
-                                :color="isHovering ? '#022754' : '#3b0764'"
-                                @click="uploadFile"
-                                >Upload
-                            </v-btn>
-                        </template>
-                    </v-hover>
+                <v-col cols="12" sm="3" md="2" lg="2">
+                    <v-btn
+                        v-if="files?.length"
+                        color="primary"
+                        variant="elevated"
+                        elevation="2"
+                        class="text-none font-weight-bold w-100"
+                        height="40"
+                        @click="uploadFile"
+                    >
+                        Upload
+                    </v-btn>
                 </v-col>
-                <v-col cols="0" sm="1" md="3">
+                <v-spacer class="hidden-sm-and-down"></v-spacer>
+                <v-col cols="12" sm="4" md="3" lg="3">
                     <v-select
                         :items="timePeriods"
                         label="Time Period (Averages)"
                         density="compact"
                         v-model="timePeriod"
-                        item-color="success"
-                        color="white"
-                        theme="dark"
-                        bg-color="#212121"
-                    >
-                    </v-select>
+                        color="primary"
+                        bg-color="surface"
+                        variant="outlined"
+                        hide-details
+                    ></v-select>
                 </v-col>
-                <v-col cols="12" sm="5" md="4">
+                <v-col cols="12" sm="12" md="3" lg="4">
                     <VueDatePicker
-                        dark
+                        :dark="theme.global.current.value.dark"
                         v-model="rangeDateFilter"
                         :enable-time-picker="false"
                         :range="{ partialRange: false }"
                         placeholder="Pick a date range"
-                        color="success"
                         :on-cleared="() => clearDateRange()"
-                    >
-                    </VueDatePicker>
+                        class="modern-dp"
+                    ></VueDatePicker>
                 </v-col>
             </v-row>
-            <v-row align="start" class="mb-2 mt-0">
-                <v-col cols="12" md="12" xl="6" :key="1" style="height: 36rem">
-                    <v-sheet
-                        class="p-4 shadow-black shadow-lg bg-[#073B3A] rounded-xl"
-                        style="
-                            height: 34rem;
-                            overflow-x: hidden;
-                            overflow-y: hidden;
-                            min-width: 40rem;
-                        "
-                    >
-                        <div
-                            style="height: 31rem; min-width: 40rem"
-                            v-if="transactions && transactions.length !== 0"
-                        >
-                            <TransactionsChart
-                                :transactionsProp="transactions"
-                                :timePeriodProp="timePeriod"
-                                chartTypeProp="Doughnut"
-                                :dateFilterProp="rangeDateFilter ? rangeDateFilter : []"
-                            >
-                            </TransactionsChart>
-                        </div>
-                        <h2 v-else-if="errorMessage">{{ errorMessage }}</h2>
-                        <h1 v-else class="text-lg mt-5 text-slate-300">No transactions, no PIE</h1>
-                    </v-sheet>
-                </v-col>
-                <v-col cols="12" md="12" xl="6" key="2" style="height: 36rem">
-                    <v-sheet
-                        class="p-4 shadow-black shadow-lg pb-10 bg-[#073B3A] rounded-xl items-center"
-                        style="
-                            height: 34rem;
-                            overflow-x: hidden;
-                            overflow-y: hidden;
-                            min-width: 40rem;
-                        "
-                    >
-                        <div
-                            style="height: 31rem; min-width: 40rem"
-                            v-if="transactions && transactions.length !== 0"
-                        >
-                            <TransactionsChart
-                                :transactionsProp="transactions"
-                                :timePeriodProp="timePeriod"
-                                chartTypeProp="Bar"
-                                :dateFilterProp="rangeDateFilter"
-                            >
-                            </TransactionsChart>
-                        </div>
-                        <h2 v-else-if="errorMessage">{{ errorMessage }}</h2>
-                        <h1 v-else class="text-lg mt-5 text-slate-300">No transactions, no BAR</h1>
-                    </v-sheet>
-                </v-col>
-            </v-row>
-            <v-row
-                class="bg-[#073B3A] text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg mb-4"
-            >
-                <v-col md="12" sm="12" class="d-flex align-center justify-center gap-2">
-                    <h3 class="text-center text-xl mb-0">
-                        Showing results for dates(filtered):
-                        <p class="font-bold inline">
-                            {{
-                                rangeDateFilter[0]
-                                    ? rangeDateFilter[0].toISOString().split('T')[0]
-                                    : transactions[transactions.length - 1]?.date
-                            }}
-                            --
-                            {{
-                                rangeDateFilter[1]
-                                    ? rangeDateFilter[1].toISOString().split('T')[0]
-                                    : transactions[0]?.date
-                            }}
-                        </p>
-                        in currency:
-                    </h3>
-                    <v-select
-                        :items="currencies"
-                        density="compact"
-                        v-model="currentCurrency"
-                        item-color="success"
-                        color="white"
-                        theme="dark"
-                        bg-color="#073B3A"
-                        style="max-width: 100px"
-                        class="text-center"
-                    >
-                    </v-select>
-                </v-col>
-                <v-col md="9" sm="12">
-                    <v-col
-                        class="text-lg inline-table border-r-2 border-cyan-100 min-h-56"
-                        md="6"
-                        sm="12"
-                    >
-                        <h1 class="text-center text-xl font-bold mb-5">General statistics</h1>
-                        <div>
-                            Total amount earned:
-                            <p class="float-right text-[#DAFFEF] font-bold">
-                                {{ convertNumberToCurrency(totalIncome, currentCurrency) }}
-                            </p>
-                        </div>
-                        <div>
-                            Total amount spent:
-                            <p class="float-right text-[#DAFFEF] font-bold">
-                                {{ convertNumberToCurrency(totalExpenses, currentCurrency) }}
-                            </p>
-                        </div>
 
-                        <div>
-                            Difference:
-                            <p class="float-right text-[#DAFFEF] font-bold">
-                                {{
-                                    convertNumberToCurrency(
-                                        differenceExpensesIncome,
-                                        currentCurrency
-                                    )
-                                }}
-                            </p>
-                        </div>
-                        <div>
-                            First transaction date:
-                            <p class="float-right">
-                                {{ transactions[transactions.length - 1]?.date }}
-                            </p>
-                        </div>
-                        <div>
-                            Last transaction date:
-                            <p class="float-right">
-                                {{ transactions[0]?.date }}
-                            </p>
-                        </div>
-                    </v-col>
-                    <v-col
-                        class="inline-table text-lg border-r-2 border-cyan-100 min-h-56"
-                        md="6"
-                        sm="12"
-                    >
-                        <h1 class="mb-5 font-bold text-xl">Wants and needs</h1>
-                        <div>
-                            Wants:
-                            <p class="float-right text-[#DAFFEF] font-bold">
-                                {{ convertNumberToCurrency(wantsTransactionsSum, currentCurrency) }}
-                            </p>
-                        </div>
-                        <div>
-                            Needs:
-                            <p class="float-right text-[#DAFFEF] font-bold">
-                                {{ convertNumberToCurrency(needsTransactionsSum, currentCurrency) }}
-                            </p>
-                        </div>
-                        <div>
-                            Not Wants Nor Needs:
-                            <p class="float-right text-[#DAFFEF] font-bold">
-                                {{
-                                    convertNumberToCurrency(
-                                        notWantsNorNeedsTranSum,
-                                        currentCurrency
-                                    )
-                                }}
-                            </p>
-                        </div>
-                    </v-col>
+            <!-- Charts Section (Bar Chart Full Width) -->
+            <v-row class="mb-6">
+                <v-col cols="12">
+                    <v-card color="surface" elevation="2" class="rounded-xl w-100 d-flex flex-column">
+                        <v-card-text class="flex-grow-1 d-flex flex-column align-center justify-center pa-6" style="min-height: 400px;">
+                            <div v-if="transactions && transactions.length !== 0" class="w-100 h-100 pb-4" style="min-height: 350px;">
+                                <TransactionsChart
+                                    :transactionsProp="transactions"
+                                    :timePeriodProp="timePeriod"
+                                    chartTypeProp="Bar"
+                                    :dateFilterProp="rangeDateFilter ? rangeDateFilter : []"
+                                />
+                            </div>
+                            <div v-else class="text-center d-flex flex-column align-center text-medium-emphasis">
+                                <v-icon size="64" color="grey-lighten-1" class="mb-4">bar_chart</v-icon>
+                                <h2 class="text-h6 font-weight-medium" v-if="errorMessage">{{ errorMessage }}</h2>
+                                <h2 class="text-h6 font-weight-medium" v-else>No transactions available</h2>
+                            </div>
+                        </v-card-text>
+                    </v-card>
+                </v-col>
+            </v-row>
+
+            <!-- Bottom Row: Pie Chart AND Summary -->
+            <v-row class="mb-6 align-stretch" align="stretch">
+                <!-- Pie Chart Column -->
+                <v-col cols="12" lg="12" class="d-flex pie-col">
+                    <v-card color="surface" elevation="2" class="rounded-xl w-100 d-flex flex-column">
+                        <v-card-text class="flex-grow-1 d-flex flex-column align-center justify-center pa-6" style="min-height: 400px;">
+                            <div v-if="transactions && transactions.length !== 0" class="w-100 h-100 pb-4" style="min-height: 350px;">
+                                <TransactionsChart
+                                    :transactionsProp="transactions"
+                                    :timePeriodProp="timePeriod"
+                                    chartTypeProp="Doughnut"
+                                    :dateFilterProp="rangeDateFilter ? rangeDateFilter : []"
+                                />
+                            </div>
+                            <div v-else class="text-center d-flex flex-column align-center text-medium-emphasis">
+                                <v-icon size="64" color="grey-lighten-1" class="mb-4">pie_chart</v-icon>
+                                <h2 class="text-h6 font-weight-medium" v-if="errorMessage">{{ errorMessage }}</h2>
+                                <h2 class="text-h6 font-weight-medium" v-else>No transactions available</h2>
+                            </div>
+                        </v-card-text>
+                    </v-card>
+                </v-col>
+
+                <!-- Statistics Section Column -->
+                <v-col cols="12" lg="12" class="d-flex stats-col">
+                    <v-card color="surface" elevation="2" class="rounded-xl w-100 d-flex flex-column">
+                        <v-card-text class="pa-6 w-100 h-100 d-flex flex-column justify-center">
+                            <div class="d-flex flex-column flex-md-row justify-space-between align-center mb-8">
+                                <div>
+                                    <h3 class="text-h6 font-weight-bold mb-1">Transaction Summary</h3>
+                                    <p class="text-body-2 text-medium-emphasis mb-0" v-if="transactions.length > 0">
+                                        {{ rangeDateFilter?.[0] ? rangeDateFilter[0].toISOString().split('T')[0] : transactions[transactions.length - 1]?.date }} 
+                                        &nbsp;&mdash;&nbsp; 
+                                        {{ rangeDateFilter?.[1] ? rangeDateFilter[1].toISOString().split('T')[0] : transactions[0]?.date }}
+                                    </p>
+                                </div>
+                                <div class="mt-4 mt-md-0 d-flex align-center">
+                                    <v-select
+                                        :items="currencies"
+                                        density="compact"
+                                        v-model="currentCurrency"
+                                        color="primary"
+                                        bg-color="surface"
+                                        variant="outlined"
+                                        hide-details
+                                        style="max-width: 120px;"
+                                    ></v-select>
+                                </div>
+                            </div>
+
+                            <v-row class="flex-grow-1 align-center">
+                                <!-- General Stats -->
+                                <v-col cols="12" class="border-b border-theme-divider pb-4">
+                                    <h4 class="text-subtitle-1 font-weight-bold mb-4 text-primary">General Flow</h4>
+                                    <div class="d-flex justify-space-between align-center mb-3">
+                                        <span class="text-body-1">Total Earned</span>
+                                        <span class="text-h6 font-weight-bold text-success">
+                                            {{ convertNumberToCurrency(totalIncome, currentCurrency) }}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex justify-space-between align-center mb-3">
+                                        <span class="text-body-1">Total Spent</span>
+                                        <span class="text-h6 font-weight-bold text-error">
+                                            {{ convertNumberToCurrency(totalExpenses, currentCurrency) }}
+                                        </span>
+                                    </div>
+                                    <v-divider class="my-3"></v-divider>
+                                    <div class="d-flex justify-space-between align-center mb-2">
+                                        <span class="text-body-1 font-weight-medium">Net Difference</span>
+                                        <span class="text-h6 font-weight-bold" :class="(differenceExpensesIncome || 0) >= 0 ? 'text-success' : 'text-error'">
+                                            {{ convertNumberToCurrency(differenceExpensesIncome, currentCurrency) }}
+                                        </span>
+                                    </div>
+                                </v-col>
+
+                                <!-- Wants and Needs -->
+                                <v-col cols="12" class="pt-4">
+                                    <h4 class="text-subtitle-1 font-weight-bold mb-4 text-primary">Expenses Distribution</h4>
+                                    <div class="d-flex justify-space-between align-center mb-3">
+                                        <span class="text-body-1">Needs</span>
+                                        <span class="text-h6 font-weight-bold text-success">
+                                            {{ convertNumberToCurrency(needsTransactionsSum, currentCurrency) }}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex justify-space-between align-center mb-3">
+                                        <span class="text-body-1">Wants</span>
+                                        <span class="text-h6 font-weight-bold text-warning">
+                                            {{ convertNumberToCurrency(wantsTransactionsSum, currentCurrency) }}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex justify-space-between align-center mb-2">
+                                        <span class="text-body-1">Uncategorized / Other</span>
+                                        <span class="text-h6 font-weight-bold text-medium-emphasis">
+                                            {{ convertNumberToCurrency(notWantsNorNeedsTranSum, currentCurrency) }}
+                                        </span>
+                                    </div>
+                                </v-col>
+                            </v-row>
+                        </v-card-text>
+                    </v-card>
                 </v-col>
             </v-row>
         </v-container>
@@ -406,24 +376,38 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
 </template>
 
 <style scoped>
-h1,
-h2 {
-    text-align: center;
+/* Override default datepicker input to match vuetify outlined style height & borders exclusively */
+:deep(.modern-dp .dp__input) {
+    height: 40px;
+    border-radius: 4px;
+    font-family: inherit;
+    background-color: rgb(var(--v-theme-surface)) !important;
+    border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+    color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
 }
-.v-data-table {
-    width: 100%;
-    table-layout: fixed;
+:deep(.modern-dp .dp__input:hover) {
+    border-color: rgba(var(--v-theme-on-surface), 0.87);
+}
+:deep(.modern-dp .dp__input_focus) {
+    border-color: rgb(var(--v-theme-primary));
+    outline: none;
+}
+:deep(.modern-dp .dp__icon) {
+    color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
 }
 
-.v-data-table :deep(table) {
-    width: 100%;
-    table-layout: fixed;
+.border-theme-divider {
+    border-color: rgba(var(--v-border-color), var(--v-border-opacity)) !important;
 }
 
-.v-data-table :deep(th),
-.v-data-table :deep(td) {
-    width: auto;
-    white-space: normal;
-    overflow-wrap: break-word;
+@media (min-width: 1280px) {
+    .pie-col {
+        flex: 0 0 70% !important;
+        max-width: 70% !important;
+    }
+    .stats-col {
+        flex: 0 0 30% !important;
+        max-width: 30% !important;
+    }
 }
 </style>

@@ -16,10 +16,11 @@ import {
     VOverlay,
     VProgressCircular,
     VRow,
-    VSheet,
+    VSelect,
     VSpacer,
     VTextField
 } from 'vuetify/components';
+import { useTheme } from 'vuetify';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import { computed, onMounted, ref, watch } from 'vue';
 import Transaction from '../model/Transaction';
@@ -36,6 +37,8 @@ type TransactionTableProps = {
 };
 
 const props = defineProps<TransactionTableProps>();
+
+const theme = useTheme();
 
 const transactions = ref<Transaction[]>([]);
 const errorMessage = ref('');
@@ -59,28 +62,28 @@ const transactionsHeaders = [
         title: 'Date',
         key: 'date',
         headerProps: {
-            style: 'font-weight: 800; font-size: 1.5rem'
+            class: 'text-subtitle-1 font-weight-bold'
         }
     },
     {
         title: 'Company name',
         key: 'nameOfPlace',
         headerProps: {
-            style: 'font-weight: 800; font-size: 1.5rem'
+            class: 'text-subtitle-1 font-weight-bold'
         }
     },
     {
         title: 'Amount (MKD)',
         key: 'amount',
         headerProps: {
-            style: 'font-weight: 800; font-size: 1.5rem'
+            class: 'text-subtitle-1 font-weight-bold'
         }
     },
     {
         title: 'Category',
         key: 'category.name',
         headerProps: {
-            style: 'font-weight: 800; font-size: 1.5rem'
+            class: 'text-subtitle-1 font-weight-bold'
         }
     },
     { key: 'actions', sortable: false }
@@ -99,8 +102,8 @@ onMounted(async () => {
 const fetchTransactions = async () => {
     loading.value = true;
     const filter: TransactionFilterDto = new TransactionFilterDto(
-        rangeDateFilter.value ? rangeDateFilter.value[0] : undefined,
-        rangeDateFilter.value ? rangeDateFilter.value[1] : undefined,
+        rangeDateFilter.value && rangeDateFilter.value.length > 0 ? rangeDateFilter.value[0] : undefined,
+        rangeDateFilter.value && rangeDateFilter.value.length > 1 ? rangeDateFilter.value[1] : undefined,
         filterCategoryId.value
     );
     TransactionService.getAllFiltered(filter).then((tr: Transaction[]) => {
@@ -195,9 +198,9 @@ function validateRequest(itemToSave: any) {
     }
     if (
         itemToSave.amount > 0 &&
-        itemToSave.category.isExpense === 0 &&
+        categories.value.find(c => c.id === itemToSave.category)?.isExpense === 0 &&
         itemToSave.amount <= 0 &&
-        itemToSave.category.isExpense === 1
+        categories.value.find(c => c.id === itemToSave.category)?.isExpense === 1
     ) {
         alert('If amount is greater than 0, category MUST be Incomes and other way around');
     }
@@ -217,7 +220,6 @@ function save() {
     if (editingItem.value.id !== undefined) {
         TransactionService.update(editingItem.value.id, itemToSave)
             .then((res) => {
-                // alert(`Successfully updated transaction ${res.data?.id}`);
                 loading.value = false;
                 fetchTransactions();
                 close();
@@ -243,291 +245,252 @@ function save() {
 </script>
 
 <template>
-    <main>
+    <main class="py-6 px-4">
         <LoadingSpinner :isLoading="loading"></LoadingSpinner>
-        <v-overlay :opacity="0.8" v-if="loading">
-            <v-progress-circular indeterminate size="64" color="green"></v-progress-circular>
+        <v-overlay :model-value="loading" class="align-center justify-center">
+            <v-progress-circular indeterminate size="64" color="primary"></v-progress-circular>
         </v-overlay>
 
-        <v-container>
-            <v-row
-                class="bg-[#073B3A] text-slate-200 p-4 pb-10 rounded-xl shadow-black shadow-lg w-full"
-            >
-                <v-col sm="12" md="3">
-                    <v-sheet class="bg-[#073B3A] text-slate-200">
+        <v-container fluid class="pa-0 max-w-[1920px] mx-auto">
+            <v-card color="surface" elevation="2" class="rounded-xl mt-4 pa-6">
+                <!-- Filters Section -->
+                <v-row align="center" class="mb-4">
+                    <v-col cols="12" sm="6" md="3">
                         <VueDatePicker
                             placeholder="Pick date range"
                             auto-apply
-                            dark
+                            :dark="theme.global.current.value.dark"
                             v-model="rangeDateFilter"
                             :enable-time-picker="false"
                             :range="{ partialRange: false }"
-                        >
-                        </VueDatePicker>
-                    </v-sheet>
-                </v-col>
-                <v-col sm="12" md="3">
-                    <v-sheet class="bg-[#073B3A] text-slate-200">
+                            class="modern-dp"
+                        ></VueDatePicker>
+                    </v-col>
+                    <v-col cols="12" sm="6" md="3">
                         <v-text-field
                             density="compact"
                             placeholder="Filter company name"
-                            bg-color="#212121"
+                            color="primary"
+                            bg-color="surface"
+                            variant="outlined"
                             v-model="companyNameFilter"
-                        >
-                        </v-text-field>
-                    </v-sheet>
-                </v-col>
-                <v-col sm="12" md="3">
-                    <v-sheet class="bg-[#073B3A]">
-                        <select
-                            class="w-full h-10 rounded-sm bg-[#212121] pl-2 text-slate-300"
-                            name="filterCategory"
+                            hide-details
+                            prepend-inner-icon="search"
+                        ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6" md="3">
+                        <v-select
+                            :items="categories"
+                            item-title="name"
+                            item-value="id"
+                            label="Choose Category Filter"
+                            density="compact"
                             v-model="filterCategoryId"
+                            color="primary"
+                            bg-color="surface"
+                            variant="outlined"
+                            hide-details
+                            clearable
+                        ></v-select>
+                    </v-col>
+                    <v-col cols="12" sm="6" md="3" class="text-right">
+                        <v-btn
+                            prepend-icon="add"
+                            color="primary"
+                            variant="elevated"
+                            elevation="2"
+                            @click="dialog = true"
+                            height="40"
+                            class="font-weight-bold"
                         >
-                            <option class="text-slate-500" :value="undefined">
-                                Choose Category Filter
-                            </option>
-                            <option
-                                v-for="category in categories"
-                                :value="category.id"
-                                v-bind:key="category.id"
-                            >
-                                {{ category.name }}
-                            </option>
-                        </select>
-                    </v-sheet>
-                </v-col>
-                <v-col sm="12" md="3">
-                    <v-btn
-                        class="float-right"
-                        prepend-icon="add"
-                        color="#DAFFEF"
-                        @click="dialog = true"
-                        min-height="40px"
-                    >
-                        <span class="text-black">Add</span>
-                    </v-btn>
-                </v-col>
-                <v-col sm="12" style="width: 100%">
-                    <VDataTable
-                        hover
-                        color="black"
-                        class="bg-[#073B3A] text-slate-200 text-xl"
-                        style="width: 100% !important; table-layout: fixed"
-                        v-if="transactions"
-                        :headers="transactionsHeaders"
-                        :items="filteredTransactions"
-                        height="59vh"
-                        :loading="loading"
-                    >
-                        <template v-slot:top>
-                            <v-dialog v-model="dialog" max-width="600px">
-                                <v-card class="bg-[#073B3A] text-slate-100 font-bold">
-                                    <v-card-title>
-                                        <span v-if="editingItem.date === undefined" class="text-h5"
-                                            >Add</span
-                                        >
-                                        <span v-else class="text-h5">Edit</span>
-                                    </v-card-title>
-                                    <v-card-text>
-                                        <v-container>
-                                            <v-row>
-                                                <v-col cols="12" sm="12" align-self="center">
-                                                    <label>Date</label>
-                                                    <VueDatePicker
-                                                        v-model="editingItem.date"
-                                                        label="Date"
-                                                        auto-apply
-                                                        dark
-                                                        :enable-time-picker="false"
-                                                        required
-                                                    >
-                                                    </VueDatePicker>
-                                                </v-col>
-                                                <v-col cols="12" sm="12">
-                                                    <v-text-field
-                                                        v-model="editingItem.nameOfPlace"
-                                                        label="Company name"
-                                                    ></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" sm="12">
-                                                    <v-text-field
-                                                        type="number"
-                                                        v-model="editingItem.amount"
-                                                        label="Amount (MKD)"
-                                                    ></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" sm="12">
-                                                    <label>Category</label>
-                                                    <select
-                                                        class="w-full h-9 p-2 rounded-sm bg-[#212121] text-slate-300"
-                                                        name="filterCategory"
-                                                        v-model="editingItem.category"
-                                                        v-if="editingItem.amount === undefined"
-                                                    >
-                                                        <option :value="undefined">
-                                                            Clear Choice
-                                                        </option>
-                                                        <option
-                                                            v-for="category in categories"
-                                                            :value="category.id"
-                                                            v-bind:key="category.id"
-                                                        >
-                                                            {{ category.name }}
-                                                        </option>
-                                                    </select>
-                                                    <select
-                                                        class="w-full h-9 p-2 rounded-sm bg-[#212121] text-slate-300"
-                                                        name="filterCategory"
-                                                        v-model="editingItem.category"
-                                                        v-else-if="editingItem.amount <= 0"
-                                                    >
-                                                        <option :value="undefined">
-                                                            Clear Choice
-                                                        </option>
-                                                        <option
-                                                            v-for="category in categories.filter(
-                                                                (cat) => cat.isExpense === 1
-                                                            )"
-                                                            :value="category.id"
-                                                            v-bind:key="category.id"
-                                                        >
-                                                            {{ category.name }}
-                                                        </option>
-                                                    </select>
-                                                    <select
-                                                        class="w-full h-9 p-2 rounded-sm bg-[#212121] text-slate-300"
-                                                        name="filterCategory"
-                                                        v-model="editingItem.category"
-                                                        v-else
-                                                    >
-                                                        <option :value="undefined">
-                                                            Clear Choice
-                                                        </option>
-                                                        <option
-                                                            v-for="category in categories.filter(
-                                                                (cat) => cat.isExpense === 0
-                                                            )"
-                                                            :value="category.id"
-                                                            v-bind:key="category.id"
-                                                        >
-                                                            {{ category.name }}
-                                                        </option>
-                                                    </select>
-                                                </v-col>
-                                                <v-col cols="12" sm="12">
-                                                    <v-checkbox
-                                                        color="success"
-                                                        v-model="addCategoryKeyword"
-                                                        label="Add category keyword"
-                                                    ></v-checkbox>
-                                                </v-col>
-                                                <v-col v-if="addCategoryKeyword" cols="12" sm="12">
-                                                    <v-text-field
-                                                        type="text"
-                                                        v-model="editingItem.categoryKeyword"
-                                                        label="Category Keyword"
-                                                    ></v-text-field>
-                                                </v-col>
-                                            </v-row>
-                                        </v-container>
-                                    </v-card-text>
+                            Add Transaction
+                        </v-btn>
+                    </v-col>
+                </v-row>
 
-                                    <v-card-actions>
-                                        <v-row class="w-full">
-                                            <v-col md="3">
-                                                <v-btn
-                                                    class="text-base float-left ml-2 mb-2"
-                                                    color="error"
-                                                    variant="text"
-                                                    @click="close"
-                                                >
-                                                    Cancel
-                                                </v-btn>
-                                            </v-col>
-                                            <v-col md="6"></v-col>
-                                            <v-col md="3">
-                                                <v-btn
-                                                    class="text-base float-right"
-                                                    color="success"
-                                                    variant="text"
-                                                    @click="save"
-                                                >
-                                                    Save
-                                                </v-btn>
-                                            </v-col>
-                                        </v-row>
-                                        <v-spacer></v-spacer>
-                                    </v-card-actions>
-                                </v-card>
-                            </v-dialog>
-                            <v-dialog v-model="dialogDelete" max-width="600px">
-                                <v-card class="bg-[#073B3A] text-slate-100">
-                                    <v-card-title class="text-h5"
-                                        >Are you sure you want to delete this item?
-                                    </v-card-title>
-                                    <v-card-actions>
-                                        <v-spacer></v-spacer>
-                                        <v-btn color="error" variant="text" @click="closeDelete"
-                                            >Cancel
-                                        </v-btn>
-                                        <v-btn
-                                            color="success"
-                                            variant="text"
-                                            @click="deleteItemConfirm"
-                                            >OK
-                                        </v-btn>
-                                        <v-spacer></v-spacer>
-                                    </v-card-actions>
-                                </v-card>
-                            </v-dialog>
-                        </template>
-                        <template v-slot:[`item.actions`]="{ item }">
-                            <v-icon
-                                color="#DAFFEF"
-                                class="me-2"
-                                size="small"
-                                @click="editItem(item)"
-                            >
-                                edit
-                            </v-icon>
-                            <v-icon color="red" size="small" @click="deleteItem(item)">
-                                delete
-                            </v-icon>
-                        </template>
-                    </VDataTable>
-                    <p v-else-if="errorMessage">{{ errorMessage }}</p>
-                    <p v-else>Loading..</p>
-                </v-col>
-            </v-row>
+                <!-- Table Section -->
+                <v-row>
+                    <v-col cols="12">
+                        <v-data-table
+                            hover
+                            density="compact"
+                            v-if="transactions"
+                            :headers="transactionsHeaders"
+                            :items="filteredTransactions"
+                            :loading="loading"
+                            class="elevation-0 bg-transparent rounded-lg"
+                        >
+                            <template v-slot:item.amount="{ item }">
+                                <span :class="(item.amount || 0) > 0 ? 'text-success font-weight-bold' : 'text-error font-weight-bold'">
+                                    {{ item.amount }}
+                                </span>
+                            </template>
+
+                            <template v-slot:top>
+                                <!-- Edit/Add Dialog -->
+                                <v-dialog v-model="dialog" max-width="600px">
+                                    <v-card color="surface" elevation="6" class="rounded-lg">
+                                        <v-card-title class="pa-4 border-b">
+                                            <span class="text-h5 font-weight-bold">{{ editingItem.id === undefined ? 'Add Transaction' : 'Edit Transaction' }}</span>
+                                        </v-card-title>
+                                        <v-card-text class="pa-6">
+                                            <v-container class="pa-0">
+                                                <v-row>
+                                                    <v-col cols="12" align-self="center">
+                                                        <label class="text-body-2 text-medium-emphasis mb-1 d-block">Date</label>
+                                                        <VueDatePicker
+                                                            v-model="editingItem.date"
+                                                            auto-apply
+                                                            :dark="theme.global.current.value.dark"
+                                                            :enable-time-picker="false"
+                                                            required
+                                                            class="modern-dp"
+                                                        ></VueDatePicker>
+                                                    </v-col>
+                                                    <v-col cols="12">
+                                                        <v-text-field
+                                                            v-model="editingItem.nameOfPlace"
+                                                            label="Company name"
+                                                            variant="outlined"
+                                                            color="primary"
+                                                            hide-details="auto"
+                                                        ></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12">
+                                                        <v-text-field
+                                                            type="number"
+                                                            v-model="editingItem.amount"
+                                                            label="Amount (MKD)"
+                                                            variant="outlined"
+                                                            color="primary"
+                                                            hide-details="auto"
+                                                        ></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12">
+                                                        <v-select
+                                                            v-model="editingItem.category"
+                                                            :items="
+                                                                editingItem.amount === undefined ? categories 
+                                                                : editingItem.amount <= 0 ? categories.filter(cat => cat.isExpense === 1)
+                                                                : categories.filter(cat => cat.isExpense === 0)
+                                                            "
+                                                            item-title="name"
+                                                            item-value="id"
+                                                            label="Category"
+                                                            variant="outlined"
+                                                            color="primary"
+                                                            hide-details="auto"
+                                                            clearable
+                                                        ></v-select>
+                                                    </v-col>
+                                                    <v-col cols="12" class="pb-0">
+                                                        <v-checkbox
+                                                            color="primary"
+                                                            v-model="addCategoryKeyword"
+                                                            label="Add category keyword"
+                                                            hide-details
+                                                            density="compact"
+                                                        ></v-checkbox>
+                                                    </v-col>
+                                                    <v-col v-if="addCategoryKeyword" cols="12">
+                                                        <v-text-field
+                                                            type="text"
+                                                            v-model="editingItem.categoryKeyword"
+                                                            label="Category Keyword"
+                                                            variant="outlined"
+                                                            color="primary"
+                                                            hide-details="auto"
+                                                        ></v-text-field>
+                                                    </v-col>
+                                                </v-row>
+                                            </v-container>
+                                        </v-card-text>
+
+                                        <v-card-actions class="pa-4 border-t bg-surface-light">
+                                            <v-btn
+                                                class="text-none font-weight-medium"
+                                                color="medium-emphasis"
+                                                variant="text"
+                                                @click="close"
+                                            >
+                                                Cancel
+                                            </v-btn>
+                                            <v-spacer></v-spacer>
+                                            <v-btn
+                                                class="text-none px-6 font-weight-bold"
+                                                color="primary"
+                                                variant="elevated"
+                                                @click="save"
+                                            >
+                                                Save
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-dialog>
+
+                                <!-- Delete Dialog -->
+                                <v-dialog v-model="dialogDelete" max-width="500px">
+                                    <v-card color="surface" elevation="6" class="rounded-lg text-center pa-6">
+                                        <v-icon size="64" color="error" class="mx-auto mb-4">warning</v-icon>
+                                        <v-card-title class="text-h6 font-weight-bold mb-2 pa-0" style="white-space: normal;">
+                                            Are you sure you want to delete this transaction?
+                                        </v-card-title>
+                                        <v-card-text class="text-body-2 text-medium-emphasis mb-6 pa-0">
+                                            This action cannot be undone.
+                                        </v-card-text>
+                                        <v-card-actions class="pa-0 justify-center">
+                                            <v-btn color="medium-emphasis" variant="text" class="text-none px-4" @click="closeDelete">
+                                                Cancel
+                                            </v-btn>
+                                            <v-btn color="error" variant="elevated" class="text-none px-6" @click="deleteItemConfirm">
+                                                Delete
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-dialog>
+                            </template>
+
+                            <template v-slot:[`item.actions`]="{ item }">
+                                <div class="d-flex align-center">
+                                    <v-btn icon variant="text" size="small" color="info" class="mr-2" @click="editItem(item)">
+                                        <v-icon>edit</v-icon>
+                                    </v-btn>
+                                    <v-btn icon variant="text" size="small" color="error" @click="deleteItem(item)">
+                                        <v-icon>delete</v-icon>
+                                    </v-btn>
+                                </div>
+                            </template>
+                        </v-data-table>
+                        
+                        <div v-else-if="errorMessage" class="text-center py-8 text-error">
+                            <v-icon size="48" class="mb-4">error_outline</v-icon>
+                            <p class="text-h6">{{ errorMessage }}</p>
+                        </div>
+                    </v-col>
+                </v-row>
+            </v-card>
         </v-container>
     </main>
 </template>
 
 <style scoped>
-h1,
-h2 {
-    text-align: center;
+/* Override default datepicker input to match vuetify outlined style height */
+:deep(.modern-dp .dp__input) {
+    height: 40px;
+    border-radius: 4px;
+    font-family: inherit;
+    background-color: rgb(var(--v-theme-surface)) !important;
+    border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+    color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
 }
-
-th,
-td {
-    padding: 10px;
+:deep(.modern-dp .dp__input:hover) {
+    border-color: rgba(var(--v-theme-on-surface), 0.87);
 }
-.v-data-table {
-    width: 100%;
-    table-layout: fixed;
+:deep(.modern-dp .dp__input_focus) {
+    border-color: rgb(var(--v-theme-primary));
+    outline: none;
 }
-
-.v-data-table :deep(table) {
-    width: 100%;
-    table-layout: fixed;
-}
-
-.v-data-table :deep(th),
-.v-data-table :deep(td) {
-    width: auto;
-    white-space: normal;
-    overflow-wrap: break-word;
+:deep(.modern-dp .dp__icon) {
+    color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
 }
 </style>

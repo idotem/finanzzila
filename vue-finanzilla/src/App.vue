@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { VAppBar, VBtn, VFooter, VIcon, VLayout, VMain } from 'vuetify/components';
+import { VApp, VAppBar, VBtn, VIcon, VLayout, VMain, VSpacer } from 'vuetify/components';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { useTheme } from 'vuetify';
 import NavigationBar from '@/navigation/NavigationBar.vue';
 
+const theme = useTheme();
 const drawer = ref(true); // Controls the visibility of the drawer
 const isMobile = ref(false); // Tracks if the screen size is mobile
 
@@ -29,28 +31,41 @@ onBeforeUnmount(() => {
 const toggleDrawer = () => {
     drawer.value = !drawer.value;
 };
+
+// Toggle Light/Dark mode
+const toggleTheme = () => {
+    theme.global.name.value = theme.global.current.value.dark ? 'customLightTheme' : 'customDarkTheme';
+};
 </script>
 
 <template>
-    <v-layout class="bg-app-gray-background" style="display: flex; flex-direction: column; min-height: 100vh">
-        <v-app-bar theme="white" color="#123030">
-            <v-btn icon @click="toggleDrawer" v-if="isMobile">
-                <v-icon>menu</v-icon>
-            </v-btn>
-            <img class="ml-4 w-12" src="/logo.svg" alt="No logo" />
-            <p class="text-slate-300 ml-10 text-xl font-bold">Finanzzila</p>
-        </v-app-bar>
+    <v-app>
+        <v-layout style="display: flex; flex-direction: column; min-height: 100vh">
+            <v-app-bar color="app-bar" class="border-b" elevation="1">
+                <v-btn icon @click="toggleDrawer" v-if="isMobile">
+                    <v-icon>menu</v-icon>
+                </v-btn>
+                <img class="ml-4 w-12" src="/logo.svg" alt="No logo" />
+                <p class="ml-4 text-xl font-bold tracking-tight text-primary">Finanzzila</p>
+                <v-spacer></v-spacer>
+                <v-btn icon @click="toggleTheme" class="mr-2">
+                    <v-icon>{{ theme.global.current.value.dark ? 'light_mode' : 'dark_mode' }}</v-icon>
+                </v-btn>
+            </v-app-bar>
 
-        <NavigationBar
-            :model-value="drawer"
-            :isMobile="isMobile"
-            @update:modelValue="drawer = $event"
-        />
+            <NavigationBar
+                :model-value="drawer"
+                :isMobile="isMobile"
+                @update:modelValue="drawer = $event"
+            />
 
-        <v-main class="d-flex align-center justify-center" style="flex: 1">
-            <RouterView></RouterView>
-        </v-main>
-    </v-layout>
+            <v-main class="d-flex justify-center bg-background" style="flex: 1">
+                <div class="w-full max-w-[1920px]">
+                    <RouterView></RouterView>
+                </div>
+            </v-main>
+        </v-layout>
+    </v-app>
 </template>
 
 <style scoped>

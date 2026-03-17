@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { VList, VListItem, VNavigationDrawer } from 'vuetify/components';
-import { defineEmits, defineProps } from 'vue';
+import { useTheme } from 'vuetify';
 
 // Props
 type NavigationBarProps = {
@@ -10,6 +10,7 @@ type NavigationBarProps = {
 
 const props = defineProps<NavigationBarProps>();
 const emit = defineEmits(['update:modelValue']);
+const theme = useTheme();
 
 // Function to handle navigation item clicks
 const handleNavigation = () => {
@@ -26,21 +27,21 @@ const handleNavigation = () => {
         :permanent="!props.isMobile"
         :model-value="props.modelValue"
         expand-on-hover
-        color="#123030"
+        color="surface"
         @update:model-value="(value) => emit('update:modelValue', value)"
     >
-        <v-list density="comfortable" nav color="#1ABC9C" bg-color="#123030">
+        <v-list density="comfortable" nav color="primary" bg-color="surface">
             <v-list-item prepend-icon="dashboard" to="/" @click="handleNavigation">
-                <p class="text-slate-300 text-xl">Dashboard</p>
+                <p class="text-xl" :class="theme.global.current.value.dark ? 'text-slate-300' : 'text-slate-700'">Dashboard</p>
             </v-list-item>
             <v-list-item prepend-icon="paid" to="/transactions" @click="handleNavigation">
-                <p class="text-slate-300 text-xl">Transactions</p>
+                <p class="text-xl" :class="theme.global.current.value.dark ? 'text-slate-300' : 'text-slate-700'">Transactions</p>
             </v-list-item>
             <v-list-item prepend-icon="settings" to="/configuration" @click="handleNavigation">
-                <p class="text-slate-300 text-xl">Config</p>
+                <p class="text-xl" :class="theme.global.current.value.dark ? 'text-slate-300' : 'text-slate-700'">Config</p>
             </v-list-item>
             <v-list-item prepend-icon="information" to="/about" @click="handleNavigation">
-                <p class="text-slate-300 text-xl">About</p>
+                <p class="text-xl" :class="theme.global.current.value.dark ? 'text-slate-300' : 'text-slate-700'">About</p>
             </v-list-item>
         </v-list>
     </v-navigation-drawer>

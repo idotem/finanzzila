@@ -10,9 +10,10 @@ import {
     Tooltip
 } from 'chart.js';
 import { VIcon } from 'vuetify/components';
+import { useTheme } from 'vuetify';
 import Transaction from '../model/Transaction';
 import type { TransactionCategory } from '../model/TransactionCategory';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Bar, Doughnut } from 'vue-chartjs';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { useRouter } from 'vue-router';
@@ -36,24 +37,6 @@ type TransactionChartProps = {
 };
 
 const props = defineProps<TransactionChartProps>();
-// const props = defineProps({
-//     transactionsProp: {
-//         type: Array as () => Transaction[],
-//         required: true
-//     },
-//     timePeriodProp: {
-//         type: String,
-//         required: true
-//     },
-//     chartTypeProp: {
-//         type: String as () => 'Bar' | 'Doughnut',
-//         required: true
-//     },
-//     dateFilterProp: {
-//         type: Array as () => Date[],
-//         required: true
-//     }
-// });
 
 const categories = ref<TransactionCategory[]>([]);
 const transactions = ref<Transaction[]>([]);
@@ -62,6 +45,10 @@ const categoriesForChart = ref<any[]>([]);
 const data = ref();
 
 const router = useRouter();
+const theme = useTheme();
+
+const chartTextColor = computed(() => theme.global.current.value.dark ? '#fff' : '#333');
+const chartGridColor = computed(() => theme.global.current.value.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)');
 
 watch(
     () => props,
@@ -76,8 +63,10 @@ watch(
 
 function clickedRotateAxis(): void {
     const axis = barChartOptions.value.indexAxis == 'x' ? 'y' : 'x';
-    barChartOptions.value = getBarChartOptions(axis);
+    rotateAxisLocal.value = axis;
 }
+
+const rotateAxisLocal = ref('x');
 
 interface GroupedTransactions {
     [category: string]: {
@@ -86,6 +75,7 @@ interface GroupedTransactions {
         totalAmount: number;
         transactions: Transaction[];
         percentFromTotal: string;
+        color: string;
     };
 }
 
@@ -119,6 +109,7 @@ function groupTransactions(tr: Transaction[], timePeriod: string) {
             const categoryName = transaction.category.name;
             const categoryIsExpense = transaction.category.isExpense;
             const categoryId = transaction.category.id;
+            const categoryColor = transaction.category.color;
             if (categoryIsExpense === 0) {
                 return acc;
             }
@@ -128,7 +119,8 @@ function groupTransactions(tr: Transaction[], timePeriod: string) {
                     categoryName: categoryName,
                     totalAmount: 0,
                     transactions: [],
-                    percentFromTotal: ''
+                    percentFromTotal: '',
+                    color: categoryColor || '#cccccc'
                 };
             }
             acc[categoryName].totalAmount += amount;
@@ -145,56 +137,22 @@ function groupTransactions(tr: Transaction[], timePeriod: string) {
     const categoriesLabelsForBarReduced = Object.values(groupedTransactions).map(
         (tr) => tr.percentFromTotal + '% ' + tr.categoryName
     );
+    const categoryColors = Object.values(groupedTransactions).map(tr => tr.color);
+    const categoryBackgroundColors = categoryColors.map(color => {
+        if (color && color.startsWith('#') && color.length === 7) {
+            return color + '80'; // Add 50% opacity
+        }
+        return color;
+    });
+
     data.value = {
         labels: categoriesLabelsForBarReduced,
         datasets: [
             {
                 label: 'Expenses',
                 fill: false,
-                backgroundColor: [
-                    'rgba(108, 52, 131, 0.5)', // #6C3483
-                    'rgba(130, 224, 170, 0.5)', // #82E0AA
-                    'rgba(231, 76, 60, 0.5)', // #E74C3C
-                    'rgba(169, 204, 227, 0.5)', // #A9CCE3
-                    'rgba(88, 214, 141, 0.5)', // #58D68D
-                    'rgba(248, 196, 113, 0.5)', // #F8C471
-                    'rgba(236, 112, 99, 0.5)', // #EC7063
-                    'rgba(69, 179, 157, 0.5)', // #45B39D
-                    'rgba(213, 219, 219, 0.5)', // #D5DBDB
-                    'rgba(255, 87, 51, 0.5)', // #FF5733
-                    'rgba(174, 198, 207, 0.5)', // #AEC6CF
-                    'rgba(125, 60, 152, 0.5)', // #7D3C98
-                    'rgba(249, 231, 159, 0.5)', // #F9E79F
-                    'rgba(46, 64, 83, 0.5)', // #2E4053
-                    'rgba(155, 89, 182, 0.5)', // #9B59B6
-                    'rgba(245, 176, 65, 0.5)', // #F5B041
-                    'rgba(250, 219, 216, 0.5)', // #FADBD8
-                    'rgba(26, 188, 156, 0.5)', // #1ABC9C
-                    'rgba(243, 156, 18, 0.5)', // #F39C12
-                    'rgba(165, 105, 189, 0.5)' // #A569BD
-                ],
-                borderColor: [
-                    'rgba(108, 52, 131)', // #6C3483
-                    'rgba(130, 224, 170)', // #82E0AA
-                    'rgba(231, 76, 60)', // #E74C3C
-                    'rgba(169, 204, 227)', // #A9CCE3
-                    'rgba(88, 214, 141)', // #58D68D
-                    'rgba(248, 196, 113)', // #F8C471
-                    'rgba(236, 112, 99)', // #EC7063
-                    'rgba(69, 179, 157)', // #45B39D
-                    'rgba(213, 219, 219)', // #D5DBDB
-                    'rgba(255, 87, 51)', // #FF5733
-                    'rgba(174, 198, 207)', // #AEC6CF
-                    'rgba(125, 60, 152)', // #7D3C98
-                    'rgba(249, 231, 159)', // #F9E79F
-                    'rgba(46, 64, 83)', // #2E4053
-                    'rgba(155, 89, 182)', // #9B59B6
-                    'rgba(245, 176, 65)', // #F5B041
-                    'rgba(250, 219, 216)', // #FADBD8
-                    'rgba(26, 188, 156)', // #1ABC9C
-                    'rgba(243, 156, 18)', // #F39C12
-                    'rgba(165, 105, 189)' // #A569BD
-                ],
+                backgroundColor: categoryBackgroundColors,
+                borderColor: categoryColors,
                 borderWidth: 2,
                 data: totalAmountsByCategory
             }
@@ -212,18 +170,18 @@ function getBarChartOptions(rotateAxis: string): any {
             y: {
                 beginAtZero: true,
                 ticks: {
-                    color: 'white'
+                    color: chartTextColor.value
                 },
                 grid: {
-                    color: 'black'
+                    color: chartGridColor.value
                 }
             },
             x: {
                 ticks: {
-                    color: 'white'
+                    color: chartTextColor.value
                 },
                 grid: {
-                    color: 'black'
+                    color: chartGridColor.value
                 }
             }
         },
@@ -232,18 +190,18 @@ function getBarChartOptions(rotateAxis: string): any {
         plugins: {
             legend: {
                 align: 'center',
-                position: 'top',
+                position: 'top' as const,
                 labels: {
-                    color: 'white',
+                    color: chartTextColor.value,
                     font: {
                         size: 16
                     }
                 }
             },
             datalabels: {
-                anchor: 'end',
-                align: 'end',
-                color: 'white',
+                anchor: 'end' as const,
+                align: 'end' as const,
+                color: chartTextColor.value,
                 offset: 6,
                 display: 'auto',
                 font: {
@@ -281,33 +239,40 @@ function getBarChartOptions(rotateAxis: string): any {
     };
 }
 
-const barChartOptions = ref<any>(getBarChartOptions('x'));
+const barChartOptions = computed(() => getBarChartOptions(rotateAxisLocal.value));
 
-// const barChartOptions: any =
-const doughtnutChartOptions: any = {
+const doughtnutChartOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
-    color: 'rgb(203 213 225)',
-    borderColor: 'black',
+    color: chartTextColor.value,
+    borderColor: chartGridColor.value,
     cutout: '40%',
     plugins: {
         legend: {
-            align: 'start',
-            color: 'white',
-            position: 'right',
+            align: 'start' as const,
+            color: chartTextColor.value,
+            position: 'right' as const,
             labels: {
-                color: 'white',
+                color: chartTextColor.value,
                 font: {
-                    size: 16
+                    size: 14
+                },
+                filter: function (item: any) {
+                    const text = item.text || '';
+                    const percentMatch = text.match(/^(\d+(\.\d+)?)%/);
+                    if (percentMatch) {
+                        return parseFloat(percentMatch[1]) >= 1;
+                    }
+                    return true;
                 }
             }
         },
         datalabels: {
-            anchor: 'center',
-            color: 'white',
+            anchor: 'center' as const,
+            color: chartTextColor.value,
             display: false,
             font: {
-                weight: 'bold'
+                weight: 'bold' as const
             }
         }
     },
@@ -329,29 +294,29 @@ const doughtnutChartOptions: any = {
             }
         });
     }
-};
+}));
 </script>
 <template>
-    <h2 class="text-center text-xl text-slate-200">
+    <h2 class="text-center text-xl" :class="theme.global.current.value.dark ? 'text-slate-200' : 'text-slate-800'">
         {{ props.chartTypeProp + ' - Averaged by ' + timePeriod }}
     </h2>
 
-    <div v-if="data && props.chartTypeProp == 'Bar'" style="height: 95%">
+    <div v-if="data && props.chartTypeProp == 'Bar'" style="position: relative; min-height: 400px; height: 400px; width: 100%;">
         <v-icon
-            color="#ffffff"
+            :color="theme.global.current.value.dark ? '#ffffff' : '#333333'"
             @click="() => clickedRotateAxis()"
             icon="refresh"
-            class="float-right mr-5"
+            style="position: absolute; top: 0; right: 0; z-index: 10;"
+            class="mr-5 hover:opacity-80 transition-opacity"
         ></v-icon>
         <Bar
             id="barChart"
             v-bind="data"
             :data="data"
             :options="barChartOptions"
-            class="text-slate-200"
         />
     </div>
-    <div v-if="data && props.chartTypeProp == 'Doughnut'" class="mt-4" style="height: 95%">
-        <Doughnut :data="data" :options="doughtnutChartOptions" class="text-slate-200" />
+    <div v-if="data && props.chartTypeProp == 'Doughnut'" class="mt-4" style="position: relative; min-height: 400px; height: 400px; width: 100%;">
+        <Doughnut :data="data" :options="doughtnutChartOptions" />
     </div>
 </template>

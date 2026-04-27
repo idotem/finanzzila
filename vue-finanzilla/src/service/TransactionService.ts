@@ -19,7 +19,7 @@ export default class TransactionService {
             (t: any) =>
                 new Transaction(
                     t.id,
-                    t.date,
+                    new Date(t.date),
                     t.nameOfPlace,
                     t.amount,
                     t.category
@@ -40,7 +40,7 @@ export default class TransactionService {
             (t: any) =>
                 new Transaction(
                     t.id,
-                    t.date,
+                    new Date(t.date),
                     t.nameOfPlace,
                     t.amount,
                     t.category

@@ -1,12 +1,24 @@
 # Finanzzila
 
-Finanzzila is a personal finance management application built with NestJS and VueJS. It helps users track their income and expenses, set budgets, and monitor their financial health.
+Finanzzila is a very simple and easy to use personal finance management application. It helps users track their income and expenses, set budgets, and monitor their financial health.
 
 ## Features
 
 - **Dashboard**: Overview of current balance and transactions
 - **Transactions**: Log and categorize income and expenses.
 - **Reports**: Visual charts and statistics to understand spending habits.(Grouping by categories)
+
+## How to Use
+
+Follow these easy steps to get started:
+
+1. **Upload your bank data:** Upload an `.xlsx` file containing an export of your bank transactions.
+2. **Review Common Categories:** Finanzzila comes pre-loaded with common categories (primarily for Macedonia). Feel free to delete any you don't need or add your own custom categories.
+3. **Map Uncategorized Transactions:** 
+   - Navigate to the **Transactions** view and filter by `NOT_MAPPED`.
+   - Start assigning categories to these transactions.
+   - For each transaction, add an identifying **keyword**.
+   - **Pro Tip:** Once you map a single transaction and add a keyword, all other transactions with the same or similar names are automatically mapped to that category, making the process incredibly fast!
 
 ## Tech Stack
 

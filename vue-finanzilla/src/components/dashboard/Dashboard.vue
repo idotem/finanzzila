@@ -168,6 +168,16 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
     needsTransactionsSum.value = needsSum;
     notWantsNorNeedsTranSum.value = notWantsNorNeeds;
 }
+
+function formatDate(date: Date | string | undefined | null): string {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+}
 </script>
 
 <template>
@@ -186,7 +196,7 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                         color="primary"
                         bg-color="surface"
                         label="Upload file with transactions"
-                        accept=".xlsx"
+                        accept=".xlsx,.xls"
                         variant="outlined"
                         hide-details
                         prepend-icon=""
@@ -300,9 +310,9 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                                 <div>
                                     <h3 class="text-h6 font-weight-bold mb-1">Transaction Summary</h3>
                                     <p class="text-body-2 text-medium-emphasis mb-0" v-if="transactions.length > 0">
-                                        {{ rangeDateFilter?.[0] ? rangeDateFilter[0].toISOString().split('T')[0] : transactions[transactions.length - 1]?.date }} 
+                                        {{ rangeDateFilter?.[0] ? formatDate(rangeDateFilter[0]) : formatDate(transactions[transactions.length - 1]?.date) }} 
                                         &nbsp;&mdash;&nbsp; 
-                                        {{ rangeDateFilter?.[1] ? rangeDateFilter[1].toISOString().split('T')[0] : transactions[0]?.date }}
+                                        {{ rangeDateFilter?.[1] ? formatDate(rangeDateFilter[1]) : formatDate(transactions[0]?.date) }}
                                     </p>
                                 </div>
                                 <div class="mt-4 mt-md-0 d-flex align-center">
@@ -349,13 +359,13 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
                                     <h4 class="text-subtitle-1 font-weight-bold mb-4 text-primary">Expenses Distribution</h4>
                                     <div class="d-flex justify-space-between align-center mb-3">
                                         <span class="text-body-1">Needs</span>
-                                        <span class="text-h6 font-weight-bold text-success">
+                                        <span class="text-h6 font-weight-bold text-warning">
                                             {{ convertNumberToCurrency(needsTransactionsSum, currentCurrency) }}
                                         </span>
                                     </div>
                                     <div class="d-flex justify-space-between align-center mb-3">
                                         <span class="text-body-1">Wants</span>
-                                        <span class="text-h6 font-weight-bold text-warning">
+                                        <span class="text-h6 font-weight-bold text-error">
                                             {{ convertNumberToCurrency(wantsTransactionsSum, currentCurrency) }}
                                         </span>
                                     </div>

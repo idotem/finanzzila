@@ -80,20 +80,20 @@ interface GroupedTransactions {
 }
 
 function groupTransactionsAverageDelimiter(
-    groupedTransactions: GroupedTransactions,
+    groupedTransactionsArray: any[],
     delimiterForWhichAverageIsReturned: number
 ): any {
-    return Object.values(groupedTransactions).map((tr) =>
+    return groupedTransactionsArray.map((tr) =>
         Math.round(Math.abs(tr.totalAmount) / delimiterForWhichAverageIsReturned)
     );
 }
 
 function groupAveragesByTimePeriod(
-    groupedTransactions: GroupedTransactions,
+    groupedTransactionsArray: any[],
     timePeriod: string
-): GroupedTransactions {
+): any[] {
     return groupTransactionsAverageDelimiter(
-        groupedTransactions,
+        groupedTransactionsArray,
         CommonCalculations.getDelimiterBasedOnTimePeriod(transactions.value, timePeriod)
     );
 }
@@ -132,12 +132,13 @@ function groupTransactions(tr: Transaction[], timePeriod: string) {
         },
         {}
     );
-    categoriesForChart.value = Object.values(groupedTransactions);
-    const totalAmountsByCategory = groupAveragesByTimePeriod(groupedTransactions, timePeriod);
-    const categoriesLabelsForBarReduced = Object.values(groupedTransactions).map(
+    const sortedGroupedTransactionsArray = Object.values(groupedTransactions).sort((a, b) => parseFloat(b.percentFromTotal) - parseFloat(a.percentFromTotal));
+    categoriesForChart.value = sortedGroupedTransactionsArray;
+    const totalAmountsByCategory = groupAveragesByTimePeriod(sortedGroupedTransactionsArray, timePeriod);
+    const categoriesLabelsForBarReduced = sortedGroupedTransactionsArray.map(
         (tr) => tr.percentFromTotal + '% ' + tr.categoryName
     );
-    const categoryColors = Object.values(groupedTransactions).map(tr => tr.color);
+    const categoryColors = sortedGroupedTransactionsArray.map(tr => tr.color);
     const categoryBackgroundColors = categoryColors.map(color => {
         if (color && color.startsWith('#') && color.length === 7) {
             return color + '80'; // Add 50% opacity

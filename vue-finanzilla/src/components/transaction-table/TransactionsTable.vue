@@ -129,6 +129,11 @@ const filteredTransactions = computed(() => {
     );
 });
 
+const totalAmount = computed(() => {
+    const sum = filteredTransactions.value.reduce((acc, item) => acc + (item.amount || 0), 0);
+    return Number(sum.toFixed(2));
+});
+
 watch(dialog, () => {
     if (!dialog.value) {
         editingItem.value = new TransactionDto(
@@ -242,6 +247,16 @@ function save() {
             });
     }
 }
+
+function formatDate(date: Date | string | undefined | null): string {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+}
 </script>
 
 <template>
@@ -308,6 +323,16 @@ function save() {
                     </v-col>
                 </v-row>
 
+                <!-- Summary Section -->
+                <v-row class="mb-1" v-if="transactions">
+                    <v-col cols="12" class="d-flex justify-end align-center pt-0 pb-2">
+                        <span class="text-subtitle-1 text-medium-emphasis mr-3">Total Amount Sum:</span>
+                        <span class="text-h5 font-weight-bold" :class="totalAmount > 0 ? 'text-success' : 'text-error'">
+                            {{ totalAmount }} <span class="text-subtitle-2 font-weight-regular ml-1">MKD</span>
+                        </span>
+                    </v-col>
+                </v-row>
+
                 <!-- Table Section -->
                 <v-row>
                     <v-col cols="12">
@@ -320,6 +345,12 @@ function save() {
                             :loading="loading"
                             class="elevation-0 bg-transparent rounded-lg"
                         >
+                            <template v-slot:item.date="{ item }">
+                                <span class="font-weight-medium text-medium-emphasis">
+                                    {{ formatDate(item.date) }}
+                                </span>
+                            </template>
+
                             <template v-slot:item.amount="{ item }">
                                 <span :class="(item.amount || 0) > 0 ? 'text-success font-weight-bold' : 'text-error font-weight-bold'">
                                     {{ item.amount }}

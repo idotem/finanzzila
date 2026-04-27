@@ -25,7 +25,7 @@ export class TransactionService {
         private readonly keywordService: KeywordService,
         @InjectRepository(Category)
         private readonly transactionCategoryRepository: Repository<Category>
-    ) {}
+    ) { }
 
     checkIfNameOfTransactionContainsGivenWord(
         nameOfTransactionPlace: string,
@@ -170,85 +170,96 @@ export class TransactionService {
         const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryIsExpense(1);
         const incomeKeywords: Keyword[] = await this.keywordService.findAllByCategoryIsExpense(0);
         const transactions: Transaction[] = [];
-        const workbook = new Workbook();
         console.log('Transaction population starting: ', file);
-        await workbook.xlsx.load(file.buffer).then(function () {
-            const worksheet = workbook.getWorksheet('Sheet1');
+
+        function checkIfNameOfTransactionContainsGivenWord(
+            nameOfTransactionPlace: string,
+            wordThatIsContained: string
+        ): boolean {
+            return nameOfTransactionPlace.includes(wordThatIsContained);
+        }
+
+        function getCategory(nameOfTransactionPlace: string, amountOfTransaction: number) {
+            if (amountOfTransaction === undefined || amountOfTransaction === null) {
+                console.log(
+                    'Ignored or invalid transaction with name: ',
+                    nameOfTransactionPlace,
+                    'and amount: ',
+                    amountOfTransaction
+                );
+                return undefined;
+            }
+            if (amountOfTransaction > 0) {
+                for (const iKeyword of incomeKeywords) {
+                    if (
+                        checkIfNameOfTransactionContainsGivenWord(
+                            nameOfTransactionPlace,
+                            iKeyword.value
+                        )
+                    ) {
+                        return iKeyword.category;
+                    }
+                }
+            }
+            for (const eKeyword of expenseKeywords) {
+                if (
+                    checkIfNameOfTransactionContainsGivenWord(
+                        nameOfTransactionPlace,
+                        eKeyword.value
+                    )
+                ) {
+                    return eKeyword.category;
+                }
+            }
+            return categories.find((c) => c.name.toLowerCase() === 'not_mapped');
+        }
+
+        const processRow = (dateVal: any, nameVal: any, amountVal: any) => {
+            const transDate: any = dateVal ? dateVal : '01.01.2024';
+            const transName: string = nameVal
+                ? nameVal.toString()
+                : 'TRANSACTION WITHOUT NAME';
+            const transAmount: number = parseInt(amountVal) ? parseInt(amountVal) : 0;
+            const category: Category = getCategory(transName, transAmount);
+            console.log('category for row: ', category);
+            console.log('transDate for row: ', transDate);
+            console.log('transName for row: ', transName);
+            console.log('transAmount for row: ', transAmount);
+            if (category) {
+                const transaction = new Transaction(
+                    transDate,
+                    transName,
+                    transAmount,
+                    category
+                );
+                transactions.push(transaction);
+            }
+        };
+
+        if (file.originalname.toLowerCase().endsWith('.xls')) {
+            const xlsxLib = require('xlsx');
+            const wb = xlsxLib.read(file.buffer, { type: 'buffer', cellDates: true });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = xlsxLib.utils.sheet_to_json(ws, { header: 1 });
+            rows.forEach((row: any[], index: number) => {
+                if (index === 0) return;
+                processRow(row[0], row[1], row[3]);
+            });
+        } else {
+            const workbook = new Workbook();
+            await workbook.xlsx.load(file.buffer as any);
+            const worksheet = workbook.worksheets[0];
             worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
                 if (rowNumber === 1) {
                     return;
                 }
-                const transDate: Date = row.values[1] ? row.values[1] : '01.01.2024';
-                const transName: string = row.values[2]
-                    ? row.values[2].toString()
-                    : 'TRANSACTION WITHOUT NAME';
-                const transAmount: number = parseInt(row.values[4]) ? parseInt(row.values[4]) : 0;
-                const category: Category = getCategory(transName, transAmount);
-                console.log('category for row: ', category);
-                console.log('transDate for row: ', transDate);
-                console.log('transName for row: ', transName);
-                console.log('transAmount for row: ', transAmount);
-                if (category) {
-                    const transaction = new Transaction(
-                        transDate,
-                        transName,
-                        transAmount,
-                        category
-                    );
-                    transactions.push(transaction);
-                }
+                processRow(row.values[1], row.values[2], row.values[4]);
             });
-
-            //function splitFuelTransaction(transactions: Transaction[], transDate: Date, transName: string,
-            //                             transAmount: number, category: TransactionCategory){
-            //}
-
-            function checkIfNameOfTransactionContainsGivenWord(
-                nameOfTransactionPlace: string,
-                wordThatIsContained: string
-            ): boolean {
-                return nameOfTransactionPlace.includes(wordThatIsContained);
-            }
-
-            function getCategory(nameOfTransactionPlace: string, amountOfTransaction: number) {
-                if (amountOfTransaction === undefined || amountOfTransaction === null) {
-                    console.log(
-                        'Ignored or invalid transaction with name: ',
-                        nameOfTransactionPlace,
-                        'and amount: ',
-                        amountOfTransaction
-                    );
-                    return undefined;
-                }
-                if (amountOfTransaction > 0) {
-                    for (const iKeyword of incomeKeywords) {
-                        if (
-                            checkIfNameOfTransactionContainsGivenWord(
-                                nameOfTransactionPlace,
-                                iKeyword.value
-                            )
-                        ) {
-                            return iKeyword.category;
-                        }
-                    }
-                }
-                for (const eKeyword of expenseKeywords) {
-                    if (
-                        checkIfNameOfTransactionContainsGivenWord(
-                            nameOfTransactionPlace,
-                            eKeyword.value
-                        )
-                    ) {
-                        return eKeyword.category;
-                    }
-                }
-                return categories.find((c) => c.name.toLowerCase() === 'not_mapped');
-            }
-        });
+        }
         console.log('SAVING TRANSACTIONS');
         await this.transactionRepository.save(transactions);
 
-        fs.writeFileSync(`${this.uploadedReportsFolderPath}/${file.originalname}`, file.buffer);
+        fs.writeFileSync(`${this.uploadedReportsFolderPath}/${file.originalname}`, file.buffer as any);
         return await this.findAllTransactionsFiltered(
             new TransactionFilterDto(undefined, undefined, undefined)
         );

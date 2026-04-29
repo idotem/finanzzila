@@ -24,6 +24,7 @@ import { onMounted, ref, watch, computed } from 'vue';
 import { Category } from '../model/Category';
 import CategoryDto from '../model/CategoryDto';
 import KeywordDto from '../model/KeywordDto';
+import { CategoryType } from '../model/CategoryType';
 
 const errorMessage = ref('');
 const categories = ref<Category[]>([]);
@@ -41,7 +42,7 @@ const filters = ref({
     name: '',
     keywords: '',
     isWants: null,
-    isExpense: null
+    type: null
 });
 
 const categoriesHeaders = [
@@ -68,7 +69,7 @@ const categoriesHeaders = [
     },
     {
         title: 'Type',
-        key: 'isExpense',
+        key: 'type',
         sortable: true,
         width: '15%',
         headerProps: { class: 'text-subtitle-1 font-weight-bold' }
@@ -95,7 +96,7 @@ const filteredCategories = computed(() => {
         )
             return false;
         if (filters.value.isWants !== null && item.isWants !== filters.value.isWants) return false;
-        if (filters.value.isExpense !== null && item.isExpense !== filters.value.isExpense)
+        if (filters.value.type !== null && item.type !== filters.value.type)
             return false;
         return true;
     });
@@ -257,13 +258,14 @@ function changeShowColorPicker(): void {
                     </v-col>
                     <v-col cols="12" sm="6" md="2">
                         <v-select
-                            v-model="filters.isExpense"
+                            v-model="filters.type"
                             label="Type"
                             density="compact"
                             :items="[
                                 { title: 'All', value: null },
-                                { title: 'Expense', value: 1 },
-                                { title: 'Income', value: 0 }
+                                { title: 'Expense', value: CategoryType.EXPENSE },
+                                { title: 'Income', value: CategoryType.INCOME },
+                                { title: 'Saving Account', value: CategoryType.SAVING_ACCOUNT }
                             ]"
                             color="primary"
                             variant="outlined"
@@ -331,8 +333,9 @@ function changeShowColorPicker(): void {
                                 <v-chip v-else size="small" color="info" variant="tonal">Needs</v-chip>
                             </template>
 
-                            <template v-slot:item.isExpense="{ item }">
-                                <v-chip v-if="item.isExpense === 1" size="small" color="error" variant="flat">Expense</v-chip>
+                            <template v-slot:item.type="{ item }">
+                                <v-chip v-if="item.type === CategoryType.EXPENSE" size="small" color="error" variant="flat">Expense</v-chip>
+                                <v-chip v-else-if="item.type === CategoryType.SAVING_ACCOUNT" size="small" color="purple" variant="flat">Saving Account</v-chip>
                                 <v-chip v-else size="small" color="success" variant="flat">Income</v-chip>
                             </template>
 
@@ -386,13 +389,14 @@ function changeShowColorPicker(): void {
 
                                                     <div class="mb-2">
                                                         <label class="text-body-2 font-weight-medium mb-1 d-block text-medium-emphasis">Transaction Type</label>
-                                                        <v-radio-group v-model="editingCategory.isExpense" inline hide-details>
-                                                            <v-radio :value="1" label="Expense" color="error"></v-radio>
-                                                            <v-radio :value="0" label="Income" color="success"></v-radio>
+                                                        <v-radio-group v-model="editingCategory.type" inline hide-details>
+                                                            <v-radio :value="CategoryType.EXPENSE" label="Expense" color="error"></v-radio>
+                                                            <v-radio :value="CategoryType.INCOME" label="Income" color="success"></v-radio>
+                                                            <v-radio :value="CategoryType.SAVING_ACCOUNT" label="Saving Account" color="purple"></v-radio>
                                                         </v-radio-group>
                                                     </div>
 
-                                                    <div v-if="editingCategory.isExpense === 1">
+                                                    <div v-if="editingCategory.type === CategoryType.EXPENSE">
                                                         <label class="text-body-2 font-weight-medium mb-1 d-block text-medium-emphasis">Necessity</label>
                                                         <v-radio-group v-model="editingCategory.isWants" inline hide-details>
                                                             <v-radio :value="null" label="Not specified" color="grey"></v-radio>

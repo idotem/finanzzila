@@ -3,6 +3,7 @@ import { Repository } from 'typeorm';
 import { Keyword } from './entities/keyword.entity';
 import { Injectable } from '@nestjs/common';
 import { Category } from 'src/transaction/entities/category.entity';
+import { CategoryType } from 'src/transaction/enums/category-type.enum';
 
 @Injectable()
 export class KeywordService {
@@ -23,12 +24,12 @@ export class KeywordService {
         return queryBuilder.getMany();
     }
 
-    async findAllByCategoryIsExpense(categoryIsExpense: number) {
+    async findAllByCategoryType(categoryType: CategoryType) {
         const queryBuilder = this.keywordRepository
             .createQueryBuilder('keyword')
             .innerJoinAndSelect('keyword.category', 'category');
-        queryBuilder.andWhere('category.isExpense = :categoryIsExpense', {
-            categoryIsExpense: categoryIsExpense
+        queryBuilder.andWhere('category.type = :categoryType', {
+            categoryType: categoryType
         });
         return queryBuilder.getMany();
     }

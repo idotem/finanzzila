@@ -29,6 +29,7 @@ import TransactionFilterDto from '../model/TransactionFilterDto';
 import TransactionDto from '../model/TransactionDto';
 import '../../assets/base.css';
 import LoadingSpinner from '@/utils/LoadingSpinner.vue';
+import { CategoryType } from '../model/CategoryType';
 
 type TransactionTableProps = {
     categoryId?: number | undefined;
@@ -196,29 +197,31 @@ function closeDelete() {
     deletingItem.value = Object.assign({}, {});
 }
 
-function validateRequest(itemToSave: any) {
+function validateRequest(itemToSave: any): boolean {
     if (!itemToSave.nameOfPlace || !itemToSave.category || !itemToSave.amount || !itemToSave.date) {
         alert('Required fields for transaction are not filled.');
-        return;
+        return false;
     }
+    const selectedCategoryType = categories.value.find(c => c.id === itemToSave.category)?.type;
     if (
-        itemToSave.amount > 0 &&
-        categories.value.find(c => c.id === itemToSave.category)?.isExpense === 0 &&
-        itemToSave.amount <= 0 &&
-        categories.value.find(c => c.id === itemToSave.category)?.isExpense === 1
+        (itemToSave.amount > 0 && selectedCategoryType === CategoryType.EXPENSE) ||
+        (itemToSave.amount <= 0 && selectedCategoryType === CategoryType.INCOME)
     ) {
-        alert('If amount is greater than 0, category MUST be Incomes and other way around');
+        alert('If amount is greater than 0, category MUST be Income, and if <= 0 it MUST be Expense. Saving Accounts can be either.');
+        return false;
     }
     if (!addCategoryKeyword.value) {
         editingItem.value.categoryKeyword = undefined;
     }
-    if (itemToSave.categoryKeyword === '') {
+    if (addCategoryKeyword.value && itemToSave.categoryKeyword === '') {
         alert('Category keyword can not be empty string');
+        return false;
     }
+    return true;
 }
 
 function save() {
-    validateRequest(editingItem.value);
+    if (!validateRequest(editingItem.value)) return;
     const itemToSave: TransactionDto = editingItem.value;
 
     loading.value = true;
@@ -400,11 +403,7 @@ function formatDate(date: Date | string | undefined | null): string {
                                                     <v-col cols="12">
                                                         <v-select
                                                             v-model="editingItem.category"
-                                                            :items="
-                                                                editingItem.amount === undefined ? categories 
-                                                                : editingItem.amount <= 0 ? categories.filter(cat => cat.isExpense === 1)
-                                                                : categories.filter(cat => cat.isExpense === 0)
-                                                            "
+                                                            :items="categories"
                                                             item-title="name"
                                                             item-value="id"
                                                             label="Category"

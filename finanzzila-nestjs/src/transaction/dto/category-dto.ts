@@ -1,4 +1,5 @@
 import { KeywordDto } from 'src/keyword/dto/keyword-dto';
+import { CategoryType } from '../enums/category-type.enum';
 
 export class CategoryDto {
     id: number;
@@ -6,7 +7,7 @@ export class CategoryDto {
     keywords: KeywordDto[];
     isWants: number;
     color: string;
-    isExpense: number;
+    type: CategoryType;
 
     constructor(
         id: number,
@@ -14,13 +15,13 @@ export class CategoryDto {
         keywords: KeywordDto[],
         isWants: number,
         color: string,
-        isExpense: number
+        type: CategoryType
     ) {
         this.id = id;
         this.name = name;
         this.keywords = keywords;
         this.isWants = isWants;
         this.color = color;
-        this.isExpense = isExpense;
+        this.type = type;
     }
 }

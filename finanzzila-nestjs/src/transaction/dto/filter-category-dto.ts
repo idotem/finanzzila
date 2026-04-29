@@ -1,11 +1,13 @@
+import { CategoryType } from '../enums/category-type.enum';
+
 export class CategoryFilterDto {
     name: string | undefined;
     isWants: number | undefined;
-    isExpense: number | undefined;
+    type: CategoryType | undefined;
 
-    constructor(name: string, isWants: number, isExpense: number) {
+    constructor(name: string, isWants: number, type: CategoryType) {
         this.name = name;
         this.isWants = isWants;
-        this.isExpense = isExpense;
+        this.type = type;
     }
 }

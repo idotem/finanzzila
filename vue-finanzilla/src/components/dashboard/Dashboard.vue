@@ -26,6 +26,7 @@ import type { TransactionCategory } from '../model/TransactionCategory';
 import CategoryService from '../../service/CategoryService';
 import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
 import CommonCalculations from '../common/CommonCalculations';
+import { CategoryType } from '../model/CategoryType';
 
 const theme = useTheme();
 
@@ -104,9 +105,12 @@ function calculateStats(transactions: Transaction[], timePeriod: string) {
     let incomeSum: number = 0;
     let expensesSum: number = 0;
     transactions.forEach((transaction) => {
-        if (transaction.category?.isExpense === 0 && transaction.amount > 0) {
+        if (transaction.category?.type === CategoryType.SAVING_ACCOUNT) {
+            return;
+        }
+        if (transaction.category?.type === CategoryType.INCOME && transaction.amount > 0) {
             incomeSum += transaction.amount;
-        } else {
+        } else if (transaction.category?.type === CategoryType.EXPENSE) {
             expensesSum += transaction.amount;
         }
     });
@@ -149,7 +153,7 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
     let needsSum: number = 0;
     let notWantsNorNeeds: number = 0;
     transactions.forEach((transaction) => {
-        if (transaction.category?.isExpense === 0) {
+        if (transaction.category?.type !== CategoryType.EXPENSE) {
             return;
         }
         switch (transaction.category.isWants) {

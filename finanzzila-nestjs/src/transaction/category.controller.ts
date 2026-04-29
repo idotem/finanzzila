@@ -22,7 +22,7 @@ export class CategoryController {
                     tc.keywords.map((k) => new KeywordDto(k.id, k.value)),
                     tc.isWants,
                     tc.color,
-                    tc.isExpense
+                    tc.type
                 )
         );
     }
@@ -38,7 +38,7 @@ export class CategoryController {
                     tc.keywords.map((k) => new KeywordDto(k.id, k.value)),
                     tc.isWants,
                     tc.color,
-                    tc.isExpense
+                    tc.type
                 )
         );
     }

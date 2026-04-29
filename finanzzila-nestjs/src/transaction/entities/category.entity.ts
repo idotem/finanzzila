@@ -1,4 +1,5 @@
 import { Keyword } from 'src/keyword/entities/keyword.entity';
+import { CategoryType } from '../enums/category-type.enum';
 import Transaction from './transaction.entity';
 import { Entity, Column, OneToMany, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
 
@@ -29,20 +30,20 @@ export class Category {
     @Column({ name: 'color', nullable: true })
     color: string;
 
-    @Column({ name: 'isExpense', nullable: false, default: 1 })
-    isExpense: number;
+    @Column({ name: 'type', nullable: false, default: CategoryType.EXPENSE })
+    type: CategoryType;
 
     constructor(
         name: string,
         keywords: Keyword[],
         isWants: number,
         color: string,
-        isExpense: number
+        type: CategoryType
     ) {
         this.name = name;
         this.keywords = keywords;
         this.isWants = isWants;
         this.color = color;
-        this.isExpense = isExpense;
+        this.type = type;
     }
 }

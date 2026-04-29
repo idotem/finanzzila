@@ -14,6 +14,7 @@ import { CreateCategoryDto } from './dto/create-category-dto';
 import { UpdateCategoryDto } from './dto/update-category-dto';
 import { KeywordDto } from 'src/keyword/dto/keyword-dto';
 import { CategoryFilterDto } from './dto/filter-category-dto';
+import { CategoryType } from './enums/category-type.enum';
 
 @Injectable()
 export class TransactionService {
@@ -42,20 +43,24 @@ export class TransactionService {
         const transactions: Transaction[] = await this.findAllTransactionsFiltered(
             new TransactionFilterDto(undefined, undefined, undefined)
         );
-        const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryIsExpense(1);
-        const incomeKeywords: Keyword[] = await this.keywordService.findAllByCategoryIsExpense(0);
+        const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.EXPENSE);
+        const incomeKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.INCOME);
+        const savingAccountKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.SAVING_ACCOUNT);
         let updatedTrCategory: boolean = false;
         for (const tr of transactions) {
             if (tr.manuallyOverried) {
                 continue;
             }
-            if (tr.amount > 0) {
-                updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(incomeKeywords, tr);
-            } else if (tr.amount <= 0) {
-                updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(
-                    expenseKeywords,
-                    tr
-                );
+            updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(savingAccountKeywords, tr);
+            if (!updatedTrCategory) {
+                if (tr.amount > 0) {
+                    updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(incomeKeywords, tr);
+                } else if (tr.amount <= 0) {
+                    updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(
+                        expenseKeywords,
+                        tr
+                    );
+                }
             }
             if (!updatedTrCategory) {
                 tr.category = notMappedCategory;
@@ -83,7 +88,7 @@ export class TransactionService {
             createTransactionDto.amount,
             category
         );
-        this.checkIfCategoryTypeMatchesTransactionAmount(category, transaction);
+        this.checkIfCategoryTypeMatchesTransactionAmount(category, createTransactionDto.amount);
         const savedTransaction = await this.transactionRepository.save(transaction);
         if (
             createTransactionDto.categoryKeyword !== null &&
@@ -107,7 +112,7 @@ export class TransactionService {
             throw new NotFoundException(`Transaction with ${id} was not found`);
         }
         const category: Category = await this.findCategoryById(updateTransactionDto.category);
-        this.checkIfCategoryTypeMatchesTransactionAmount(category, transaction);
+        this.checkIfCategoryTypeMatchesTransactionAmount(category, updateTransactionDto.amount);
         const oldTransactionCategoryName: string = transaction.category.name;
         if (oldTransactionCategoryName !== category.name) {
             transaction.manuallyOverried = true;
@@ -126,18 +131,19 @@ export class TransactionService {
         return savedTransaction;
     }
 
-    checkIfCategoryTypeMatchesTransactionAmount(category: Category, transaction: Transaction) {
+    checkIfCategoryTypeMatchesTransactionAmount(category: Category, amount: number) {
+        if (category.type === CategoryType.SAVING_ACCOUNT) {
+            return; // SavingAccount can be both positive and negative
+        }
         if (
-            (category.isExpense && transaction.amount > 0) ||
-            (!category.isExpense && transaction.amount < 0)
+            (category.type === CategoryType.EXPENSE && amount > 0) ||
+            (category.type === CategoryType.INCOME && amount < 0)
         ) {
             console.log(
                 'Category: ',
                 category.id,
-                ' is expense and tran: ',
-                transaction.nameOfPlace,
-                ' has amount: ',
-                transaction.amount
+                ' is expense/income and tran amount: ',
+                amount
             );
             throw new BadRequestException(
                 'Category can not be of type expense/income while amount is greater/lesser than 0.'
@@ -167,8 +173,9 @@ export class TransactionService {
     async populateTransactions(file: Express.Multer.File): Promise<Transaction[]> {
         //await this.checkIfFileAlreadyUploaded(file.originalname);
         const categories = await this.findAllCategories();
-        const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryIsExpense(1);
-        const incomeKeywords: Keyword[] = await this.keywordService.findAllByCategoryIsExpense(0);
+        const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.EXPENSE);
+        const incomeKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.INCOME);
+        const savingAccountKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.SAVING_ACCOUNT);
         const transactions: Transaction[] = [];
         console.log('Transaction population starting: ', file);
 
@@ -188,6 +195,16 @@ export class TransactionService {
                     amountOfTransaction
                 );
                 return undefined;
+            }
+            for (const sKeyword of savingAccountKeywords) {
+                if (
+                    checkIfNameOfTransactionContainsGivenWord(
+                        nameOfTransactionPlace,
+                        sKeyword.value
+                    )
+                ) {
+                    return sKeyword.category;
+                }
             }
             if (amountOfTransaction > 0) {
                 for (const iKeyword of incomeKeywords) {
@@ -211,7 +228,7 @@ export class TransactionService {
                     return eKeyword.category;
                 }
             }
-            return categories.find((c) => c.name.toLowerCase() === 'not_mapped');
+            return categories.find((c: Category) => c.name.toLowerCase() === 'not_mapped');
         }
 
         const processRow = (dateVal: any, nameVal: any, amountVal: any) => {
@@ -328,9 +345,9 @@ export class TransactionService {
                 isWants: filter.isWants
             });
         }
-        if (filter.isExpense) {
-            queryBuilder.andWhere('category.isExpense = :isExpense', {
-                isExpense: filter.isExpense
+        if (filter.type !== undefined && filter.type !== null) {
+            queryBuilder.andWhere('category.type = :type', {
+                type: filter.type
             });
         }
         return queryBuilder.getMany();
@@ -345,7 +362,7 @@ export class TransactionService {
             keywords,
             createTransactionCategoryDto.isWants,
             createTransactionCategoryDto.color,
-            createTransactionCategoryDto.isExpense
+            createTransactionCategoryDto.type
         );
         const savedCategory = await this.transactionCategoryRepository.save(category);
         await this.updateTransactionsAfterCategoriesGetUpdated();
@@ -377,7 +394,7 @@ export class TransactionService {
             category.keywords = keywords;
             category.isWants = updateTransactionCategoryDto.isWants;
             category.color = updateTransactionCategoryDto.color;
-            category.isExpense = updateTransactionCategoryDto.isExpense;
+            category.type = updateTransactionCategoryDto.type;
             const cat = await this.transactionCategoryRepository.save(category);
             if (shouldUpdateTrans) {
                 await this.updateTransactionsAfterCategoriesGetUpdated();

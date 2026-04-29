@@ -18,6 +18,7 @@ import { Bar, Doughnut } from 'vue-chartjs';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { useRouter } from 'vue-router';
 import CommonCalculations from '../common/CommonCalculations';
+import { CategoryType } from '../model/CategoryType';
 
 ChartJS.register(
     Title,
@@ -100,17 +101,17 @@ function groupAveragesByTimePeriod(
 
 function groupTransactions(tr: Transaction[], timePeriod: string) {
     const totalAmount = tr.reduce(
-        (acc, curr) => (curr.category.isExpense === 1 ? acc + Math.abs(curr.amount) : acc),
+        (acc, curr) => (curr.category.type === CategoryType.EXPENSE ? acc + Math.abs(curr.amount) : acc),
         0
     );
     const groupedTransactions: GroupedTransactions = tr.reduce(
         (acc: GroupedTransactions, transaction) => {
             const { amount } = transaction;
             const categoryName = transaction.category.name;
-            const categoryIsExpense = transaction.category.isExpense;
+            const categoryType = transaction.category.type;
             const categoryId = transaction.category.id;
             const categoryColor = transaction.category.color;
-            if (categoryIsExpense === 0) {
+            if (categoryType !== CategoryType.EXPENSE) {
                 return acc;
             }
             if (!acc[categoryName]) {

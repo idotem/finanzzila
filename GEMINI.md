@@ -10,9 +10,9 @@ Finanzzila is a personal finance management application built with NestJS and Vu
 
 ## Tech Stack
 
-- **Framework**: VueJS
+- **Framework**: VueJS 3 (Composition API) with Tailwind CSS
 - **Language**: TypeScript
-- **Backend**: NestJS
+- **Backend**: NestJS (with sqlite)
 - **Charts**: ChartJS
 
 
@@ -22,6 +22,4 @@ Finanzzila is a personal finance management application built with NestJS and Vu
 
 ## Things to come
 
-- **Visual improvements**: Lose the current view of the app. It is too simple and not at all modern. Add theme colors, modern fonts, better spacing, better cards, etc. 
-- **Accounts**: User can have multiple accounts and transfering money between them should not be counted as an expense or income.
 - **Bulk edit functionality in transactions and categories**: User can edit multiple transactions and categories at once.

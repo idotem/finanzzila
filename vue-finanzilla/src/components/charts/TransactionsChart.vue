@@ -299,10 +299,6 @@ const doughtnutChartOptions = computed(() => ({
 }));
 </script>
 <template>
-    <h2 class="text-center text-xl" :class="theme.global.current.value.dark ? 'text-slate-200' : 'text-slate-800'">
-        {{ props.chartTypeProp + ' - Averaged by ' + timePeriod }}
-    </h2>
-
     <div v-if="data && props.chartTypeProp == 'Bar'" style="position: relative; min-height: 400px; height: 400px; width: 100%;">
         <v-icon
             :color="theme.global.current.value.dark ? '#ffffff' : '#333333'"

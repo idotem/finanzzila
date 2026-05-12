@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import {
     VBtn,
     VCard,
@@ -27,6 +27,7 @@ import CategoryService from '../../service/CategoryService';
 import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
 import CommonCalculations from '../common/CommonCalculations';
 import { CategoryType } from '../model/CategoryType';
+import router from '@/router';
 
 const theme = useTheme();
 
@@ -182,6 +183,58 @@ function formatDate(date: Date | string | undefined | null): string {
     const year = d.getFullYear();
     return `${day}.${month}.${year}`;
 }
+
+const savingAccountsData = computed(() => {
+    const map = new Map<number, { id: number; name: string; color: string; totalAmount: number }>();
+
+    categories.value.forEach((c) => {
+        if (c.type === CategoryType.SAVING_ACCOUNT) {
+            map.set(c.id, {
+                id: c.id,
+                name: c.name,
+                color: c.color || '#4CAF50',
+                totalAmount: 0
+            });
+        }
+    });
+
+    transactions.value.forEach((t) => {
+        if (t.category?.type === CategoryType.SAVING_ACCOUNT) {
+            if (!map.has(t.category.id)) {
+                map.set(t.category.id, {
+                    id: t.category.id,
+                    name: t.category.name,
+                    color: t.category.color || '#4CAF50',
+                    totalAmount: 0
+                });
+            }
+            const item = map.get(t.category.id)!;
+            item.totalAmount += t.amount;
+        }
+    });
+
+    return Array.from(map.values()).map((item) => ({
+        ...item,
+        totalAmount: Math.abs(item.totalAmount)
+    }));
+});
+
+const totalSavingAccountsSum = computed(() => {
+    return savingAccountsData.value.reduce((sum, item) => sum + item.totalAmount, 0);
+});
+
+function goToCategory(id: number): void {
+    const dateFilterFrom: any = rangeDateFilter.value?.[0] ?? undefined;
+    const dateFilterTo: any = rangeDateFilter.value?.[1] ?? undefined;
+    router.push({
+        name: 'Transactions',
+        query: {
+            categoryId: id,
+            dateFilterFrom,
+            dateFilterTo
+        }
+    });
+}
 </script>
 
 <template>
@@ -260,9 +313,10 @@ function formatDate(date: Date | string | undefined | null): string {
                 </v-col>
             </v-row>
 
-            <!-- Charts Section (Bar Chart Full Width) -->
-            <v-row class="mb-6">
-                <v-col cols="12">
+            <!-- Top Row: Bar Chart AND Saving Accounts -->
+            <v-row class="mb-6 align-stretch" align="stretch">
+                <!-- Bar Chart Column -->
+                <v-col cols="12" lg="12" class="d-flex bar-col">
                     <v-card color="surface" elevation="2" class="rounded-xl w-100 d-flex flex-column">
                         <v-card-text class="flex-grow-1 d-flex flex-column align-center justify-center pa-6" style="min-height: 400px;">
                             <div v-if="transactions && transactions.length !== 0" class="w-100 h-100 pb-4" style="min-height: 350px;">
@@ -277,6 +331,51 @@ function formatDate(date: Date | string | undefined | null): string {
                                 <v-icon size="64" color="grey-lighten-1" class="mb-4">bar_chart</v-icon>
                                 <h2 class="text-h6 font-weight-medium" v-if="errorMessage">{{ errorMessage }}</h2>
                                 <h2 class="text-h6 font-weight-medium" v-else>No transactions available</h2>
+                            </div>
+                        </v-card-text>
+                    </v-card>
+                </v-col>
+
+                <!-- Saving Accounts Column -->
+                <v-col cols="12" lg="12" class="d-flex saving-col">
+                    <v-card color="surface" elevation="2" class="rounded-xl w-100 d-flex flex-column overflow-hidden">
+                        <v-card-text class="pa-5 w-100 d-flex flex-column">
+                            <div class="d-flex align-left mb-4">
+                                <h3 class="text-h6 font-weight-bold mb-0">Saving Accounts</h3>
+                            </div>
+
+                            <div v-if="savingAccountsData.length > 0" class="d-flex flex-column gap-3 w-100">
+                                <div
+                                    v-for="account in savingAccountsData"
+                                    :key="account.id"
+                                    class="cursor-pointer d-flex justify-space-between align-center py-2 px-3 rounded-lg saving-account-item transition-all"
+                                    @click="goToCategory(account.id)"
+                                >
+                                    <div class="d-flex align-center overflow-hidden mr-2">
+                                        <span
+                                            class="rounded-circle d-inline-block flex-shrink-0 mr-3"
+                                            :style="{ width: '12px', height: '12px', backgroundColor: account.color }"
+                                        ></span>
+                                        <span class="text-body-1 font-weight-medium text-truncate">{{ account.name }}</span>
+                                    </div>
+                                    <span class="text-subtitle-1 font-weight-bold text-primary flex-shrink-0">
+                                        {{ convertNumberToCurrency(account.totalAmount, currentCurrency) }}
+                                    </span>
+                                </div>
+
+                                <v-divider class="my-2 border-theme-divider"></v-divider>
+
+                                <div class="d-flex justify-space-between align-center px-2 pt-1">
+                                    <span class="text-body-2 font-weight-bold text-medium-emphasis uppercase tracking-wider">Total</span>
+                                    <span class="text-h6 font-weight-bold text-success">
+                                        {{ convertNumberToCurrency(totalSavingAccountsSum, currentCurrency) }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div v-else class="text-center py-6 text-medium-emphasis">
+                                <v-icon size="40" color="grey-lighten-2" class="mb-2">account_balance</v-icon>
+                                <p class="text-body-2 mb-0">No saving accounts available</p>
                             </div>
                         </v-card-text>
                     </v-card>
@@ -298,7 +397,6 @@ function formatDate(date: Date | string | undefined | null): string {
                                 />
                             </div>
                             <div v-else class="text-center d-flex flex-column align-center text-medium-emphasis">
-                                <v-icon size="64" color="grey-lighten-1" class="mb-4">pie_chart</v-icon>
                                 <h2 class="text-h6 font-weight-medium" v-if="errorMessage">{{ errorMessage }}</h2>
                                 <h2 class="text-h6 font-weight-medium" v-else>No transactions available</h2>
                             </div>
@@ -415,13 +513,30 @@ function formatDate(date: Date | string | undefined | null): string {
 }
 
 @media (min-width: 1280px) {
+    .bar-col {
+        flex: 0 0 75% !important;
+        max-width: 75% !important;
+    }
+    .saving-col {
+        flex: 0 0 25% !important;
+        max-width: 25% !important;
+    }
     .pie-col {
-        flex: 0 0 70% !important;
-        max-width: 70% !important;
+        flex: 0 0 65% !important;
+        max-width: 65% !important;
     }
     .stats-col {
-        flex: 0 0 30% !important;
-        max-width: 30% !important;
+        flex: 0 0 35% !important;
+        max-width: 35% !important;
     }
+}
+
+.saving-account-item {
+    background-color: rgba(var(--v-theme-on-surface), 0.03);
+}
+
+.saving-account-item:hover {
+    background-color: rgba(var(--v-theme-on-surface), 0.08);
+    transform: translateX(4px);
 }
 </style>

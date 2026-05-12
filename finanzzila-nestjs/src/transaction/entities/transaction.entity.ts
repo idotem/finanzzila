@@ -11,12 +11,18 @@ export default class Transaction {
         transformer: {
             to: (value: any) => {
                 if (!value) return value;
-                let date = value instanceof Date ? value : new Date(value);
-                if (isNaN(date.getTime()) && typeof value === 'string' && value.includes('.')) {
+                let date: Date;
+                if (value instanceof Date) {
+                    date = value;
+                } else if (typeof value === 'string' && value.includes('.')) {
                     const parts = value.split('.');
                     if (parts.length === 3) {
                         date = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+                    } else {
+                        date = new Date(value);
                     }
+                } else {
+                    date = new Date(value);
                 }
                 if (isNaN(date.getTime())) return value;
                 const year = date.getFullYear();

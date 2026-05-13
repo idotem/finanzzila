@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Workbook } from 'exceljs';
 import Transaction from './entities/transaction.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { TransactionFilterDto } from './dto/filter-transaction.dto';
 import * as fs from 'fs';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -320,6 +320,31 @@ export class TransactionService {
                 }
             });
         });
+    }
+
+    async bulkDeleteTransactions(ids: number[]): Promise<void> {
+        if (!ids || ids.length === 0) return;
+        await this.transactionRepository.delete({ id: In(ids) } as any);
+        console.log('Successfully bulk deleted transactions with ids: ', ids);
+    }
+
+    async bulkUpdateCategory(ids: number[], categoryId: number): Promise<Transaction[]> {
+        if (!ids || ids.length === 0) return [];
+        const category: Category = await this.findCategoryById(categoryId);
+        const transactions: Transaction[] = await this.transactionRepository.find({
+            where: { id: In(ids) } as any,
+            relations: ['category']
+        });
+
+        for (const transaction of transactions) {
+            this.checkIfCategoryTypeMatchesTransactionAmount(category, transaction.amount);
+            if (transaction.category?.name !== category.name) {
+                transaction.manuallyOverried = true;
+            }
+            transaction.category = category;
+        }
+
+        return await this.transactionRepository.save(transactions);
     }
 
     //CATEGORY:

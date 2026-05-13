@@ -219,6 +219,11 @@ const savingAccountsData = computed(() => {
     }));
 });
 
+const currentBalance = computed(() => {
+    const sum = transactions.value.reduce((acc, item) => acc + (item.amount || 0), 0);
+    return Number(sum.toFixed(2));
+});
+
 const totalSavingAccountsSum = computed(() => {
     return savingAccountsData.value.reduce((sum, item) => sum + item.totalAmount, 0);
 });
@@ -340,9 +345,19 @@ function goToCategory(id: number): void {
                 <v-col cols="12" lg="12" class="d-flex saving-col">
                     <v-card color="surface" elevation="2" class="rounded-xl w-100 d-flex flex-column overflow-hidden">
                         <v-card-text class="pa-5 w-100 d-flex flex-column">
-                            <div class="d-flex align-left mb-4">
-                                <h3 class="text-h6 font-weight-bold mb-0">Saving Accounts</h3>
+                            <div class="d-flex align-left mb-3">
+                                <h3 class="text-h6 font-weight-bold mb-0">Current Account Balance</h3>
                             </div>
+
+                            <!-- Current Balance Display -->
+                            <div class="mb-4 pa-3 rounded-lg bg-gradient-to-r from-primary/10 via-surface to-surface border border-theme-divider">
+                                <div class="text-caption text-medium-emphasis uppercase tracking-wider mb-1">Total Available</div>
+                                <div class="text-h5 font-weight-bold" :class="currentBalance >= 0 ? 'text-success' : 'text-error'">
+                                    {{ convertNumberToCurrency(currentBalance, currentCurrency) }}
+                                </div>
+                            </div>
+
+                            <div class="text-subtitle-2 font-weight-bold text-medium-emphasis mb-3">Saving Accounts</div>
 
                             <div v-if="savingAccountsData.length > 0" class="d-flex flex-column gap-3 w-100">
                                 <div

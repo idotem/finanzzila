@@ -12,6 +12,7 @@ import {
     VContainer,
     VDataTable,
     VDialog,
+    VExpandTransition,
     VIcon,
     VOverlay,
     VProgressCircular,
@@ -57,6 +58,9 @@ const editingItem = ref<TransactionDto>(
     new TransactionDto(undefined, undefined, undefined, undefined, undefined, undefined)
 );
 const deletingItem = ref<any>({});
+const selectedTransactions = ref<Transaction[]>([]);
+const bulkSelectedCategoryId = ref<number | undefined>(undefined);
+const dialogBulkDelete = ref<boolean>(false);
 
 const transactionsHeaders = [
     {
@@ -260,6 +264,58 @@ function formatDate(date: Date | string | undefined | null): string {
     const year = d.getFullYear();
     return `${day}.${month}.${year}`;
 }
+function confirmBulkUpdateCategory() {
+    if (!bulkSelectedCategoryId.value) return;
+    const selectedCategoryType = categories.value.find(c => c.id === bulkSelectedCategoryId.value)?.type;
+    
+    for (const item of selectedTransactions.value) {
+        if (
+            ((item.amount || 0) > 0 && selectedCategoryType === CategoryType.EXPENSE) ||
+            ((item.amount || 0) <= 0 && selectedCategoryType === CategoryType.INCOME)
+        ) {
+            alert('Bulk update failed: One or more selected transactions have amounts incompatible with the chosen category type. Positive amounts require Income categories, while negative/zero amounts require Expense categories.');
+            return;
+        }
+    }
+
+    loading.value = true;
+    const ids = selectedTransactions.value.map(t => t.id).filter((id): id is number => id !== undefined);
+    TransactionService.bulkUpdateCategory(ids, bulkSelectedCategoryId.value)
+        .then(() => {
+            fetchTransactions();
+            selectedTransactions.value = [];
+            bulkSelectedCategoryId.value = undefined;
+            loading.value = false;
+        })
+        .catch((err) => {
+            loading.value = false;
+            alert(`Unsuccessful bulk category update: ${err}`);
+        });
+}
+
+function confirmBulkDelete() {
+    dialogBulkDelete.value = true;
+}
+
+function closeBulkDelete() {
+    dialogBulkDelete.value = false;
+}
+
+function bulkDeleteConfirm() {
+    loading.value = true;
+    const ids = selectedTransactions.value.map(t => t.id).filter((id): id is number => id !== undefined);
+    TransactionService.bulkDelete(ids)
+        .then(() => {
+            fetchTransactions();
+            selectedTransactions.value = [];
+            loading.value = false;
+        })
+        .catch((err) => {
+            loading.value = false;
+            alert(`Unsuccessful bulk delete: ${err}`);
+        });
+    closeBulkDelete();
+}
 </script>
 
 <template>
@@ -339,9 +395,69 @@ function formatDate(date: Date | string | undefined | null): string {
                 <!-- Table Section -->
                 <v-row>
                     <v-col cols="12">
+                        <!-- Bulk Actions Toolbar -->
+                        <v-expand-transition>
+                            <div v-if="selectedTransactions.length > 0" class="mb-4">
+                                <v-card
+                                    color="surface"
+                                    elevation="4"
+                                    class="rounded-lg border pa-4 bg-gradient-to-r from-primary/10 via-surface to-surface"
+                                >
+                                    <div class="d-flex align-center flex-wrap gap-4">
+                                        <div class="d-flex align-center">
+                                            <v-icon color="primary" class="mr-2">check_circle</v-icon>
+                                            <span class="text-subtitle-1 font-weight-bold text-primary">
+                                                {{ selectedTransactions.length }} item{{ selectedTransactions.length > 1 ? 's' : '' }} selected
+                                            </span>
+                                        </div>
+                                        <v-spacer></v-spacer>
+                                        <div class="d-flex align-center flex-wrap gap-3">
+                                            <v-select
+                                                :items="categories"
+                                                item-title="name"
+                                                item-value="id"
+                                                label="Update category to..."
+                                                density="compact"
+                                                v-model="bulkSelectedCategoryId"
+                                                variant="outlined"
+                                                hide-details
+                                                bg-color="surface"
+                                                color="primary"
+                                                style="min-width: 220px;"
+                                            ></v-select>
+                                            <v-btn
+                                                color="primary"
+                                                variant="elevated"
+                                                :disabled="!bulkSelectedCategoryId"
+                                                @click="confirmBulkUpdateCategory"
+                                                class="text-none font-weight-bold px-4"
+                                                height="40"
+                                                prepend-icon="category"
+                                            >
+                                                Update Category
+                                            </v-btn>
+                                            <v-btn
+                                                color="error"
+                                                variant="tonal"
+                                                @click="confirmBulkDelete"
+                                                class="text-none font-weight-bold px-4"
+                                                height="40"
+                                                prepend-icon="delete_sweep"
+                                            >
+                                                Delete Selected
+                                            </v-btn>
+                                        </div>
+                                    </div>
+                                </v-card>
+                            </div>
+                        </v-expand-transition>
+
                         <v-data-table
                             hover
                             density="compact"
+                            show-select
+                            return-object
+                            v-model="selectedTransactions"
                             v-if="transactions"
                             :headers="transactionsHeaders"
                             :items="filteredTransactions"
@@ -474,6 +590,27 @@ function formatDate(date: Date | string | undefined | null): string {
                                             </v-btn>
                                             <v-btn color="error" variant="elevated" class="text-none px-6" @click="deleteItemConfirm">
                                                 Delete
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-dialog>
+
+                                <!-- Bulk Delete Dialog -->
+                                <v-dialog v-model="dialogBulkDelete" max-width="500px">
+                                    <v-card color="surface" elevation="6" class="rounded-lg text-center pa-6">
+                                        <v-icon size="64" color="error" class="mx-auto mb-4">delete_sweep</v-icon>
+                                        <v-card-title class="text-h6 font-weight-bold mb-2 pa-0" style="white-space: normal;">
+                                            Delete {{ selectedTransactions.length }} selected transactions?
+                                        </v-card-title>
+                                        <v-card-text class="text-body-2 text-medium-emphasis mb-6 pa-0">
+                                            This action will permanently remove the selected transactions and cannot be undone.
+                                        </v-card-text>
+                                        <v-card-actions class="pa-0 justify-center">
+                                            <v-btn color="medium-emphasis" variant="text" class="text-none px-4" @click="closeBulkDelete">
+                                                Cancel
+                                            </v-btn>
+                                            <v-btn color="error" variant="elevated" class="text-none px-6" @click="bulkDeleteConfirm">
+                                                Delete All Selected
                                             </v-btn>
                                         </v-card-actions>
                                     </v-card>

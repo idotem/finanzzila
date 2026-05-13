@@ -67,4 +67,18 @@ export default class TransactionService {
     static async findById(id: number): Promise<AxiosResponse> {
         return await axiosInstance.get(`transactions/${id}`);
     }
+
+    static async bulkDelete(ids: number[]): Promise<AxiosResponse> {
+        return await axiosInstance.post(`transactions/bulk-delete`, { ids });
+    }
+
+    static async bulkUpdateCategory(
+        ids: number[],
+        categoryId: number
+    ): Promise<AxiosResponse> {
+        return await axiosInstance.post(`transactions/bulk-update-category`, {
+            ids,
+            categoryId
+        });
+    }
 }

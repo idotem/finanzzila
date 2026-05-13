@@ -44,6 +44,19 @@ export class TransactionController {
         return this.transactionService.createTransaction(createTransactionDto);
     }
 
+    @Post('bulk-delete')
+    bulkDelete(@Body('ids') ids: number[]): Promise<void> {
+        return this.transactionService.bulkDeleteTransactions(ids);
+    }
+
+    @Post('bulk-update-category')
+    bulkUpdateCategory(
+        @Body('ids') ids: number[],
+        @Body('categoryId') categoryId: number
+    ): Promise<Transaction[]> {
+        return this.transactionService.bulkUpdateCategory(ids, categoryId);
+    }
+
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.transactionService.findTransactionById(+id);

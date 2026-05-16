@@ -61,6 +61,7 @@ const deletingItem = ref<any>({});
 const selectedTransactions = ref<Transaction[]>([]);
 const bulkSelectedCategoryId = ref<number | undefined>(undefined);
 const dialogBulkDelete = ref<boolean>(false);
+const dialogDeleteAll = ref<boolean>(false);
 
 const transactionsHeaders = [
     {
@@ -316,6 +317,29 @@ function bulkDeleteConfirm() {
         });
     closeBulkDelete();
 }
+
+function openDeleteAll() {
+    dialogDeleteAll.value = true;
+}
+
+function closeDeleteAll() {
+    dialogDeleteAll.value = false;
+}
+
+function deleteAllConfirm() {
+    loading.value = true;
+    TransactionService.deleteAll()
+        .then(() => {
+            fetchTransactions();
+            selectedTransactions.value = [];
+            loading.value = false;
+        })
+        .catch((err) => {
+            loading.value = false;
+            alert(`Unsuccessful delete all: ${err}`);
+        });
+    closeDeleteAll();
+}
 </script>
 
 <template>
@@ -367,7 +391,7 @@ function bulkDeleteConfirm() {
                             clearable
                         ></v-select>
                     </v-col>
-                    <v-col cols="12" sm="6" md="3" class="text-right">
+                    <v-col cols="12" sm="6" md="3" class="text-right d-flex justify-end gap-2">
                         <v-btn
                             prepend-icon="add"
                             color="primary"
@@ -378,6 +402,17 @@ function bulkDeleteConfirm() {
                             class="font-weight-bold"
                         >
                             Add Transaction
+                        </v-btn>
+                        <v-btn
+                            prepend-icon="delete_forever"
+                            color="error"
+                            variant="elevated"
+                            elevation="2"
+                            @click="openDeleteAll"
+                            height="40"
+                            class="font-weight-bold"
+                        >
+                            Delete All
                         </v-btn>
                     </v-col>
                 </v-row>
@@ -611,6 +646,27 @@ function bulkDeleteConfirm() {
                                             </v-btn>
                                             <v-btn color="error" variant="elevated" class="text-none px-6" @click="bulkDeleteConfirm">
                                                 Delete All Selected
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-dialog>
+
+                                <!-- Delete All Dialog -->
+                                <v-dialog v-model="dialogDeleteAll" max-width="500px">
+                                    <v-card color="surface" elevation="6" class="rounded-lg text-center pa-6">
+                                        <v-icon size="64" color="error" class="mx-auto mb-4">delete_forever</v-icon>
+                                        <v-card-title class="text-h6 font-weight-bold mb-2 pa-0" style="white-space: normal;">
+                                            Delete ALL transactions?
+                                        </v-card-title>
+                                        <v-card-text class="text-body-2 text-medium-emphasis mb-6 pa-0">
+                                            This will permanently remove <strong>every</strong> transaction and cannot be undone.
+                                        </v-card-text>
+                                        <v-card-actions class="pa-0 justify-center">
+                                            <v-btn color="medium-emphasis" variant="text" class="text-none px-4" @click="closeDeleteAll">
+                                                Cancel
+                                            </v-btn>
+                                            <v-btn color="error" variant="elevated" class="text-none px-6" @click="deleteAllConfirm">
+                                                Delete Everything
                                             </v-btn>
                                         </v-card-actions>
                                     </v-card>

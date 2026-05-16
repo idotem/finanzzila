@@ -170,7 +170,7 @@ export class TransactionService {
     //     }
     // }
 
-    async populateTransactions(file: Express.Multer.File): Promise<Transaction[]> {
+    async populateTransactions(file: Express.Multer.File, bank: string = 'KOMERCIJALNA BANKA'): Promise<Transaction[]> {
         //await this.checkIfFileAlreadyUploaded(file.originalname);
         const categories = await this.findAllCategories();
         const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.EXPENSE);
@@ -253,25 +253,87 @@ export class TransactionService {
             }
         };
 
-        if (file.originalname.toLowerCase().endsWith('.xls')) {
-            const xlsxLib = require('xlsx');
-            const wb = xlsxLib.read(file.buffer, { type: 'buffer', cellDates: true });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            const rows = xlsxLib.utils.sheet_to_json(ws, { header: 1 });
-            rows.forEach((row: any[], index: number) => {
-                if (index === 0) return;
-                processRow(row[0], row[1], row[3]);
-            });
-        } else {
-            const workbook = new Workbook();
-            await workbook.xlsx.load(file.buffer as any);
-            const worksheet = workbook.worksheets[0];
-            worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
-                if (rowNumber === 1) {
-                    return;
+        if (bank === 'NLB BANKA') {
+            // Helper: parse a raw cell value to a JS number, handling both numeric and string formats.
+            const parseAmount = (val: any): number => {
+                if (val === undefined || val === null || val === '') return 0;
+                if (typeof val === 'number') return val;
+                // Handle European number format: "19.725,00" → 19725
+                const cleaned = String(val).replace(/\./g, '').replace(',', '.');
+                return parseFloat(cleaned) || 0;
+            };
+
+            if (file.originalname.toLowerCase().endsWith('.xls')) {
+                const xlsxLib = require('xlsx');
+                const wb = xlsxLib.read(file.buffer, { type: 'buffer', cellDates: true });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const rows = xlsxLib.utils.sheet_to_json(ws, { header: 1 });
+                for (let i = 27; i < rows.length; i++) {
+                    const row: any[] = rows[i] as any[];
+                    if (!row) continue;
+                    const dateVal = row[4];
+                    const nameVal = row[5];
+                    const expenseRaw = row[15];
+                    const incomeRaw = row[17];
+
+                    if (dateVal) {
+                        const expenseNum = parseAmount(expenseRaw);
+                        const incomeNum = parseAmount(incomeRaw);
+                        let amountVal = 0;
+                        if (expenseNum !== 0) {
+                            amountVal = -expenseNum;
+                        } else if (incomeNum !== 0) {
+                            amountVal = incomeNum;
+                        }
+                        processRow(dateVal, nameVal, amountVal);
+                    }
                 }
-                processRow(row.values[1], row.values[2], row.values[4]);
-            });
+            } else {
+                const workbook = new Workbook();
+                await workbook.xlsx.load(file.buffer as any);
+                const worksheet = workbook.worksheets[0];
+                worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+                    if (rowNumber < 28) return;
+
+                    const dateVal = row.values[5];
+                    const nameVal = row.values[6];
+                    const expenseRaw = row.values[16];
+                    const incomeRaw = row.values[18];
+
+                    if (dateVal) {
+                        const expenseNum = parseAmount(expenseRaw);
+                        const incomeNum = parseAmount(incomeRaw);
+                        let amountVal = 0;
+                        if (expenseNum !== 0) {
+                            amountVal = -expenseNum;
+                        } else if (incomeNum !== 0) {
+                            amountVal = incomeNum;
+                        }
+                        processRow(dateVal, nameVal, amountVal);
+                    }
+                });
+            }
+        } else {
+            if (file.originalname.toLowerCase().endsWith('.xls')) {
+                const xlsxLib = require('xlsx');
+                const wb = xlsxLib.read(file.buffer, { type: 'buffer', cellDates: true });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const rows = xlsxLib.utils.sheet_to_json(ws, { header: 1 });
+                rows.forEach((row: any[], index: number) => {
+                    if (index === 0) return;
+                    processRow(row[0], row[1], row[3]);
+                });
+            } else {
+                const workbook = new Workbook();
+                await workbook.xlsx.load(file.buffer as any);
+                const worksheet = workbook.worksheets[0];
+                worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+                    if (rowNumber === 1) {
+                        return;
+                    }
+                    processRow(row.values[1], row.values[2], row.values[4]);
+                });
+            }
         }
         console.log('SAVING TRANSACTIONS');
         await this.transactionRepository.save(transactions);
@@ -326,6 +388,11 @@ export class TransactionService {
         if (!ids || ids.length === 0) return;
         await this.transactionRepository.delete({ id: In(ids) } as any);
         console.log('Successfully bulk deleted transactions with ids: ', ids);
+    }
+
+    async deleteAllTransactions(): Promise<void> {
+        await this.transactionRepository.clear();
+        console.log('Successfully deleted all transactions');
     }
 
     async bulkUpdateCategory(ids: number[], categoryId: number): Promise<Transaction[]> {

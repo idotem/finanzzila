@@ -22,4 +22,4 @@ Finanzzila is a personal finance management application built with NestJS and Vu
 
 ## Things to come
 
-- **Bulk edit functionality in transactions and categories**: User can edit multiple transactions and categories at once.
+- **Ability to import transactions from multiple different bank statements**: Before uploading and importing transactions from a new bank statement, the user should be offered a choice to choose a BANK from the list of supported banks. Currently only one bank is supported, so we want to keep that functionality as KOMERCIJALNA BANKA and add another bank NLB Banka. This should be done by opening a dialog and offering the user a choice to choose a bank. After that the same import logic is used as before. And in the BE we should differentiate the transaction parsing based on the bank. 

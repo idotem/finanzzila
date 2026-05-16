@@ -28,9 +28,10 @@ export default class TransactionService {
         return transactions;
     }
 
-    static async uploadFileTransactions(file: File): Promise<Transaction[]> {
+    static async uploadFileTransactions(file: File, bank: string): Promise<Transaction[]> {
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('bank', bank);
         const res = await axiosInstance.post('transactions/upload', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
@@ -80,5 +81,9 @@ export default class TransactionService {
             ids,
             categoryId
         });
+    }
+
+    static async deleteAll(): Promise<AxiosResponse> {
+        return await axiosInstance.delete(`transactions/delete-all`);
     }
 }

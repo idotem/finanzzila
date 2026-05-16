@@ -24,9 +24,9 @@ export class TransactionController {
 
     @Post('upload')
     @UseInterceptors(FileInterceptor('file'))
-    uploadFile(@UploadedFile() file: Express.Multer.File): Promise<Transaction[]> {
+    uploadFile(@UploadedFile() file: Express.Multer.File, @Body('bank') bank: string): Promise<Transaction[]> {
         console.log(file);
-        return this.transactionService.populateTransactions(file);
+        return this.transactionService.populateTransactions(file, bank);
     }
 
     @Get()
@@ -65,6 +65,11 @@ export class TransactionController {
     @Put(':id')
     update(@Param('id') id: string, @Body() updateTransactionDto: UpdateTransactionDto) {
         return this.transactionService.updateTransaction(+id, updateTransactionDto);
+    }
+
+    @Delete('delete-all')
+    deleteAll(): Promise<void> {
+        return this.transactionService.deleteAllTransactions();
     }
 
     @Delete(':id')

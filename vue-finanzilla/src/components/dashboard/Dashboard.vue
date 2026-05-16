@@ -13,7 +13,11 @@ import {
     VProgressCircular,
     VRow,
     VSelect,
-    VDivider
+    VDivider,
+    VDialog,
+    VCardTitle,
+    VCardActions,
+    VSpacer
 } from 'vuetify/components';
 import { useTheme } from 'vuetify';
 import VueDatePicker from '@vuepic/vue-datepicker';
@@ -28,6 +32,7 @@ import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
 import CommonCalculations from '../common/CommonCalculations';
 import { CategoryType } from '../model/CategoryType';
 import router from '@/router';
+import axiosInstance from '@/config/axios/axios';
 
 const theme = useTheme();
 
@@ -49,16 +54,29 @@ const currentCurrency = ref<string>('MKD');
 const wantsTransactionsSum = ref<number>();
 const needsTransactionsSum = ref<number>();
 const notWantsNorNeedsTranSum = ref<number>();
+const banks = ref<string[]>([]);
+const selectedBank = ref<string>('KOMERCIJALNA BANKA');
+const showImportDialog = ref<boolean>(false);
 
 onMounted(async () => {
     try {
         await fetchCategories();
         await fetchTransactions();
+        await fetchBanks();
     } catch (error) {
         errorMessage.value = 'Error fetching data';
         console.error('Error fetching data:', error);
     }
 });
+
+const fetchBanks = async () => {
+    try {
+        const res = await axiosInstance.get('/banks');
+        banks.value = res.data;
+    } catch (error) {
+        console.error('Error fetching banks:', error);
+    }
+};
 
 const fetchTransactions = async () => {
     const filter: TransactionFilterDto = new TransactionFilterDto(
@@ -128,13 +146,14 @@ async function uploadFile() {
     isLoading.value = true;
     if (files.value && files.value.length > 0) {
         try {
-            await TransactionService.uploadFileTransactions(files.value[0]).then(
+            await TransactionService.uploadFileTransactions(files.value[0], selectedBank.value).then(
                 (tr: Transaction[]) => {
                     transactions.value = tr;
                     calculateStats(tr, timePeriod.value);
                     calculateWantsAndNeeds(tr);
                     files.value = undefined;
                     isLoading.value = false;
+                    showImportDialog.value = false;
                 }
             );
         } catch (error) {
@@ -252,44 +271,16 @@ function goToCategory(id: number): void {
             <!-- Filter Section -->
             <v-row class="mb-6" align="center">
                 <v-col cols="12" sm="5" md="4" lg="3">
-                    <v-file-input
-                        v-model="files"
-                        density="compact"
-                        color="primary"
-                        bg-color="surface"
-                        label="Upload file with transactions"
-                        accept=".xlsx,.xls"
-                        variant="outlined"
-                        hide-details
-                        prepend-icon=""
-                        prepend-inner-icon="attach_file"
-                    >
-                        <template v-slot:selection="{ fileNames }">
-                            <template v-for="(fileName, index) in fileNames" :key="fileName">
-                                <v-chip
-                                    v-if="index < 1"
-                                    color="primary"
-                                    size="small"
-                                    label
-                                    class="font-weight-bold"
-                                >
-                                    {{ fileName }}
-                                </v-chip>
-                            </template>
-                        </template>
-                    </v-file-input>
-                </v-col>
-                <v-col cols="12" sm="3" md="2" lg="2">
                     <v-btn
-                        v-if="files?.length"
                         color="primary"
                         variant="elevated"
                         elevation="2"
                         class="text-none font-weight-bold w-100"
                         height="40"
-                        @click="uploadFile"
+                        prepend-icon="cloud_upload"
+                        @click="showImportDialog = true"
                     >
-                        Upload
+                        Import Transactions
                     </v-btn>
                 </v-col>
                 <v-spacer class="hidden-sm-and-down"></v-spacer>
@@ -499,6 +490,77 @@ function goToCategory(id: number): void {
                 </v-col>
             </v-row>
         </v-container>
+
+        <!-- Import Transactions Dialog -->
+        <v-dialog v-model="showImportDialog" max-width="500px">
+            <v-card class="rounded-xl">
+                <v-card-title class="text-h6 font-weight-bold pa-5 pb-2">
+                    Import Transactions
+                </v-card-title>
+                <v-card-text class="pa-5 pt-0">
+                    <v-select
+                        v-model="selectedBank"
+                        :items="banks"
+                        label="Select Bank"
+                        variant="outlined"
+                        color="primary"
+                        bg-color="surface"
+                        density="comfortable"
+                        class="mb-4 mt-2"
+                        hide-details
+                    ></v-select>
+
+                    <v-file-input
+                        v-model="files"
+                        density="comfortable"
+                        color="primary"
+                        bg-color="surface"
+                        label="Upload bank statement"
+                        accept=".xlsx,.xls"
+                        variant="outlined"
+                        hide-details
+                        prepend-icon=""
+                        prepend-inner-icon="attach_file"
+                    >
+                        <template v-slot:selection="{ fileNames }">
+                            <template v-for="(fileName, index) in fileNames" :key="fileName">
+                                <v-chip
+                                    v-if="index < 1"
+                                    color="primary"
+                                    size="small"
+                                    label
+                                    class="font-weight-bold"
+                                >
+                                    {{ fileName }}
+                                </v-chip>
+                            </template>
+                        </template>
+                    </v-file-input>
+                </v-card-text>
+                <v-divider></v-divider>
+                <v-card-actions class="pa-4">
+                    <v-spacer></v-spacer>
+                    <v-btn
+                        color="medium-emphasis"
+                        variant="text"
+                        class="text-none font-weight-medium mr-2"
+                        @click="showImportDialog = false"
+                    >
+                        Cancel
+                    </v-btn>
+                    <v-btn
+                        color="primary"
+                        variant="elevated"
+                        class="text-none font-weight-bold px-4"
+                        :disabled="!files || files.length === 0"
+                        :loading="isLoading"
+                        @click="uploadFile"
+                    >
+                        Upload
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </main>
 </template>
 

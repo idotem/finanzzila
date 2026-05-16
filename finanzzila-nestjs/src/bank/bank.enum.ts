@@ -1,0 +1,4 @@
+export enum Bank {
+    KOMERCIJALNA_BANKA = 'KOMERCIJALNA BANKA',
+    NLB_BANKA = 'NLB BANKA'
+}

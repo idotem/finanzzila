@@ -7,6 +7,7 @@ import Transaction from './transaction/entities/transaction.entity';
 import { Keyword } from './keyword/entities/keyword.entity';
 import { Category } from './transaction/entities/category.entity';
 import { KeywordModule } from './keyword/keyword.module';
+import { BankModule } from './bank/bank.module';
 
 @Module({
     imports: [
@@ -19,7 +20,8 @@ import { KeywordModule } from './keyword/keyword.module';
             logging: true
         }),
         TransactionModule,
-        KeywordModule
+        KeywordModule,
+        BankModule
     ],
     controllers: [AppController],
     providers: [AppService]

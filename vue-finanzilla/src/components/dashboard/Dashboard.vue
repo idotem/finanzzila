@@ -8,7 +8,6 @@ import {
     VCol,
     VContainer,
     VFileInput,
-    VHover,
     VOverlay,
     VProgressCircular,
     VRow,
@@ -33,6 +32,27 @@ import CommonCalculations from '../common/CommonCalculations';
 import { CategoryType } from '../model/CategoryType';
 import router from '@/router';
 import axiosInstance from '@/config/axios/axios';
+import BudgetPlanner from './BudgetPlanner.vue';
+import SavedBudgetsList from './SavedBudgetsList.vue';
+
+const rawMonthStr = ref<string>(new Date().toISOString().substring(0, 7));
+
+const maxMonthStr = computed(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    return d.toISOString().substring(0, 7);
+});
+
+const selectedBudgetMonth = computed({
+    get: () => rawMonthStr.value,
+    set: (val: string) => {
+        if (val > maxMonthStr.value) {
+            rawMonthStr.value = maxMonthStr.value;
+        } else {
+            rawMonthStr.value = val;
+        }
+    }
+});
 
 const theme = useTheme();
 
@@ -57,6 +77,7 @@ const notWantsNorNeedsTranSum = ref<number>();
 const banks = ref<string[]>([]);
 const selectedBank = ref<string>('KOMERCIJALNA BANKA');
 const showImportDialog = ref<boolean>(false);
+const savedBudgetsListRef = ref<InstanceType<typeof SavedBudgetsList> | null>(null);
 
 onMounted(async () => {
     try {
@@ -259,6 +280,8 @@ function goToCategory(id: number): void {
         }
     });
 }
+
+
 </script>
 
 <template>
@@ -379,7 +402,7 @@ function goToCategory(id: number): void {
                                 </div>
                             </div>
 
-                            <div v-else class="text-center py-6 text-medium-emphasis">
+                            <div class="text-center py-6 text-medium-emphasis">
                                 <v-icon size="40" color="grey-lighten-2" class="mb-2">account_balance</v-icon>
                                 <p class="text-body-2 mb-0">No saving accounts available</p>
                             </div>
@@ -487,6 +510,29 @@ function goToCategory(id: number): void {
                             </v-row>
                         </v-card-text>
                     </v-card>
+                </v-col>
+            </v-row>
+
+            <!-- Budget Section: Planner (70%) + Saved List (30%) -->
+            <v-row class="mb-6 align-stretch" align="stretch">
+                <v-col cols="12" sm="8" class="d-flex budget-planner-col">
+                    <BudgetPlanner
+                        :transactions="transactions"
+                        :categories="categories"
+                        :currentCurrency="currentCurrency"
+                        :isLoading="isLoading"
+                        @update:isLoading="(v: boolean) => isLoading = v"
+                        @budget-saved="savedBudgetsListRef?.refresh()"
+                        v-model:selectedBudgetMonth="selectedBudgetMonth"
+                    />
+                </v-col>
+                <v-col cols="12" sm="4" class="d-flex saved-budgets-col">
+                    <SavedBudgetsList
+                        ref="savedBudgetsListRef"
+                        :transactions="transactions"
+                        :categories="categories"
+                        :currentCurrency="currentCurrency"
+                    />
                 </v-col>
             </v-row>
         </v-container>

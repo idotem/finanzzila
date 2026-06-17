@@ -15,6 +15,8 @@ import { UpdateCategoryDto } from './dto/update-category-dto';
 import { KeywordDto } from 'src/keyword/dto/keyword-dto';
 import { CategoryFilterDto } from './dto/filter-category-dto';
 import { CategoryType } from './enums/category-type.enum';
+import { Budget } from './entities/budget.entity';
+import { CreateBudgetDto } from './dto/create-budget.dto';
 
 @Injectable()
 export class TransactionService {
@@ -25,7 +27,9 @@ export class TransactionService {
         private readonly transactionRepository: Repository<Transaction>,
         private readonly keywordService: KeywordService,
         @InjectRepository(Category)
-        private readonly transactionCategoryRepository: Repository<Category>
+        private readonly transactionCategoryRepository: Repository<Category>,
+        @InjectRepository(Budget)
+        private readonly budgetRepository: Repository<Budget>
     ) { }
 
     checkIfNameOfTransactionContainsGivenWord(
@@ -540,5 +544,50 @@ export class TransactionService {
         const savedKeyword = await this.transactionCategoryRepository.save(category);
         await this.updateTransactionsAfterCategoriesGetUpdated();
         return savedKeyword;
+    }
+
+    // BUDGETS:
+
+    async findBudgetsByMonth(month: string): Promise<Budget[]> {
+        return await this.budgetRepository.find({
+            where: { month },
+            relations: ['category']
+        });
+    }
+
+    async findAllBudgets(): Promise<Budget[]> {
+        return await this.budgetRepository.find({
+            relations: ['category'],
+            order: { month: 'DESC' }
+        });
+    }
+
+    async saveBudgets(createBudgetDtos: CreateBudgetDto[]): Promise<Budget[]> {
+        const savedBudgets: Budget[] = [];
+        for (const dto of createBudgetDtos) {
+            const category = await this.findCategoryById(dto.categoryId);
+            let budget = await this.budgetRepository.findOne({
+                where: { month: dto.month, category: { id: dto.categoryId } }
+            });
+            if (budget) {
+                budget.amount = dto.amount;
+            } else {
+                budget = new Budget(dto.month, dto.amount, category);
+            }
+            savedBudgets.push(await this.budgetRepository.save(budget));
+        }
+        return savedBudgets;
+    }
+
+    async deleteBudget(id: number): Promise<void> {
+        await this.budgetRepository.delete(id);
+    }
+
+    async deleteBudgetsByMonth(month: string): Promise<void> {
+        await this.budgetRepository.delete({ month });
+    }
+
+    async deleteAllBudgets(): Promise<void> {
+        await this.budgetRepository.delete({});
     }
 }

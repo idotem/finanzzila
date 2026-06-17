@@ -17,10 +17,42 @@ import { TransactionFilterDto } from './dto/filter-transaction.dto';
 import Transaction from './entities/transaction.entity';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { CreateBudgetDto } from './dto/create-budget.dto';
+import { Budget } from './entities/budget.entity';
 
 @Controller('transactions')
 export class TransactionController {
     constructor(private readonly transactionService: TransactionService) { }
+
+    @Get('budgets')
+    async findBudgets(@Query('month') month: string): Promise<Budget[]> {
+        return await this.transactionService.findBudgetsByMonth(month);
+    }
+
+    @Post('budgets')
+    async saveBudgets(@Body() createBudgetDtos: CreateBudgetDto[]): Promise<Budget[]> {
+        return await this.transactionService.saveBudgets(createBudgetDtos);
+    }
+
+    @Get('budgets/all')
+    async findAllBudgets(): Promise<Budget[]> {
+        return await this.transactionService.findAllBudgets();
+    }
+
+    @Delete('budgets/month/:month')
+    async deleteBudgetsByMonth(@Param('month') month: string): Promise<void> {
+        return await this.transactionService.deleteBudgetsByMonth(month);
+    }
+
+    @Delete('budgets/:id')
+    async deleteBudget(@Param('id') id: string): Promise<void> {
+        return await this.transactionService.deleteBudget(+id);
+    }
+
+    @Delete('budgets')
+    async deleteAllBudgets(): Promise<void> {
+        return await this.transactionService.deleteAllBudgets();
+    }
 
     @Post('upload')
     @UseInterceptors(FileInterceptor('file'))

@@ -1,5 +1,5 @@
+import { Category } from 'src/transaction/entities/category.entity';
 import { Entity, Column, PrimaryGeneratedColumn, JoinColumn, ManyToOne, Unique } from 'typeorm';
-import { Category } from './category.entity';
 
 @Entity()
 @Unique(['category', 'month'])

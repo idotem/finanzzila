@@ -15,8 +15,6 @@ import { UpdateCategoryDto } from './dto/update-category-dto';
 import { KeywordDto } from 'src/keyword/dto/keyword-dto';
 import { CategoryFilterDto } from './dto/filter-category-dto';
 import { CategoryType } from './enums/category-type.enum';
-import { Budget } from './entities/budget.entity';
-import { CreateBudgetDto } from './dto/create-budget.dto';
 
 @Injectable()
 export class TransactionService {
@@ -27,10 +25,8 @@ export class TransactionService {
         private readonly transactionRepository: Repository<Transaction>,
         private readonly keywordService: KeywordService,
         @InjectRepository(Category)
-        private readonly transactionCategoryRepository: Repository<Category>,
-        @InjectRepository(Budget)
-        private readonly budgetRepository: Repository<Budget>
-    ) { }
+        private readonly transactionCategoryRepository: Repository<Category>
+    ) {}
 
     checkIfNameOfTransactionContainsGivenWord(
         nameOfTransactionPlace: string,
@@ -47,18 +43,30 @@ export class TransactionService {
         const transactions: Transaction[] = await this.findAllTransactionsFiltered(
             new TransactionFilterDto(undefined, undefined, undefined)
         );
-        const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.EXPENSE);
-        const incomeKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.INCOME);
-        const savingAccountKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.SAVING_ACCOUNT);
+        const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(
+            CategoryType.EXPENSE
+        );
+        const incomeKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(
+            CategoryType.INCOME
+        );
+        const savingAccountKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(
+            CategoryType.SAVING_ACCOUNT
+        );
         let updatedTrCategory: boolean = false;
         for (const tr of transactions) {
             if (tr.manuallyOverried) {
                 continue;
             }
-            updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(savingAccountKeywords, tr);
+            updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(
+                savingAccountKeywords,
+                tr
+            );
             if (!updatedTrCategory) {
                 if (tr.amount > 0) {
-                    updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(incomeKeywords, tr);
+                    updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(
+                        incomeKeywords,
+                        tr
+                    );
                 } else if (tr.amount <= 0) {
                     updatedTrCategory = this.determineCategoryFromTrNameAndKeywords(
                         expenseKeywords,
@@ -143,12 +151,7 @@ export class TransactionService {
             (category.type === CategoryType.EXPENSE && amount > 0) ||
             (category.type === CategoryType.INCOME && amount < 0)
         ) {
-            console.log(
-                'Category: ',
-                category.id,
-                ' is expense/income and tran amount: ',
-                amount
-            );
+            console.log('Category: ', category.id, ' is expense/income and tran amount: ', amount);
             throw new BadRequestException(
                 'Category can not be of type expense/income while amount is greater/lesser than 0.'
             );
@@ -174,12 +177,21 @@ export class TransactionService {
     //     }
     // }
 
-    async populateTransactions(file: Express.Multer.File, bank: string = 'KOMERCIJALNA BANKA'): Promise<Transaction[]> {
+    async populateTransactions(
+        file: Express.Multer.File,
+        bank: string = 'KOMERCIJALNA BANKA'
+    ): Promise<Transaction[]> {
         //await this.checkIfFileAlreadyUploaded(file.originalname);
         const categories = await this.findAllCategories();
-        const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.EXPENSE);
-        const incomeKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.INCOME);
-        const savingAccountKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(CategoryType.SAVING_ACCOUNT);
+        const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(
+            CategoryType.EXPENSE
+        );
+        const incomeKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(
+            CategoryType.INCOME
+        );
+        const savingAccountKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(
+            CategoryType.SAVING_ACCOUNT
+        );
         const transactions: Transaction[] = [];
         console.log('Transaction population starting: ', file);
 
@@ -237,9 +249,7 @@ export class TransactionService {
 
         const processRow = (dateVal: any, nameVal: any, amountVal: any) => {
             const transDate: any = dateVal ? dateVal : '01.01.2024';
-            const transName: string = nameVal
-                ? nameVal.toString()
-                : 'TRANSACTION WITHOUT NAME';
+            const transName: string = nameVal ? nameVal.toString() : 'TRANSACTION WITHOUT NAME';
             const transAmount: number = parseInt(amountVal) ? parseInt(amountVal) : 0;
             const category: Category = getCategory(transName, transAmount);
             console.log('category for row: ', category);
@@ -247,12 +257,7 @@ export class TransactionService {
             console.log('transName for row: ', transName);
             console.log('transAmount for row: ', transAmount);
             if (category) {
-                const transaction = new Transaction(
-                    transDate,
-                    transName,
-                    transAmount,
-                    category
-                );
+                const transaction = new Transaction(transDate, transName, transAmount, category);
                 transactions.push(transaction);
             }
         };
@@ -342,7 +347,10 @@ export class TransactionService {
         console.log('SAVING TRANSACTIONS');
         await this.transactionRepository.save(transactions);
 
-        fs.writeFileSync(`${this.uploadedReportsFolderPath}/${file.originalname}`, file.buffer as any);
+        fs.writeFileSync(
+            `${this.uploadedReportsFolderPath}/${file.originalname}`,
+            file.buffer as any
+        );
         return await this.findAllTransactionsFiltered(
             new TransactionFilterDto(undefined, undefined, undefined)
         );
@@ -544,50 +552,5 @@ export class TransactionService {
         const savedKeyword = await this.transactionCategoryRepository.save(category);
         await this.updateTransactionsAfterCategoriesGetUpdated();
         return savedKeyword;
-    }
-
-    // BUDGETS:
-
-    async findBudgetsByMonth(month: string): Promise<Budget[]> {
-        return await this.budgetRepository.find({
-            where: { month },
-            relations: ['category']
-        });
-    }
-
-    async findAllBudgets(): Promise<Budget[]> {
-        return await this.budgetRepository.find({
-            relations: ['category'],
-            order: { month: 'DESC' }
-        });
-    }
-
-    async saveBudgets(createBudgetDtos: CreateBudgetDto[]): Promise<Budget[]> {
-        const savedBudgets: Budget[] = [];
-        for (const dto of createBudgetDtos) {
-            const category = await this.findCategoryById(dto.categoryId);
-            let budget = await this.budgetRepository.findOne({
-                where: { month: dto.month, category: { id: dto.categoryId } }
-            });
-            if (budget) {
-                budget.amount = dto.amount;
-            } else {
-                budget = new Budget(dto.month, dto.amount, category);
-            }
-            savedBudgets.push(await this.budgetRepository.save(budget));
-        }
-        return savedBudgets;
-    }
-
-    async deleteBudget(id: number): Promise<void> {
-        await this.budgetRepository.delete(id);
-    }
-
-    async deleteBudgetsByMonth(month: string): Promise<void> {
-        await this.budgetRepository.delete({ month });
-    }
-
-    async deleteAllBudgets(): Promise<void> {
-        await this.budgetRepository.delete({});
     }
 }

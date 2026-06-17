@@ -4,8 +4,8 @@ import { VCard, VDivider, VBtn, VDialog, VCardTitle, VCardText, VCardActions } f
 import Transaction from '../model/Transaction';
 import { CategoryType } from '../model/CategoryType';
 import type { TransactionCategory } from '../model/TransactionCategory';
-import TransactionService from '../../service/TransactionService';
 import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
+import BudgetService from '@/service/BudgetService';
 
 const props = defineProps<{
     transactions: Transaction[];
@@ -21,7 +21,7 @@ const deleteAllDialog = ref(false);
 
 const fetchAllSavedBudgets = async () => {
     try {
-        const data = await TransactionService.getAllBudgets();
+        const data = await BudgetService.getAllBudgets();
         const grouped = new Map<string, any[]>();
         for (const b of data) {
             const existing = grouped.get(b.month) || [];
@@ -84,7 +84,7 @@ const confirmDeleteMonth = async () => {
     const month = deleteMonthDialog.value;
     if (!month) return;
     try {
-        await TransactionService.deleteBudgetsByMonth(month);
+        await BudgetService.deleteBudgetsByMonth(month);
         showDeleteMonthDialog.value = false;
         deleteMonthDialog.value = null;
         if (expandedMonth.value === month) expandedMonth.value = null;
@@ -96,7 +96,7 @@ const confirmDeleteMonth = async () => {
 
 const deleteAllBudgets = async () => {
     try {
-        await TransactionService.deleteAllBudgets();
+        await BudgetService.deleteAllBudgets();
         deleteAllDialog.value = false;
         expandedMonth.value = null;
         await fetchAllSavedBudgets();

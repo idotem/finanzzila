@@ -6,9 +6,10 @@ import { TransactionModule } from './transaction/transaction.module';
 import Transaction from './transaction/entities/transaction.entity';
 import { Keyword } from './keyword/entities/keyword.entity';
 import { Category } from './transaction/entities/category.entity';
-import { Budget } from './transaction/entities/budget.entity';
 import { KeywordModule } from './keyword/keyword.module';
 import { BankModule } from './bank/bank.module';
+import { Budget } from './budget/entities/budget.entity';
+import { BudgetModule } from './budget/budget.module';
 
 @Module({
     imports: [
@@ -22,9 +23,10 @@ import { BankModule } from './bank/bank.module';
         }),
         TransactionModule,
         KeywordModule,
-        BankModule
+        BankModule,
+        BudgetModule
     ],
     controllers: [AppController],
     providers: [AppService]
 })
-export class AppModule { }
+export class AppModule {}

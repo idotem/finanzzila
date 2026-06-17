@@ -87,32 +87,4 @@ export default class TransactionService {
         return await axiosInstance.delete(`transactions/delete-all`);
     }
 
-    static async getBudgets(month: string): Promise<any[]> {
-        const res = await axiosInstance.get('transactions/budgets', {
-            params: { month }
-        });
-        return res.data;
-    }
-
-    static async getAllBudgets(): Promise<any[]> {
-        const res = await axiosInstance.get('transactions/budgets/all');
-        return res.data;
-    }
-
-    static async saveBudgets(budgets: { month: string; amount: number; categoryId: number }[]): Promise<any[]> {
-        const res = await axiosInstance.post('transactions/budgets', budgets);
-        return res.data;
-    }
-
-    static async deleteBudget(id: number): Promise<void> {
-        await axiosInstance.delete(`transactions/budgets/${id}`);
-    }
-
-    static async deleteBudgetsByMonth(month: string): Promise<void> {
-        await axiosInstance.delete(`transactions/budgets/month/${month}`);
-    }
-
-    static async deleteAllBudgets(): Promise<void> {
-        await axiosInstance.delete('transactions/budgets');
-    }
 }

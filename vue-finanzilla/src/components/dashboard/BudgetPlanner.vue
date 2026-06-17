@@ -4,8 +4,8 @@ import { VBtn, VCard, VRow, VCol, VTextField, VAlert } from 'vuetify/components'
 import Transaction from '../model/Transaction';
 import { CategoryType } from '../model/CategoryType';
 import type { TransactionCategory } from '../model/TransactionCategory';
-import TransactionService from '../../service/TransactionService';
 import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
+import BudgetService from '@/service/BudgetService';
 
 const props = defineProps<{
     transactions: Transaction[];
@@ -81,7 +81,7 @@ const generateBudgetFromAverages = async () => {
 
 const fetchSavedBudgetAndCompare = async (allTransactions?: Transaction[]) => {
     try {
-        const saved = await TransactionService.getBudgets(props.selectedBudgetMonth);
+        const saved = await BudgetService.getBudgets(props.selectedBudgetMonth);
         const allTr = allTransactions || props.transactions;
 
         const targetDate = new Date(props.selectedBudgetMonth + '-01');
@@ -134,7 +134,7 @@ const saveBudgetPlan = async () => {
             amount: bc.amount,
             categoryId: bc.categoryId
         }));
-        await TransactionService.saveBudgets(dtos);
+        await BudgetService.saveBudgets(dtos);
         saveSuccessMessage.value = `Successfully saved budget for ${props.selectedBudgetMonth}!`;
         saveSuccess.value = true;
         await fetchSavedBudgetAndCompare();

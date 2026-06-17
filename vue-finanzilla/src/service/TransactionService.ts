@@ -5,9 +5,7 @@ import type { AxiosResponse } from 'axios';
 import type TransactionDto from '@/components/model/TransactionDto';
 
 export default class TransactionService {
-    static async getAllFiltered(
-        filter: TransactionFilterDto
-    ): Promise<Transaction[]> {
+    static async getAllFiltered(filter: TransactionFilterDto): Promise<Transaction[]> {
         const res = await axiosInstance.get('/transactions', {
             params: {
                 dateFrom: filter.dateFrom,
@@ -16,14 +14,7 @@ export default class TransactionService {
             }
         });
         const transactions: Transaction[] = res.data.map(
-            (t: any) =>
-                new Transaction(
-                    t.id,
-                    new Date(t.date),
-                    t.nameOfPlace,
-                    t.amount,
-                    t.category
-                )
+            (t: any) => new Transaction(t.id, new Date(t.date), t.nameOfPlace, t.amount, t.category)
         );
         return transactions;
     }
@@ -38,14 +29,7 @@ export default class TransactionService {
             }
         });
         const transactions: Transaction[] = res.data.map(
-            (t: any) =>
-                new Transaction(
-                    t.id,
-                    new Date(t.date),
-                    t.nameOfPlace,
-                    t.amount,
-                    t.category
-                )
+            (t: any) => new Transaction(t.id, new Date(t.date), t.nameOfPlace, t.amount, t.category)
         );
         return transactions;
     }
@@ -54,10 +38,7 @@ export default class TransactionService {
         return await axiosInstance.delete(`transactions/${id}`);
     }
 
-    static async update(
-        id: number,
-        editingItem: TransactionDto
-    ): Promise<AxiosResponse> {
+    static async update(id: number, editingItem: TransactionDto): Promise<AxiosResponse> {
         return await axiosInstance.put(`transactions/${id}`, editingItem);
     }
 
@@ -73,10 +54,7 @@ export default class TransactionService {
         return await axiosInstance.post(`transactions/bulk-delete`, { ids });
     }
 
-    static async bulkUpdateCategory(
-        ids: number[],
-        categoryId: number
-    ): Promise<AxiosResponse> {
+    static async bulkUpdateCategory(ids: number[], categoryId: number): Promise<AxiosResponse> {
         return await axiosInstance.post(`transactions/bulk-update-category`, {
             ids,
             categoryId
@@ -86,5 +64,4 @@ export default class TransactionService {
     static async deleteAll(): Promise<AxiosResponse> {
         return await axiosInstance.delete(`transactions/delete-all`);
     }
-
 }

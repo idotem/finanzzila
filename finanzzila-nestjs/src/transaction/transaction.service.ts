@@ -4,7 +4,6 @@ import Transaction from './entities/transaction.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { TransactionFilterDto } from './dto/filter-transaction.dto';
-import * as fs from 'fs';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { KeywordService } from 'src/keyword/keyword.service';
@@ -15,6 +14,7 @@ import { UpdateCategoryDto } from './dto/update-category-dto';
 import { KeywordDto } from 'src/keyword/dto/keyword-dto';
 import { CategoryFilterDto } from './dto/filter-category-dto';
 import { CategoryType } from './enums/category-type.enum';
+import { BankConfigService, BankFileFormatConfig } from 'src/bank/bank-config.service';
 
 @Injectable()
 export class TransactionService {
@@ -25,7 +25,8 @@ export class TransactionService {
         private readonly transactionRepository: Repository<Transaction>,
         private readonly keywordService: KeywordService,
         @InjectRepository(Category)
-        private readonly transactionCategoryRepository: Repository<Category>
+        private readonly transactionCategoryRepository: Repository<Category>,
+        private readonly bankConfigService: BankConfigService
     ) {}
 
     checkIfNameOfTransactionContainsGivenWord(
@@ -170,18 +171,10 @@ export class TransactionService {
             });
     }
 
-    // async checkIfFileAlreadyUploaded(fileName: string): Promise<void> {
-    //     const uploadedFiles = await this.findAllUploadedReports();
-    //     if (uploadedFiles.find((f) => f === fileName)) {
-    //         throw new ConflictException(`File with filename ${fileName} already exists`);
-    //     }
-    // }
-
     async populateTransactions(
         file: Express.Multer.File,
         bank: string = 'KOMERCIJALNA BANKA'
     ): Promise<Transaction[]> {
-        //await this.checkIfFileAlreadyUploaded(file.originalname);
         const categories = await this.findAllCategories();
         const expenseKeywords: Keyword[] = await this.keywordService.findAllByCategoryType(
             CategoryType.EXPENSE
@@ -194,6 +187,22 @@ export class TransactionService {
         );
         const transactions: Transaction[] = [];
         console.log('Transaction population starting: ', file);
+
+        const bankConfig = this.bankConfigService.getConfig(bank);
+        const isXls = file.originalname.toLowerCase().endsWith('.xls');
+        const fileFormatConfig: BankFileFormatConfig = isXls
+            ? bankConfig.fileFormats.xls
+            : bankConfig.fileFormats.xlsx;
+
+        const parseAmount = (val: any): number => {
+            if (val === undefined || val === null || val === '') return 0;
+            if (typeof val === 'number') return val;
+            if (bankConfig.amountParsing.europeanNumberFormat) {
+                const cleaned = String(val).replace(/\./g, '').replace(',', '.');
+                return parseFloat(cleaned) || 0;
+            }
+            return parseInt(val) || 0;
+        };
 
         function checkIfNameOfTransactionContainsGivenWord(
             nameOfTransactionPlace: string,
@@ -250,7 +259,7 @@ export class TransactionService {
         const processRow = (dateVal: any, nameVal: any, amountVal: any) => {
             const transDate: any = dateVal ? dateVal : '01.01.2024';
             const transName: string = nameVal ? nameVal.toString() : 'TRANSACTION WITHOUT NAME';
-            const transAmount: number = parseInt(amountVal) ? parseInt(amountVal) : 0;
+            const transAmount: number = parseAmount(amountVal);
             const category: Category = getCategory(transName, transAmount);
             console.log('category for row: ', category);
             console.log('transDate for row: ', transDate);
@@ -262,95 +271,76 @@ export class TransactionService {
             }
         };
 
-        if (bank === 'NLB BANKA') {
-            // Helper: parse a raw cell value to a JS number, handling both numeric and string formats.
-            const parseAmount = (val: any): number => {
-                if (val === undefined || val === null || val === '') return 0;
-                if (typeof val === 'number') return val;
-                // Handle European number format: "19.725,00" → 19725
-                const cleaned = String(val).replace(/\./g, '').replace(',', '.');
-                return parseFloat(cleaned) || 0;
-            };
+        const processRowWithSeparateIncomeExpense = (
+            dateVal: any,
+            nameVal: any,
+            expenseRaw: any,
+            incomeRaw: any
+        ) => {
+            const expenseNum = parseAmount(expenseRaw);
+            const incomeNum = parseAmount(incomeRaw);
+            let amountVal = 0;
+            if (expenseNum !== 0) {
+                amountVal = -expenseNum;
+            } else if (incomeNum !== 0) {
+                amountVal = incomeNum;
+            }
+            processRow(dateVal, nameVal, amountVal);
+        };
 
-            if (file.originalname.toLowerCase().endsWith('.xls')) {
-                const xlsxLib = require('xlsx');
-                const wb = xlsxLib.read(file.buffer, { type: 'buffer', cellDates: true });
-                const ws = wb.Sheets[wb.SheetNames[0]];
-                const rows = xlsxLib.utils.sheet_to_json(ws, { header: 1 });
-                for (let i = 27; i < rows.length; i++) {
-                    const row: any[] = rows[i] as any[];
-                    if (!row) continue;
-                    const dateVal = row[4];
-                    const nameVal = row[5];
-                    const expenseRaw = row[15];
-                    const incomeRaw = row[17];
+        const { columns, startRow } = fileFormatConfig;
 
-                    if (dateVal) {
-                        const expenseNum = parseAmount(expenseRaw);
-                        const incomeNum = parseAmount(incomeRaw);
-                        let amountVal = 0;
-                        if (expenseNum !== 0) {
-                            amountVal = -expenseNum;
-                        } else if (incomeNum !== 0) {
-                            amountVal = incomeNum;
-                        }
-                        processRow(dateVal, nameVal, amountVal);
+        if (isXls) {
+            const xlsxLib = require('xlsx');
+            const wb = xlsxLib.read(file.buffer, { type: 'buffer', cellDates: true });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = xlsxLib.utils.sheet_to_json(ws, { header: 1 });
+            for (let i = startRow; i < rows.length; i++) {
+                const row: any[] = rows[i] as any[];
+                if (!row) continue;
+                const dateVal = row[columns.date];
+                const nameVal = row[columns.name];
+
+                if (dateVal) {
+                    if (fileFormatConfig.hasSeparateIncomeExpense) {
+                        processRowWithSeparateIncomeExpense(
+                            dateVal,
+                            nameVal,
+                            row[columns.expense],
+                            row[columns.income]
+                        );
+                    } else {
+                        processRow(dateVal, nameVal, row[columns.amount]);
                     }
                 }
-            } else {
-                const workbook = new Workbook();
-                await workbook.xlsx.load(file.buffer as any);
-                const worksheet = workbook.worksheets[0];
-                worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
-                    if (rowNumber < 28) return;
-
-                    const dateVal = row.values[5];
-                    const nameVal = row.values[6];
-                    const expenseRaw = row.values[16];
-                    const incomeRaw = row.values[18];
-
-                    if (dateVal) {
-                        const expenseNum = parseAmount(expenseRaw);
-                        const incomeNum = parseAmount(incomeRaw);
-                        let amountVal = 0;
-                        if (expenseNum !== 0) {
-                            amountVal = -expenseNum;
-                        } else if (incomeNum !== 0) {
-                            amountVal = incomeNum;
-                        }
-                        processRow(dateVal, nameVal, amountVal);
-                    }
-                });
             }
         } else {
-            if (file.originalname.toLowerCase().endsWith('.xls')) {
-                const xlsxLib = require('xlsx');
-                const wb = xlsxLib.read(file.buffer, { type: 'buffer', cellDates: true });
-                const ws = wb.Sheets[wb.SheetNames[0]];
-                const rows = xlsxLib.utils.sheet_to_json(ws, { header: 1 });
-                rows.forEach((row: any[], index: number) => {
-                    if (index === 0) return;
-                    processRow(row[0], row[1], row[3]);
-                });
-            } else {
-                const workbook = new Workbook();
-                await workbook.xlsx.load(file.buffer as any);
-                const worksheet = workbook.worksheets[0];
-                worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
-                    if (rowNumber === 1) {
-                        return;
+            const workbook = new Workbook();
+            await workbook.xlsx.load(file.buffer as any);
+            const worksheet = workbook.worksheets[0];
+            worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+                if (rowNumber < startRow) return;
+
+                const dateVal = row.values[columns.date];
+                const nameVal = row.values[columns.name];
+
+                if (dateVal) {
+                    if (fileFormatConfig.hasSeparateIncomeExpense) {
+                        processRowWithSeparateIncomeExpense(
+                            dateVal,
+                            nameVal,
+                            row.values[columns.expense],
+                            row.values[columns.income]
+                        );
+                    } else {
+                        processRow(dateVal, nameVal, row.values[columns.amount]);
                     }
-                    processRow(row.values[1], row.values[2], row.values[4]);
-                });
-            }
+                }
+            });
         }
         console.log('SAVING TRANSACTIONS');
         await this.transactionRepository.save(transactions);
 
-        fs.writeFileSync(
-            `${this.uploadedReportsFolderPath}/${file.originalname}`,
-            file.buffer as any
-        );
         return await this.findAllTransactionsFiltered(
             new TransactionFilterDto(undefined, undefined, undefined)
         );
@@ -381,19 +371,6 @@ export class TransactionService {
         }
         queryBuilder.orderBy('transaction.date', 'DESC');
         return queryBuilder.getMany();
-    }
-
-    async findAllUploadedReports(): Promise<string[]> {
-        const folderPath = `${this.uploadedReportsFolderPath}/`;
-        return new Promise<string[]>((resolve, reject) => {
-            fs.readdir(folderPath, (err, files) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(files);
-                }
-            });
-        });
     }
 
     async bulkDeleteTransactions(ids: number[]): Promise<void> {

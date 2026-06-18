@@ -7,9 +7,10 @@ import { Keyword } from 'src/keyword/entities/keyword.entity';
 import { KeywordService } from 'src/keyword/keyword.service';
 import { Category } from './entities/category.entity';
 import { CategoryController } from './category.controller';
+import { BankModule } from 'src/bank/bank.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Category, Keyword, Transaction])],
+    imports: [TypeOrmModule.forFeature([Category, Keyword, Transaction]), BankModule],
     controllers: [TransactionController, CategoryController],
     providers: [TransactionService, KeywordService],
     exports: [TypeOrmModule]

@@ -3,6 +3,13 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "assets": [
+      {
+        "include": "bank/bank_config/**/*.json",
+        "outDir": "dist"
+      }
+    ],
+    "watchAssets": true
   }
 }

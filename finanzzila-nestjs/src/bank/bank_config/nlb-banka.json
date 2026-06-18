@@ -1,0 +1,28 @@
+{
+    "bankName": "NLB BANKA",
+    "fileFormats": {
+        "xls": {
+            "startRow": 27,
+            "columns": {
+                "date": 4,
+                "name": 5,
+                "expense": 15,
+                "income": 17
+            },
+            "hasSeparateIncomeExpense": true
+        },
+        "xlsx": {
+            "startRow": 28,
+            "columns": {
+                "date": 5,
+                "name": 6,
+                "expense": 16,
+                "income": 18
+            },
+            "hasSeparateIncomeExpense": true
+        }
+    },
+    "amountParsing": {
+        "europeanNumberFormat": true
+    }
+}

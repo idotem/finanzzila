@@ -1,0 +1,26 @@
+{
+    "bankName": "KOMERCIJALNA BANKA",
+    "fileFormats": {
+        "xls": {
+            "startRow": 1,
+            "columns": {
+                "date": 0,
+                "name": 1,
+                "amount": 3
+            },
+            "hasSeparateIncomeExpense": false
+        },
+        "xlsx": {
+            "startRow": 2,
+            "columns": {
+                "date": 1,
+                "name": 2,
+                "amount": 4
+            },
+            "hasSeparateIncomeExpense": false
+        }
+    },
+    "amountParsing": {
+        "europeanNumberFormat": false
+    }
+}

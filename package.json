@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "postinstall": "npm install --prefix finanzzila-nestjs && npm install --prefix vue-finanzilla && npm run seed --prefix finanzzila-nestjs",
     "start": "concurrently \"npm run start:dev --prefix finanzzila-nestjs\" \"npm run dev --prefix vue-finanzilla\""
   },
   "devDependencies": {

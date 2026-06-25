@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import CategoryService from '@/service/CategoryService';
+import TransactionService from '@/service/TransactionService';
+import BudgetService from '@/service/BudgetService';
+import DatabaseService from '@/service/DatabaseService';
 import {
     VBtn,
     VCard,
@@ -30,6 +33,8 @@ const errorMessage = ref('');
 const categories = ref<Category[]>([]);
 const dialog = ref<boolean>(false);
 const dialogDelete = ref<boolean>(false);
+const dialogWipe = ref<boolean>(false);
+const wipeInProgress = ref<boolean>(false);
 const editingCategory = ref<Category>(
     new Category(undefined, '', [], undefined, undefined, undefined)
 );
@@ -210,6 +215,35 @@ function save() {
 
 function changeShowColorPicker(): void {
     showColorPicker.value = !showColorPicker.value;
+}
+
+function openWipeDialog(): void {
+    dialogWipe.value = true;
+}
+
+function closeWipeDialog(): void {
+    dialogWipe.value = false;
+}
+
+async function wipeAndDumpConfirm(): Promise<void> {
+    wipeInProgress.value = true;
+    loading.value = true;
+    try {
+        await TransactionService.deleteAll();
+        await BudgetService.deleteAllBudgets();
+        const result = await DatabaseService.dump();
+        await fetchCategories();
+        alert(
+            `Done. Wiped all transactions and budgets.\n` +
+                `Dumped ${result.categoriesCount} categories and ${result.keywordsCount} keywords to:\n${result.path}`
+        );
+    } catch (err) {
+        alert(`Unsuccessful: ${err}`);
+    } finally {
+        wipeInProgress.value = false;
+        loading.value = false;
+        closeWipeDialog();
+    }
 }
 </script>
 
@@ -495,6 +529,53 @@ function changeShowColorPicker(): void {
                         </div>
                     </v-col>
                 </v-row>
+            </v-card>
+
+            <!-- Database Maintenance -->
+            <v-card color="surface" elevation="2" class="rounded-xl mt-4 pa-6">
+                <v-card-title class="text-h6 font-weight-bold pa-0 mb-2">
+                    Database Maintenance
+                </v-card-title>
+                <v-card-text class="text-body-2 text-medium-emphasis pa-0 mb-4">
+                    Wipe all transactions and budgets, then dump the current categories and
+                    keywords to <code>database-dump.txt</code> (committed to the repo as the
+                    seed snapshot). The binary <code>finanzzila.db</code> is also tracked, so run
+                    this before committing to keep the DB in a clean seed state.
+                </v-card-text>
+                <v-btn
+                    prepend-icon="delete_forever"
+                    color="error"
+                    variant="elevated"
+                    elevation="2"
+                    height="40"
+                    class="font-weight-bold"
+                    :loading="wipeInProgress"
+                    @click="openWipeDialog"
+                >
+                    Reset &amp; Dump Seed Data
+                </v-btn>
+
+                <v-dialog v-model="dialogWipe" max-width="540px">
+                    <v-card color="surface" class="pa-6 text-center rounded-lg" elevation="6">
+                        <v-icon size="64" color="error" class="mx-auto mb-4">delete_forever</v-icon>
+                        <v-card-title class="text-h6 font-weight-bold mb-2 pa-0 text-wrap">
+                            Reset Database &amp; Dump Seed Data?
+                        </v-card-title>
+                        <v-card-text class="text-body-2 text-medium-emphasis pa-0 mb-6">
+                            This will permanently delete <strong>all</strong> transactions and
+                            budgets, then write the current categories and keywords to
+                            <code>database-dump.txt</code>. This action cannot be undone.
+                        </v-card-text>
+                        <v-card-actions class="pa-0 justify-center">
+                            <v-btn class="text-none px-4" color="medium-emphasis" variant="text" @click="closeWipeDialog">
+                                Cancel
+                            </v-btn>
+                            <v-btn class="text-none px-6" color="error" variant="elevated" @click="wipeAndDumpConfirm">
+                                Reset &amp; Dump
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
             </v-card>
         </v-container>
     </main>

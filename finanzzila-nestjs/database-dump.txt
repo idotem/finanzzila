@@ -1,0 +1,964 @@
+{
+    "generatedAt": "2026-06-25T22:44:04.853Z",
+    "categories": [
+        {
+            "id": 1,
+            "name": "not_mapped",
+            "isWants": null,
+            "color": null,
+            "type": "EXPENSE"
+        },
+        {
+            "id": 2,
+            "name": "Hygiene",
+            "isWants": 0,
+            "color": "#6EA156",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 3,
+            "name": "ATM CASH",
+            "isWants": null,
+            "color": "#0CEF04",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 4,
+            "name": "MARKET",
+            "isWants": 0,
+            "color": "#777F0C",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 5,
+            "name": "Everything store",
+            "isWants": 1,
+            "color": "#241FAA",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 6,
+            "name": "Fuel and car",
+            "isWants": 0,
+            "color": "#E5FF92",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 7,
+            "name": "FOOD",
+            "isWants": 0,
+            "color": "#18E0D0",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 8,
+            "name": "Chinatown",
+            "isWants": 1,
+            "color": "#D80E0E",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 9,
+            "name": "Medical",
+            "isWants": 0,
+            "color": "#427832",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 10,
+            "name": "SOFTWARE - HARDWARE",
+            "isWants": 1,
+            "color": "#7E86CF",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 12,
+            "name": "Paycheck",
+            "isWants": null,
+            "color": "#00FF54",
+            "type": "INCOME"
+        },
+        {
+            "id": 13,
+            "name": "TRAVEL",
+            "isWants": 1,
+            "color": "#C14646",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 14,
+            "name": "ONE TIME BIG PURCHASE",
+            "isWants": 1,
+            "color": "#7B1414",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 16,
+            "name": "Refunds",
+            "isWants": null,
+            "color": null,
+            "type": "INCOME"
+        },
+        {
+            "id": 17,
+            "name": "Rent",
+            "isWants": 0,
+            "color": "#2B8895",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 18,
+            "name": "MON - Income",
+            "isWants": null,
+            "color": "#6E6931",
+            "type": "INCOME"
+        },
+        {
+            "id": 19,
+            "name": "Education",
+            "isWants": 0,
+            "color": "#C81E1E",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 20,
+            "name": "Devizna Smetka",
+            "isWants": 0,
+            "color": "#96E020",
+            "type": "SAVING_ACCOUNT"
+        },
+        {
+            "id": 21,
+            "name": "Gifts",
+            "isWants": 1,
+            "color": "#772222",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 22,
+            "name": "Clothes and wearables",
+            "isWants": 0,
+            "color": "#22204D",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 23,
+            "name": "Restaurants-Cafes",
+            "isWants": 1,
+            "color": "#FFEE3F",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 24,
+            "name": "Entertainment",
+            "isWants": 1,
+            "color": "#00DFFF",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 25,
+            "name": "TOOLS - Mainly woodworking",
+            "isWants": 1,
+            "color": "#4A148C",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 26,
+            "name": "Credit",
+            "isWants": 1,
+            "color": "#000000",
+            "type": "EXPENSE"
+        },
+        {
+            "id": 27,
+            "name": "Savings Account",
+            "isWants": null,
+            "color": null,
+            "type": "SAVING_ACCOUNT"
+        },
+        {
+            "id": 28,
+            "name": "JOAKIM CECKA PLATA",
+            "isWants": null,
+            "color": null,
+            "type": "SAVING_ACCOUNT"
+        }
+    ],
+    "keywords": [
+        {
+            "id": 1,
+            "value": "DM",
+            "categoryId": 2
+        },
+        {
+            "id": 2,
+            "value": "ATM",
+            "categoryId": 3
+        },
+        {
+            "id": 3,
+            "value": "KAM",
+            "categoryId": 4
+        },
+        {
+            "id": 4,
+            "value": "VERO",
+            "categoryId": 4
+        },
+        {
+            "id": 5,
+            "value": "PANI",
+            "categoryId": 4
+        },
+        {
+            "id": 6,
+            "value": "ZUR",
+            "categoryId": 4
+        },
+        {
+            "id": 7,
+            "value": "STOKOMAK",
+            "categoryId": 4
+        },
+        {
+            "id": 8,
+            "value": "BAZARO",
+            "categoryId": 5
+        },
+        {
+            "id": 9,
+            "value": "JUMBO",
+            "categoryId": 5
+        },
+        {
+            "id": 10,
+            "value": "ELEKTROMETAL",
+            "categoryId": 5
+        },
+        {
+            "id": 11,
+            "value": "Ramstor",
+            "categoryId": 4
+        },
+        {
+            "id": 12,
+            "value": "OIL",
+            "categoryId": 6
+        },
+        {
+            "id": 13,
+            "value": "MAKPETROL",
+            "categoryId": 6
+        },
+        {
+            "id": 14,
+            "value": "B.P",
+            "categoryId": 6
+        },
+        {
+            "id": 15,
+            "value": "B.S",
+            "categoryId": 6
+        },
+        {
+            "id": 16,
+            "value": "SILBO",
+            "categoryId": 7
+        },
+        {
+            "id": 17,
+            "value": "CENA TREJD",
+            "categoryId": 4
+        },
+        {
+            "id": 18,
+            "value": "ROJAL",
+            "categoryId": 7
+        },
+        {
+            "id": 19,
+            "value": "Temu",
+            "categoryId": 8
+        },
+        {
+            "id": 20,
+            "value": "Aliexpress",
+            "categoryId": 8
+        },
+        {
+            "id": 21,
+            "value": "ZEGIN",
+            "categoryId": 9
+        },
+        {
+            "id": 22,
+            "value": "PZU",
+            "categoryId": 9
+        },
+        {
+            "id": 23,
+            "value": "VIOLA",
+            "categoryId": 9
+        },
+        {
+            "id": 24,
+            "value": "NEPTUN",
+            "categoryId": 10
+        },
+        {
+            "id": 25,
+            "value": "SETEC",
+            "categoryId": 10
+        },
+        {
+            "id": 26,
+            "value": "ANHOCH",
+            "categoryId": 10
+        },
+        {
+            "id": 27,
+            "value": "SETEK",
+            "categoryId": 10
+        },
+        {
+            "id": 28,
+            "value": "BP",
+            "categoryId": 6
+        },
+        {
+            "id": 29,
+            "value": "ALIEXPRESS",
+            "categoryId": 8
+        },
+        {
+            "id": 30,
+            "value": "TINEKS",
+            "categoryId": 4
+        },
+        {
+            "id": 32,
+            "value": "МОДИРУМ",
+            "categoryId": 12
+        },
+        {
+            "id": 33,
+            "value": "ITGma",
+            "categoryId": 12
+        },
+        {
+            "id": 34,
+            "value": "TIVAT",
+            "categoryId": 13
+        },
+        {
+            "id": 35,
+            "value": "BUDVA",
+            "categoryId": 13
+        },
+        {
+            "id": 36,
+            "value": "KOTOR",
+            "categoryId": 13
+        },
+        {
+            "id": 37,
+            "value": "OHRID",
+            "categoryId": 13
+        },
+        {
+            "id": 38,
+            "value": "TRAVEL",
+            "categoryId": 13
+        },
+        {
+            "id": 39,
+            "value": "BELESKA",
+            "categoryId": 5
+        },
+        {
+            "id": 40,
+            "value": "SOBOMO",
+            "categoryId": 7
+        },
+        {
+            "id": 41,
+            "value": "MARKETI",
+            "categoryId": 4
+        },
+        {
+            "id": 42,
+            "value": "ДАВИД МЛАДЕНОВСКИ",
+            "categoryId": 14
+        },
+        {
+            "id": 44,
+            "value": "ХАЈ ТЕК",
+            "categoryId": 12
+        },
+        {
+            "id": 45,
+            "value": "ЕУРО-ЛЕВЕЛ",
+            "categoryId": 12
+        },
+        {
+            "id": 47,
+            "value": "ИНТЕЛИГЕНТА",
+            "categoryId": 12
+        },
+        {
+            "id": 48,
+            "value": "ИНФО ТУРС",
+            "categoryId": 13
+        },
+        {
+            "id": 49,
+            "value": "СТЕФАН ПЕТРОВСКИ",
+            "categoryId": 17
+        },
+        {
+            "id": 50,
+            "value": "МИНИСТЕРСТВО ЗА ФИНАНСИИ",
+            "categoryId": 18
+        },
+        {
+            "id": 51,
+            "value": "TOBAKO",
+            "categoryId": 4
+        },
+        {
+            "id": 52,
+            "value": "DD-FUD",
+            "categoryId": 7
+        },
+        {
+            "id": 53,
+            "value": "IKNOW",
+            "categoryId": 19
+        },
+        {
+            "id": 55,
+            "value": "aliexpress Luxembourg",
+            "categoryId": 17
+        },
+        {
+            "id": 56,
+            "value": "WWW.ALIEXPRESS",
+            "categoryId": 17
+        },
+        {
+            "id": 57,
+            "value": "MARKET",
+            "categoryId": 4
+        },
+        {
+            "id": 58,
+            "value": "230706724686",
+            "categoryId": 23
+        },
+        {
+            "id": 59,
+            "value": "STOP I GO",
+            "categoryId": 6
+        },
+        {
+            "id": 60,
+            "value": "HALK OSIGURUVANJE",
+            "categoryId": 6
+        },
+        {
+            "id": 61,
+            "value": "CENTAR ZA VOZILA",
+            "categoryId": 6
+        },
+        {
+            "id": 62,
+            "value": "PANDORA",
+            "categoryId": 24
+        },
+        {
+            "id": 63,
+            "value": "ROBI 8 ",
+            "categoryId": 17
+        },
+        {
+            "id": 64,
+            "value": "ANHOC",
+            "categoryId": 10
+        },
+        {
+            "id": 65,
+            "value": "COTON",
+            "categoryId": 22
+        },
+        {
+            "id": 66,
+            "value": "KUPI KARTI ZA SE",
+            "categoryId": 24
+        },
+        {
+            "id": 67,
+            "value": "WWW.SPORT-M.COM.MK",
+            "categoryId": 22
+        },
+        {
+            "id": 68,
+            "value": "JPDP-UNIJA NA VOZACI",
+            "categoryId": 6
+        },
+        {
+            "id": 69,
+            "value": "URBAN KITCHEN BAR",
+            "categoryId": 23
+        },
+        {
+            "id": 70,
+            "value": "MINT-KICEN BAR",
+            "categoryId": 23
+        },
+        {
+            "id": 71,
+            "value": "IDEA BAR",
+            "categoryId": 23
+        },
+        {
+            "id": 72,
+            "value": "SINSAY",
+            "categoryId": 22
+        },
+        {
+            "id": 73,
+            "value": "EVN",
+            "categoryId": 17
+        },
+        {
+            "id": 74,
+            "value": "PULL AND BEAR",
+            "categoryId": 22
+        },
+        {
+            "id": 75,
+            "value": "REVIJA BAR",
+            "categoryId": 23
+        },
+        {
+            "id": 76,
+            "value": "CINEPLEXX",
+            "categoryId": 24
+        },
+        {
+            "id": 77,
+            "value": "VAIKIKI",
+            "categoryId": 22
+        },
+        {
+            "id": 78,
+            "value": "NJU JORKER",
+            "categoryId": 22
+        },
+        {
+            "id": 79,
+            "value": "БУЛ. 8 СЕПТЕМВРИ",
+            "categoryId": 17
+        },
+        {
+            "id": 80,
+            "value": "KRIGLA BAR",
+            "categoryId": 23
+        },
+        {
+            "id": 81,
+            "value": "LITERATURA",
+            "categoryId": 19
+        },
+        {
+            "id": 82,
+            "value": "ZARA",
+            "categoryId": 24
+        },
+        {
+            "id": 83,
+            "value": "BORCHE EKSKLUZIV",
+            "categoryId": 23
+        },
+        {
+            "id": 84,
+            "value": "NIKOLOVI",
+            "categoryId": 4
+        },
+        {
+            "id": 85,
+            "value": "MARNES",
+            "categoryId": 7
+        },
+        {
+            "id": 86,
+            "value": "JPDP PATARINA",
+            "categoryId": 6
+        },
+        {
+            "id": 87,
+            "value": "SPORT M",
+            "categoryId": 22
+        },
+        {
+            "id": 88,
+            "value": "BON APETIT",
+            "categoryId": 7
+        },
+        {
+            "id": 89,
+            "value": "PICA",
+            "categoryId": 7
+        },
+        {
+            "id": 90,
+            "value": "RESTORAN MIDA",
+            "categoryId": 7
+        },
+        {
+            "id": 91,
+            "value": "SPORTMASTER",
+            "categoryId": 22
+        },
+        {
+            "id": 92,
+            "value": "BLUMEN",
+            "categoryId": 24
+        },
+        {
+            "id": 93,
+            "value": "M S BEJKERI",
+            "categoryId": 7
+        },
+        {
+            "id": 94,
+            "value": "AVENJU KAFE",
+            "categoryId": 23
+        },
+        {
+            "id": 95,
+            "value": "MASADA",
+            "categoryId": 23
+        },
+        {
+            "id": 96,
+            "value": "MT-PROMET",
+            "categoryId": 4
+        },
+        {
+            "id": 97,
+            "value": "AVTOBUSKA STANICA",
+            "categoryId": 6
+        },
+        {
+            "id": 98,
+            "value": "CENTRAL PERK KOFI",
+            "categoryId": 23
+        },
+        {
+            "id": 99,
+            "value": "JUSK",
+            "categoryId": 5
+        },
+        {
+            "id": 100,
+            "value": "IZDAVACKI CENTAR TRI",
+            "categoryId": 19
+        },
+        {
+            "id": 101,
+            "value": "GIRO VELADA",
+            "categoryId": 7
+        },
+        {
+            "id": 102,
+            "value": "ARISTOTELIS",
+            "categoryId": 7
+        },
+        {
+            "id": 103,
+            "value": "GURMAN 2",
+            "categoryId": 7
+        },
+        {
+            "id": 104,
+            "value": "MESARNICA ANDREJA",
+            "categoryId": 7
+        },
+        {
+            "id": 105,
+            "value": "ZVEZDEN OKEAN",
+            "categoryId": 7
+        },
+        {
+            "id": 106,
+            "value": "Netflix.com",
+            "categoryId": 10
+        },
+        {
+            "id": 107,
+            "value": "APTEKA LAJF",
+            "categoryId": 9
+        },
+        {
+            "id": 108,
+            "value": "BIFE 1",
+            "categoryId": 7
+        },
+        {
+            "id": 109,
+            "value": "OPENAI",
+            "categoryId": 10
+        },
+        {
+            "id": 110,
+            "value": "VRSHNIK",
+            "categoryId": 7
+        },
+        {
+            "id": 111,
+            "value": "KIT GO",
+            "categoryId": 4
+        },
+        {
+            "id": 112,
+            "value": "BEN. STANICA OKTA",
+            "categoryId": 4
+        },
+        {
+            "id": 113,
+            "value": "EUROFARM",
+            "categoryId": 9
+        },
+        {
+            "id": 114,
+            "value": "KAFE BAR",
+            "categoryId": 23
+        },
+        {
+            "id": 115,
+            "value": "RIMES",
+            "categoryId": 7
+        },
+        {
+            "id": 116,
+            "value": "HOMAKS",
+            "categoryId": 5
+        },
+        {
+            "id": 117,
+            "value": "MVR K.PALANKA",
+            "categoryId": 6
+        },
+        {
+            "id": 118,
+            "value": "KAFE",
+            "categoryId": 23
+        },
+        {
+            "id": 119,
+            "value": "ROZE CVEKARNICA",
+            "categoryId": 21
+        },
+        {
+            "id": 120,
+            "value": "RAMSTOR",
+            "categoryId": 4
+        },
+        {
+            "id": 121,
+            "value": "aliexpress",
+            "categoryId": 8
+        },
+        {
+            "id": 122,
+            "value": "JPDP",
+            "categoryId": 6
+        },
+        {
+            "id": 123,
+            "value": "LA NOI",
+            "categoryId": 4
+        },
+        {
+            "id": 124,
+            "value": "APTEKA",
+            "categoryId": 9
+        },
+        {
+            "id": 125,
+            "value": "SET UNION",
+            "categoryId": 4
+        },
+        {
+            "id": 126,
+            "value": "PARKOMAT",
+            "categoryId": 6
+        },
+        {
+            "id": 127,
+            "value": "MAK TENIS",
+            "categoryId": 4
+        },
+        {
+            "id": 128,
+            "value": "JP VODOVOD",
+            "categoryId": 17
+        },
+        {
+            "id": 129,
+            "value": "ASSTOR",
+            "categoryId": 4
+        },
+        {
+            "id": 130,
+            "value": "BIBA GRUP",
+            "categoryId": 23
+        },
+        {
+            "id": 131,
+            "value": "WOLT",
+            "categoryId": 7
+        },
+        {
+            "id": 132,
+            "value": "VEGERA",
+            "categoryId": 7
+        },
+        {
+            "id": 133,
+            "value": "TINEX",
+            "categoryId": 4
+        },
+        {
+            "id": 134,
+            "value": "TEMU.COM",
+            "categoryId": 8
+        },
+        {
+            "id": 135,
+            "value": "INDUSTRISKA 9 KRIVA PALANKA",
+            "categoryId": 25
+        },
+        {
+            "id": 136,
+            "value": "Stefan",
+            "categoryId": 17
+        },
+        {
+            "id": 137,
+            "value": "Методи Младеновски",
+            "categoryId": 26
+        },
+        {
+            "id": 138,
+            "value": "METODI MLADENOVSKI",
+            "categoryId": 26
+        },
+        {
+            "id": 139,
+            "value": "STARO BURE",
+            "categoryId": 23
+        },
+        {
+            "id": 140,
+            "value": "1905999424003",
+            "categoryId": 20
+        },
+        {
+            "id": 143,
+            "value": "MARVEL",
+            "categoryId": 23
+        },
+        {
+            "id": 144,
+            "value": "КОМЕРЦИЈАЛНА БАНКА",
+            "categoryId": 27
+        },
+        {
+            "id": 145,
+            "value": "FUD HUD",
+            "categoryId": 7
+        },
+        {
+            "id": 146,
+            "value": "GOOGLE",
+            "categoryId": 10
+        },
+        {
+            "id": 147,
+            "value": "МЕТОДИ МЛАДЕНОВСКИ",
+            "categoryId": 20
+        },
+        {
+            "id": 148,
+            "value": "DELEGAT",
+            "categoryId": 25
+        },
+        {
+            "id": 149,
+            "value": "TELEKABEL",
+            "categoryId": 17
+        },
+        {
+            "id": 150,
+            "value": "MERKUR",
+            "categoryId": 5
+        },
+        {
+            "id": 151,
+            "value": "FAST FUD",
+            "categoryId": 7
+        },
+        {
+            "id": 152,
+            "value": "ALFI BI",
+            "categoryId": 5
+        },
+        {
+            "id": 153,
+            "value": "GORGIEV INVEST",
+            "categoryId": 4
+        },
+        {
+            "id": 154,
+            "value": "PERPLEXITY",
+            "categoryId": 10
+        },
+        {
+            "id": 155,
+            "value": "KROACIJA OSIGUR",
+            "categoryId": 6
+        },
+        {
+            "id": 156,
+            "value": "BERSHKA",
+            "categoryId": 22
+        },
+        {
+            "id": 157,
+            "value": "SVETI",
+            "categoryId": 28
+        },
+        {
+            "id": 158,
+            "value": "JOAKIM",
+            "categoryId": 28
+        },
+        {
+            "id": 159,
+            "value": "ЈОАКИМ",
+            "categoryId": 28
+        },
+        {
+            "id": 160,
+            "value": "EKSP",
+            "categoryId": 3
+        },
+        {
+            "id": 161,
+            "value": "UVMK",
+            "categoryId": 3
+        }
+    ]
+}

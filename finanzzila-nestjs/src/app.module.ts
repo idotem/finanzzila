@@ -10,6 +10,7 @@ import { KeywordModule } from './keyword/keyword.module';
 import { BankModule } from './bank/bank.module';
 import { Budget } from './budget/entities/budget.entity';
 import { BudgetModule } from './budget/budget.module';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
     imports: [
@@ -24,7 +25,8 @@ import { BudgetModule } from './budget/budget.module';
         TransactionModule,
         KeywordModule,
         BankModule,
-        BudgetModule
+        BudgetModule,
+        DatabaseModule
     ],
     controllers: [AppController],
     providers: [AppService]

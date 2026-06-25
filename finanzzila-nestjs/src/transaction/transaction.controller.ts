@@ -37,11 +37,6 @@ export class TransactionController {
         return await this.transactionService.findAllTransactionsFiltered(filter);
     }
 
-    @Get('uploaded-reports')
-    async findAllUploadedReports() {
-        return await this.transactionService.findAllUploadedReports();
-    }
-
     @Post()
     create(@Body() createTransactionDto: CreateTransactionDto) {
         return this.transactionService.createTransaction(createTransactionDto);

@@ -34,13 +34,16 @@ import router from '@/router';
 import axiosInstance from '@/config/axios/axios';
 import BudgetPlanner from './BudgetPlanner.vue';
 import SavedBudgetsList from './SavedBudgetsList.vue';
+import { formatDateDisplay, formatDateToYYYYMMDD, parseDate } from '@/utils/DateUtils';
 
 const rawMonthStr = ref<string>(new Date().toISOString().substring(0, 7));
 
 const maxMonthStr = computed(() => {
     const d = new Date();
     d.setMonth(d.getMonth() + 1);
-    return d.toISOString().substring(0, 7);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
 });
 
 const selectedBudgetMonth = computed({
@@ -60,10 +63,28 @@ const timePeriods = ['All time', 'Yearly', 'Monthly'];
 const currencies = ['MKD', 'USD', 'EUR'];
 
 const transactions = ref<Transaction[]>([]);
+const allTransactions = ref<Transaction[]>([]);
 const categories = ref<TransactionCategory[]>([]);
 const errorMessage = ref('');
 const files = ref<File[] | undefined>();
-const rangeDateFilter = ref<Date[]>([]);
+const DATE_FILTER_STORAGE_KEY = 'dashboard_date_filter';
+
+function loadDateFilterFromStorage(): Date[] {
+    try {
+        const stored = localStorage.getItem(DATE_FILTER_STORAGE_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored) as string[];
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                return parsed.map((d) => parseDate(d));
+            }
+        }
+    } catch {
+        // ignore malformed data
+    }
+    return [];
+}
+
+const rangeDateFilter = ref<Date[]>(loadDateFilterFromStorage());
 const timePeriod = ref<string>('All time');
 const filterCategoryId = ref<number | undefined>(undefined);
 const totalExpenses = ref<number>();
@@ -82,6 +103,7 @@ const savedBudgetsListRef = ref<InstanceType<typeof SavedBudgetsList> | null>(nu
 onMounted(async () => {
     try {
         await fetchCategories();
+        await fetchAllTransactions();
         await fetchTransactions();
         await fetchBanks();
     } catch (error) {
@@ -99,25 +121,43 @@ const fetchBanks = async () => {
     }
 };
 
+const fetchAllTransactions = async () => {
+    try {
+        const tr = await TransactionService.getAllFiltered(new TransactionFilterDto(undefined, undefined, undefined));
+        allTransactions.value = tr;
+    } catch (e) {
+        console.error('Error fetching all transactions:', e);
+    }
+};
+
 const fetchTransactions = async () => {
+    isLoading.value = true;
     const filter: TransactionFilterDto = new TransactionFilterDto(
         rangeDateFilter.value && rangeDateFilter.value.length > 0 ? rangeDateFilter.value[0] : undefined,
         rangeDateFilter.value && rangeDateFilter.value.length > 1 ? rangeDateFilter.value[1] : undefined,
         filterCategoryId.value
     );
-    TransactionService.getAllFiltered(filter)
-        .then((tr: Transaction[]) => {
-            transactions.value = tr;
-            calculateStats(tr, timePeriod.value);
-            calculateWantsAndNeeds(tr);
-            isLoading.value = false;
-        })
-        .catch(() => {
-            isLoading.value = false;
-        });
+    try {
+        const tr = await TransactionService.getAllFiltered(filter);
+        transactions.value = tr;
+        calculateStats(tr, timePeriod.value);
+        calculateWantsAndNeeds(tr);
+        if (!rangeDateFilter.value || rangeDateFilter.value.length === 0) {
+            allTransactions.value = tr;
+        }
+    } catch {
+        // error handling
+    } finally {
+        isLoading.value = false;
+    }
 };
 
-watch(rangeDateFilter, () => {
+watch(rangeDateFilter, (newVal) => {
+    if (newVal && newVal.length > 0) {
+        localStorage.setItem(DATE_FILTER_STORAGE_KEY, JSON.stringify(newVal.map((d) => formatDateToYYYYMMDD(d))));
+    } else {
+        localStorage.removeItem(DATE_FILTER_STORAGE_KEY);
+    }
     fetchTransactions();
 });
 
@@ -167,19 +207,16 @@ async function uploadFile() {
     isLoading.value = true;
     if (files.value && files.value.length > 0) {
         try {
-            await TransactionService.uploadFileTransactions(files.value[0], selectedBank.value).then(
-                (tr: Transaction[]) => {
-                    transactions.value = tr;
-                    calculateStats(tr, timePeriod.value);
-                    calculateWantsAndNeeds(tr);
-                    files.value = undefined;
-                    isLoading.value = false;
-                    showImportDialog.value = false;
-                }
-            );
+            await TransactionService.uploadFileTransactions(files.value[0], selectedBank.value);
+            await fetchAllTransactions();
+            await fetchTransactions();
+            files.value = undefined;
+            showImportDialog.value = false;
+            savedBudgetsListRef.value?.refresh();
         } catch (error) {
             console.error(error);
             files.value = undefined;
+        } finally {
             isLoading.value = false;
         }
     }
@@ -187,6 +224,7 @@ async function uploadFile() {
 
 function clearDateRange() {
     rangeDateFilter.value = [];
+    localStorage.removeItem(DATE_FILTER_STORAGE_KEY);
 }
 
 function calculateWantsAndNeeds(transactions: Transaction[]) {
@@ -215,13 +253,7 @@ function calculateWantsAndNeeds(transactions: Transaction[]) {
 }
 
 function formatDate(date: Date | string | undefined | null): string {
-    if (!date) return '';
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return '';
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}.${month}.${year}`;
+    return formatDateDisplay(date);
 }
 
 const savingAccountsData = computed(() => {
@@ -269,8 +301,8 @@ const totalSavingAccountsSum = computed(() => {
 });
 
 function goToCategory(id: number): void {
-    const dateFilterFrom: any = rangeDateFilter.value?.[0] ?? undefined;
-    const dateFilterTo: any = rangeDateFilter.value?.[1] ?? undefined;
+    const dateFilterFrom: any = rangeDateFilter.value?.[0] ? formatDateToYYYYMMDD(rangeDateFilter.value[0]) : undefined;
+    const dateFilterTo: any = rangeDateFilter.value?.[1] ? formatDateToYYYYMMDD(rangeDateFilter.value[1]) : undefined;
     router.push({
         name: 'Transactions',
         query: {
@@ -285,12 +317,12 @@ function goToCategory(id: number): void {
 </script>
 
 <template>
-    <main class="py-6 px-4">
+    <main class="py-6 px-3">
         <v-overlay :model-value="isLoading" class="align-center justify-center">
             <v-progress-circular color="primary" size="64" indeterminate></v-progress-circular>
         </v-overlay>
 
-        <v-container fluid class="pa-0 max-w-7xl mx-auto">
+        <v-container fluid class="py-3 px-6">
             <!-- Filter Section -->
             <v-row class="mb-6" align="center">
                 <v-col cols="12" sm="5" md="4" lg="3">
@@ -517,7 +549,7 @@ function goToCategory(id: number): void {
             <v-row class="mb-6 align-stretch" align="stretch">
                 <v-col cols="12" sm="8" class="d-flex budget-planner-col">
                     <BudgetPlanner
-                        :transactions="transactions"
+                        :transactions="allTransactions.length > 0 ? allTransactions : transactions"
                         :categories="categories"
                         :currentCurrency="currentCurrency"
                         :isLoading="isLoading"
@@ -529,7 +561,7 @@ function goToCategory(id: number): void {
                 <v-col cols="12" sm="4" class="d-flex saved-budgets-col">
                     <SavedBudgetsList
                         ref="savedBudgetsListRef"
-                        :transactions="transactions"
+                        :transactions="allTransactions.length > 0 ? allTransactions : transactions"
                         :categories="categories"
                         :currentCurrency="currentCurrency"
                     />

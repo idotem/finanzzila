@@ -31,6 +31,7 @@ import TransactionDto from '../model/TransactionDto';
 import '../../assets/base.css';
 import LoadingSpinner from '@/utils/LoadingSpinner.vue';
 import { CategoryType } from '../model/CategoryType';
+import { formatDateDisplay } from '@/utils/DateUtils';
 
 type TransactionTableProps = {
     categoryId?: number | undefined;
@@ -257,13 +258,7 @@ function save() {
 }
 
 function formatDate(date: Date | string | undefined | null): string {
-    if (!date) return '';
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return '';
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}.${month}.${year}`;
+    return formatDateDisplay(date);
 }
 function confirmBulkUpdateCategory() {
     if (!bulkSelectedCategoryId.value) return;

@@ -6,6 +6,7 @@ import { CategoryType } from '../model/CategoryType';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
 import BudgetService from '@/service/BudgetService';
+import { parseDate, getMonthDateRange } from '@/utils/DateUtils';
 
 const props = defineProps<{
     transactions: Transaction[];
@@ -41,26 +42,22 @@ const monthTotal = (budgets: any[]) => {
 };
 
 const actualSpendForMonth = (month: string) => {
-    const [y, m] = month.split('-');
-    const start = new Date(parseInt(y), parseInt(m) - 1, 1);
-    const end = new Date(parseInt(y), parseInt(m), 0, 23, 59, 59);
+    const range = getMonthDateRange(month);
     return props.transactions
         .filter((t) => {
-            const d = new Date(t.date);
-            return d >= start && d <= end && t.category?.type === CategoryType.EXPENSE;
+            const d = parseDate(t.date);
+            return d >= range.start && d <= range.end && t.category?.type === CategoryType.EXPENSE;
         })
         .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 };
 
 const actualByCategory = (month: string) => {
-    const [y, m] = month.split('-');
-    const start = new Date(parseInt(y), parseInt(m) - 1, 1);
-    const end = new Date(parseInt(y), parseInt(m), 0, 23, 59, 59);
+    const range = getMonthDateRange(month);
     const map = new Map<number, number>();
     props.transactions
         .filter((t) => {
-            const d = new Date(t.date);
-            return d >= start && d <= end && t.category?.type === CategoryType.EXPENSE;
+            const d = parseDate(t.date);
+            return d >= range.start && d <= range.end && t.category?.type === CategoryType.EXPENSE;
         })
         .forEach((t) => {
             if (t.category) {
@@ -72,7 +69,7 @@ const actualByCategory = (month: string) => {
 
 const formatMonth = (month: string) => {
     const [year, m] = month.split('-');
-    const date = new Date(parseInt(year), parseInt(m) - 1);
+    const date = new Date(parseInt(year, 10), parseInt(m, 10) - 1, 1);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
 };
 
@@ -148,7 +145,12 @@ onMounted(() => {
                     ></span>
                     <div class="flex-grow-1" style="min-width: 0; overflow: hidden">
                         <div class="d-flex align-center flex-wrap" style="gap: 4px 8px">
-                            <span class="text-caption font-weight-bold text-truncate">{{ formatMonth(month) }}</span>
+                            <div class="d-flex flex-column" style="min-width: 0;">
+                                <span class="text-caption font-weight-bold text-truncate">{{ formatMonth(month) }}</span>
+                                <span class="text-caption text-medium-emphasis" style="font-size: 10px; line-height: 1.1;">
+                                    {{ getMonthDateRange(month).startFormatted }} &ndash; {{ getMonthDateRange(month).endFormatted }}
+                                </span>
+                            </div>
                             <VDivider class="border-theme-divider"></VDivider>
                             <div class="d-flex align-center flex-shrink-0" style="gap: 3px">
                                 <span class="text-overline text-medium-emphasis" style="font-size: 9px; line-height: 1"

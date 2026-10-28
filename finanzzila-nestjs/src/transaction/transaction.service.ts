@@ -346,6 +346,34 @@ export class TransactionService {
         );
     }
 
+    private normalizeDateToYYYYMMDD(dateVal: any): string | undefined {
+        if (!dateVal) return undefined;
+        if (typeof dateVal === 'string') {
+            const match = dateVal.match(/^(\d{4}-\d{2}-\d{2})/);
+            if (match) return match[1];
+            const dotMatch = dateVal.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+            if (dotMatch) {
+                const day = dotMatch[1].padStart(2, '0');
+                const month = dotMatch[2].padStart(2, '0');
+                const year = dotMatch[3];
+                return `${year}-${month}-${day}`;
+            }
+            const d = new Date(dateVal);
+            if (!isNaN(d.getTime())) {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+        } else if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
+            const year = dateVal.getFullYear();
+            const month = String(dateVal.getMonth() + 1).padStart(2, '0');
+            const day = String(dateVal.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        return undefined;
+    }
+
     findAllTransactionsFiltered(transactionFilter: TransactionFilterDto): Promise<Transaction[]> {
         const queryBuilder = this.transactionRepository
             .createQueryBuilder('transaction')
@@ -355,18 +383,20 @@ export class TransactionService {
                 categoryId: transactionFilter.categoryId
             });
         }
-        if (transactionFilter.dateFrom && transactionFilter.dateTo) {
+        const dateFromStr = this.normalizeDateToYYYYMMDD(transactionFilter.dateFrom);
+        const dateToStr = this.normalizeDateToYYYYMMDD(transactionFilter.dateTo);
+        if (dateFromStr && dateToStr) {
             queryBuilder.andWhere('transaction.date BETWEEN :dateFrom AND :dateTo', {
-                dateFrom: transactionFilter.dateFrom,
-                dateTo: transactionFilter.dateTo
+                dateFrom: dateFromStr,
+                dateTo: dateToStr
             });
-        } else if (transactionFilter.dateFrom) {
+        } else if (dateFromStr) {
             queryBuilder.andWhere('transaction.date >= :dateFrom', {
-                dateFrom: transactionFilter.dateFrom
+                dateFrom: dateFromStr
             });
-        } else if (transactionFilter.dateTo) {
+        } else if (dateToStr) {
             queryBuilder.andWhere('transaction.date <= :dateTo', {
-                dateTo: transactionFilter.dateTo
+                dateTo: dateToStr
             });
         }
         queryBuilder.orderBy('transaction.date', 'DESC');

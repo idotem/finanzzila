@@ -6,6 +6,7 @@ import { CategoryType } from '../model/CategoryType';
 import type { TransactionCategory } from '../model/TransactionCategory';
 import { convertNumberToCurrency } from '../../utils/CurrencyConverter';
 import BudgetService from '@/service/BudgetService';
+import { parseDate, formatDateDisplay, getMonthDateRange } from '@/utils/DateUtils';
 
 const props = defineProps<{
     transactions: Transaction[];
@@ -29,7 +30,27 @@ const localMonth = computed({
 const maxMonthStr = computed(() => {
     const d = new Date();
     d.setMonth(d.getMonth() + 1);
-    return d.toISOString().substring(0, 7);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+});
+
+const budgetPeriod = computed(() => {
+    return getMonthDateRange(props.selectedBudgetMonth);
+});
+
+const averagePeriod = computed(() => {
+    const [yStr, mStr] = props.selectedBudgetMonth.split('-');
+    const year = parseInt(yStr, 10);
+    const month = parseInt(mStr, 10);
+    const sixMonthsAgo = new Date(year, month - 1 - 6, 1, 0, 0, 0, 0);
+    const endOfPeriod = new Date(year, month - 1, 0, 23, 59, 59, 999);
+    return {
+        start: sixMonthsAgo,
+        end: endOfPeriod,
+        startFormatted: formatDateDisplay(sixMonthsAgo),
+        endFormatted: formatDateDisplay(endOfPeriod)
+    };
 });
 
 const budgetCategories = ref<any[]>([]);
@@ -41,13 +62,11 @@ const generateBudgetFromAverages = async () => {
     try {
         emit('update:isLoading', true);
         const allTr = props.transactions;
-        const targetDate = new Date(props.selectedBudgetMonth + '-01');
-        const sixMonthsAgo = new Date(targetDate.getFullYear(), targetDate.getMonth() - 6, 1);
-        const endOfPeriod = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0, 23, 59, 59);
+        const avgRange = averagePeriod.value;
 
         const periodTransactions = allTr.filter((t: any) => {
-            const d = new Date(t.date);
-            return d >= sixMonthsAgo && d <= endOfPeriod && t.category?.type === CategoryType.EXPENSE;
+            const d = parseDate(t.date);
+            return d >= avgRange.start && d <= avgRange.end && t.category?.type === CategoryType.EXPENSE;
         });
 
         const categorySums = new Map<number, number>();
@@ -83,14 +102,11 @@ const fetchSavedBudgetAndCompare = async (allTransactions?: Transaction[]) => {
     try {
         const saved = await BudgetService.getBudgets(props.selectedBudgetMonth);
         const allTr = allTransactions || props.transactions;
-
-        const targetDate = new Date(props.selectedBudgetMonth + '-01');
-        const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
-        const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59);
+        const curRange = budgetPeriod.value;
 
         const monthTransactions = allTr.filter(t => {
-            const d = new Date(t.date);
-            return d >= startOfMonth && d <= endOfMonth && t.category?.type === CategoryType.EXPENSE;
+            const d = parseDate(t.date);
+            return d >= curRange.start && d <= curRange.end && t.category?.type === CategoryType.EXPENSE;
         });
 
         const actualSums = new Map<number, number>();
@@ -196,9 +212,22 @@ watch(() => props.transactions, () => {
 
         <VRow>
             <VCol cols="12">
-                <h4 class="text-subtitle-1 font-weight-bold mb-4 text-primary d-flex align-center">
-                    Budget vs. Actual Spend
-                </h4>
+                <div class="d-flex flex-column flex-sm-row justify-space-between align-start align-sm-center mb-4">
+                    <h4 class="text-subtitle-1 font-weight-bold text-primary mb-1 mb-sm-0">
+                        Budget vs. Actual Spend
+                    </h4>
+                    <div class="d-flex align-center flex-wrap" style="gap: 6px;">
+                        <span
+                            class="text-caption font-weight-bold px-2 py-1 rounded border border-theme-divider"
+                            style="background-color: rgba(var(--v-theme-primary), 0.08); color: rgb(var(--v-theme-primary));"
+                        >
+                            Period: {{ budgetPeriod.startFormatted }} &ndash; {{ budgetPeriod.endFormatted }}
+                        </span>
+                        <span class="text-caption text-medium-emphasis" style="font-size: 11px;">
+                            (Averages: {{ averagePeriod.startFormatted }} &ndash; {{ averagePeriod.endFormatted }})
+                        </span>
+                    </div>
+                </div>
 
                 <div class="pa-4 mb-4 rounded-xl bg-gradient-to-r from-primary/10 via-surface to-surface border border-theme-divider">
                     <div class="d-flex justify-space-between align-center mb-2">

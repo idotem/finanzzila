@@ -3,18 +3,21 @@ import Transaction from '../components/model/Transaction';
 import type TransactionFilterDto from '../components/model/TransactionFilterDto';
 import type { AxiosResponse } from 'axios';
 import type TransactionDto from '@/components/model/TransactionDto';
+import { formatDateToYYYYMMDD, parseDate } from '@/utils/DateUtils';
 
 export default class TransactionService {
     static async getAllFiltered(filter: TransactionFilterDto): Promise<Transaction[]> {
+        const dateFrom = filter.dateFrom ? formatDateToYYYYMMDD(filter.dateFrom) : undefined;
+        const dateTo = filter.dateTo ? formatDateToYYYYMMDD(filter.dateTo) : undefined;
         const res = await axiosInstance.get('/transactions', {
             params: {
-                dateFrom: filter.dateFrom,
-                dateTo: filter.dateTo,
+                dateFrom,
+                dateTo,
                 categoryId: filter.categoryId
             }
         });
         const transactions: Transaction[] = res.data.map(
-            (t: any) => new Transaction(t.id, new Date(t.date), t.nameOfPlace, t.amount, t.category)
+            (t: any) => new Transaction(t.id, parseDate(t.date), t.nameOfPlace, t.amount, t.category)
         );
         return transactions;
     }
@@ -29,7 +32,7 @@ export default class TransactionService {
             }
         });
         const transactions: Transaction[] = res.data.map(
-            (t: any) => new Transaction(t.id, new Date(t.date), t.nameOfPlace, t.amount, t.category)
+            (t: any) => new Transaction(t.id, parseDate(t.date), t.nameOfPlace, t.amount, t.category)
         );
         return transactions;
     }

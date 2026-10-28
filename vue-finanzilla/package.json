@@ -11,7 +11,11 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "test:e2e": "start-server-and-test dev http-get://localhost:5173 cypress:run",
+    "test:e2e:open": "start-server-and-test dev http-get://localhost:5173 cypress:open"
   },
   "dependencies": {
     "@vuepic/vue-datepicker": "^8.3.2",
@@ -35,6 +39,7 @@
     "@vue/test-utils": "^2.4.4",
     "@vue/tsconfig": "^0.5.1",
     "autoprefixer": "^10.4.18",
+    "cypress": "^13.17.0",
     "eslint": "^8.49.0",
     "eslint-plugin-vue": "^9.17.0",
     "jsdom": "^24.0.0",
@@ -42,6 +47,7 @@
     "npm-run-all2": "^6.1.1",
     "postcss": "^8.4.35",
     "prettier": "^3.0.3",
+    "start-server-and-test": "^3.0.11",
     "tailwindcss": "^3.4.1",
     "typescript": "~5.3.0",
     "vite": "^5.0.11",

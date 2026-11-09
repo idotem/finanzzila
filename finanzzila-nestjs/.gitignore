@@ -37,3 +37,6 @@ lerna-debug.log*
 # Uploaded reports
 /uploaded-reports-main/*
 /uploaded-reports-dev/*
+
+#db
+database.sqlite
